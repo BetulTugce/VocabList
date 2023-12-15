@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VocabList.UI", "VocabList.UI\VocabList.UI.csproj", "{31DB2DCF-C47A-418F-9101-15F78D9BA387}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VocabList.Core", "VocabList.Core\VocabList.Core.csproj", "{E0840277-C2B8-4C65-96EB-2ED576EFE0B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VocabList.Repository", "VocabList.Repository\VocabList.Repository.csproj", "{0E1AA003-33F2-403C-A4BD-8ACEEC0A9DDA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VocabList.Service", "VocabList.Service\VocabList.Service.csproj", "{FC5112A4-20CD-4A8B-BADB-67B7D137F993}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VocabList.API", "VocabList.API\VocabList.API.csproj", "{5C6620C4-4392-421C-B886-0C26723132DC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{31DB2DCF-C47A-418F-9101-15F78D9BA387}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31DB2DCF-C47A-418F-9101-15F78D9BA387}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31DB2DCF-C47A-418F-9101-15F78D9BA387}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31DB2DCF-C47A-418F-9101-15F78D9BA387}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0840277-C2B8-4C65-96EB-2ED576EFE0B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0840277-C2B8-4C65-96EB-2ED576EFE0B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0840277-C2B8-4C65-96EB-2ED576EFE0B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0840277-C2B8-4C65-96EB-2ED576EFE0B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E1AA003-33F2-403C-A4BD-8ACEEC0A9DDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E1AA003-33F2-403C-A4BD-8ACEEC0A9DDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E1AA003-33F2-403C-A4BD-8ACEEC0A9DDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E1AA003-33F2-403C-A4BD-8ACEEC0A9DDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC5112A4-20CD-4A8B-BADB-67B7D137F993}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC5112A4-20CD-4A8B-BADB-67B7D137F993}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC5112A4-20CD-4A8B-BADB-67B7D137F993}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC5112A4-20CD-4A8B-BADB-67B7D137F993}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C6620C4-4392-421C-B886-0C26723132DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C6620C4-4392-421C-B886-0C26723132DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C6620C4-4392-421C-B886-0C26723132DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C6620C4-4392-421C-B886-0C26723132DC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C4843150-324E-424B-A040-987335EA5BF3}
+	EndGlobalSection
+EndGlobal
