@@ -13,6 +13,7 @@ namespace VocabList.Repository.Contexts
             
         }
 
+        public DbSet<WordList> WordLists { get; set; }
         public DbSet<Word> Words { get; set; }
         public DbSet<Sentence> Sentences { get; set; }
 
