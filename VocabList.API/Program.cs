@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+using System.Reflection;
+using VocabList.Repository.Contexts;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,6 +10,14 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<VocabListDbContext>(opt =>
+{
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), options =>
+    {
+        options.MigrationsAssembly(Assembly.GetAssembly(typeof(VocabListDbContext)).GetName().Name);
+    });
+});
 
 var app = builder.Build();
 
