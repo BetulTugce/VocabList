@@ -8,8 +8,8 @@ namespace VocabList.Service.Services
 {
     public class Service<T> : IService<T> where T : class
     {
-        public readonly IGenericRepository<T> _repository;
-        public readonly IUnitOfWork _unitOfWork;
+        private readonly IGenericRepository<T> _repository;
+        private readonly IUnitOfWork _unitOfWork;
 
         public Service(IGenericRepository<T> repository, IUnitOfWork unitOfWork)
         {
