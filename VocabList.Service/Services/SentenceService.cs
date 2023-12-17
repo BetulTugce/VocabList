@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AutoMapper;
 using VocabList.Core.Entities;
 using VocabList.Core.Repositories;
 using VocabList.Core.Services;
@@ -13,10 +9,12 @@ namespace VocabList.Service.Services
     public class SentenceService : Service<Sentence>, ISentenceService
     {
         private readonly ISentenceRepository _sentenceRepository;
+        private readonly IMapper _mapper;
 
-        public SentenceService(IGenericRepository<Sentence> repository, IUnitOfWork unitOfWork, ISentenceRepository sentenceRepository) : base(repository, unitOfWork)
+        public SentenceService(IGenericRepository<Sentence> repository, IUnitOfWork unitOfWork, ISentenceRepository sentenceRepository, IMapper mapper) : base(repository, unitOfWork)
         {
             _sentenceRepository = sentenceRepository;
+            _mapper = mapper;
         }
     }
 }
