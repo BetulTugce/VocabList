@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using VocabList.Core.DTOs.Identity;
-using VocabList.Core.Entities.Identity;
+using VocabList.Core.Services;
 
 
 namespace VocabList.API.Controllers
@@ -10,60 +9,59 @@ namespace VocabList.API.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        readonly UserManager<AppUser> _userManager;
+        private readonly IUserService _userService;
 
-        public UsersController(UserManager<AppUser> userManager)
+        public UsersController(IUserService userService)
         {
-            _userManager = userManager;
+            _userService = userService;
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateUser(CreateUser model)
         {
-            IdentityResult result = await _userManager.CreateAsync(new()
+            try
             {
-                Id = Guid.NewGuid().ToString(),
-                UserName = model.Username,
-                Email = model.Email,
-                Name = model.Name,
-                Surname = model.Surname
-            }, model.Password);
-            if (result.Succeeded)
-            {
-                //return StatusCode((int)HttpStatusCode.Created);
-
-                var createdUser = await _userManager.FindByNameAsync(model.Username);
-                return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, createdUser);
+                var createdUser = await _userService.CreateAsync(model);
+                return CreatedAtAction(nameof(CreateUser), new { id = createdUser.Id }, createdUser);
             }
-            else
+            catch (Exception ex)
             {
-                //return BadRequest(new { ErrorMessage = "Kullanıcı oluşturma başarısız oldu", Errors = result.Errors });
-                var errors = result.Errors.Select(error => error.Description);
-                var errorMessage = string.Join(", ", errors);
-
-                return BadRequest(new { ErrorMessage = "Kullanıcı kayıt işlemi başarısız oldu.", Errors = errorMessage });
+                //return StatusCode(500, new { ErrorMessage = "Kullanıcı kayıt işlemi başarısız oldu. " + ex.Message });
+                return StatusCode(500, new { ex.Message });
             }
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUser(string id)
         {
-            var user = await _userManager.FindByIdAsync(id);
-
-            if (user == null)
+            try
             {
-                return NotFound(new { ErrorMessage = "Kullanıcı bulunamadı." });
-            }
+                var user = await _userService.GetUserByIdAsync(id);
 
-            return Ok(user);
+                if (user == null)
+                {
+                    return NotFound(new { ErrorMessage = "Kullanıcı bulunamadı." });
+                }
+
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { ErrorMessage = "Kullanıcıyı getirme işlemi başarısız oldu. " + ex.Message });
+            }
         }
 
         [HttpGet]
-        public IActionResult GetAllUsers()
+        public async Task<IActionResult> GetAllUsers()
         {
-            var users = _userManager.Users.ToList();
-            return Ok(users);
+            try
+            {
+                return Ok(await _userService.GetAllUsersAsync());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { ErrorMessage = "Kullanıcıları listeleme işlemi başarısız oldu. " + ex.Message });
+            }
         }
-
     }
 }

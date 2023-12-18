@@ -38,6 +38,7 @@ builder.Services.AddScoped<IWordRepository, WordRepository>();
 builder.Services.AddScoped<IWordService, WordService>();
 builder.Services.AddScoped<ISentenceRepository, SentenceRepository>();
 builder.Services.AddScoped<ISentenceService, SentenceService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 
