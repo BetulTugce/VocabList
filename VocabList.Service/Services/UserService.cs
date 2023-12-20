@@ -75,5 +75,21 @@ namespace VocabList.Service.Services
                 Surname = user.Surname
             };
         }
+
+        public async Task UpdateRefreshTokenAsync(string refreshToken, AppUser user, DateTime accessTokenDate, int addOnAccessTokenDate)
+        {
+            if (user != null)
+            {
+                // RefreshTokena güncel değeri atanıyor.
+                user.RefreshToken = refreshToken;
+                // RefreshTokenın expire olacağı zaman ayarlanıyor. 
+                user.RefreshTokenEndDate = accessTokenDate.AddSeconds(addOnAccessTokenDate);
+                // Veritabanında ilgili kolonlar güncelleniyor.
+                await _userManager.UpdateAsync(user);
+            }
+            else
+                throw new Exception("Kullanıcı veya şifre hatalı!");
+        }
+
     }
 }
