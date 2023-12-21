@@ -38,5 +38,24 @@ namespace VocabList.API.Controllers
             };
             return Ok(response);
         }
+
+        // Bu endpoint, kullanıcıdan email bilgisini alıp veritabanında ilgili kullanıcıyı bulursa ResetToken oluşturarak kullanıcıya parola değişikliği için mail gönderiyor..
+        [HttpPost("password-reset")]
+        public async Task<IActionResult> PasswordReset(string email)
+        {
+            await _authService.PasswordResetAsnyc(email);
+            return Ok();
+        }
+
+        // Kullanıcı veritabanında kayıtlı ise ResetTokenı decode ederek doğrulama işlemini yürütüyor..
+        [HttpPost("verify-reset-token")]
+        public async Task<VerifyPasswordResetTokenResponse> VerifyResetToken([FromBody] VerifyPasswordResetToken request)
+        {
+            bool state = await _authService.VerifyResetTokenAsync(request.ResetToken, request.UserId);
+            return new()
+            {
+                State = state,
+            };
+        }
     }
 }

@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using VocabList.Core.Entities.Identity;
 using VocabList.Core.Services;
 using VocabList.Repository.Token;
+using VocabList.Service.Helpers;
+using VocabList.Service.Mail;
 
 namespace VocabList.Service.Services
 {
@@ -12,13 +14,15 @@ namespace VocabList.Service.Services
         readonly ITokenHandler _tokenHandler;
         readonly SignInManager<AppUser> _signInManager;
         readonly IUserService _userService;
+        readonly IMailService _mailService;
 
-        public AuthService(UserManager<AppUser> userManager, ITokenHandler tokenHandler, SignInManager<AppUser> signInManager, IUserService userService)
+        public AuthService(UserManager<AppUser> userManager, ITokenHandler tokenHandler, SignInManager<AppUser> signInManager, IUserService userService, IMailService mailService)
         {
             _userManager = userManager;
             _tokenHandler = tokenHandler;
             _signInManager = signInManager;
             _userService = userService;
+            _mailService = mailService;
         }
 
         // Username/e-posta ve parola ile giriş yapmak için..
@@ -47,6 +51,31 @@ namespace VocabList.Service.Services
             throw new Exception("Giriş başarısız! Lütfen bilgilerinizi kontrol edin.");
         }
 
+        // Kullanıcı veritabanında kayıtlı ise bir ResetToken oluşturup kullanıcıya mail atacak..
+        public async Task PasswordResetAsnyc(string email)
+        {
+            // Gelen email ile bir kullanıcı kayıtlı ise..
+            AppUser user = await _userManager.FindByEmailAsync(email);
+            if (user != null)
+            {
+                // ResetToken oluşturuluyor..
+                string resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+                #region Encode
+                // ResetToken byte dönüştürülüp diziye atanıyor..
+                //byte[] tokenBytes = Encoding.UTF8.GetBytes(resetToken);
+                // Reset token urlde taşınabilir bir stringe dönüştürerek şifreliyor..
+                //resetToken = WebEncoders.Base64UrlEncode(tokenBytes);
+                #endregion
+
+                // Token urlde taşınabilir bir stringe dönüştürülerek şifreleniyor, kullanıcı kendine gelen maille ilgili linke tıkladığında bu token decode edilecek ve doğrulanacak..
+                resetToken = resetToken.UrlEncode();
+
+                // Kullanıcıya parola değişikliği yapabilmesi için mail gönderiliyor..
+                await _mailService.SendPasswordResetMailAsync(email, user.Id, resetToken);
+            }
+        }
+
         // RefreshToken ile giriş yapmak için..
         public async Task<Core.DTOs.Token> RefreshTokenLoginAsync(string refreshToken)
         {
@@ -65,6 +94,27 @@ namespace VocabList.Service.Services
             }
             else // İlgili RefreshTokena sahip kullanıcı bulunamamışsa veya RefreshToken expire olmuşsa hata verir..
                 throw new Exception("Lütfen tekrar giriş yapın!");
+        }
+
+        // Kullanıcının parola değişikliği için ResetTokenı doğrulayacak olan method..
+        public async Task<bool> VerifyResetTokenAsync(string resetToken, string userId)
+        {
+            // UserId veritabanında kayıtlı mı kontrol ediliyor..
+            AppUser user = await _userManager.FindByIdAsync(userId);
+            if (user != null) // Kullanıcı bulunduysa..
+            {
+                //byte[] tokenBytes = WebEncoders.Base64UrlDecode(resetToken);
+                //resetToken = Encoding.UTF8.GetString(tokenBytes);
+                
+                // ResetToken decode ediliyor..
+                resetToken = resetToken.UrlDecode();
+
+                // ResetToken doğrulanıyor ve true ya da false şeklinde ilgili değeri dönüyor..
+                return await _userManager.VerifyUserTokenAsync(user, _userManager.Options.Tokens.PasswordResetTokenProvider, "ResetPassword", resetToken);
+            }
+
+            // Kullanıcı bulunamadıysa false dönüyor.
+            return false;
         }
     }
 }

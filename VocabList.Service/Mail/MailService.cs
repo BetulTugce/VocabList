@@ -41,5 +41,19 @@ namespace VocabList.Service.Mail
             smtp.Host = _configuration["Mail:Host"];
             await smtp.SendMailAsync(mail);
         }
+
+        public async Task SendPasswordResetMailAsync(string to, string userId, string resetToken)
+        {
+            StringBuilder mail = new();
+            mail.AppendLine("<strong>Merhaba,</strong><br>Parolanızı sıfırlama talebiniz için bir link gönderdik.<br><strong><a target=\"_blank\" href=\"");
+            mail.AppendLine(_configuration["BlazorServerClientUrl"]);
+            mail.AppendLine("/update-password/");
+            mail.AppendLine(userId);
+            mail.AppendLine("/");
+            mail.AppendLine(resetToken);
+            mail.AppendLine("\">Parolanızı yenilemek için tıklayınız...</a></strong><br><br><span style=\"font-size:12px;\">NOT : Parola sıfırlama isteğinde bulunmadıysanız, bu e-postayı dikkate almayınız.</span><br>Sevgiler..<br><br><br>BTD | VocabList");
+
+            await SendMailAsync(to, "Parola Sıfırlama İsteği", mail.ToString());
+        }
     }
 }
