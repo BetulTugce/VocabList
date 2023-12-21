@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using VocabList.Core.DTOs.Identity;
 using VocabList.Core.Services;
 
@@ -32,6 +33,7 @@ namespace VocabList.API.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(AuthenticationSchemes = "Admin")]
         public async Task<IActionResult> GetUser(string id)
         {
             try
@@ -52,6 +54,7 @@ namespace VocabList.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(AuthenticationSchemes = "Admin")]
         public async Task<IActionResult> GetAllUsers()
         {
             try
@@ -61,6 +64,20 @@ namespace VocabList.API.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { ErrorMessage = "Kullanıcıları listeleme işlemi başarısız oldu. " + ex.Message });
+            }
+        }
+
+        [HttpPost("update-password")]
+        public async Task<IActionResult> UpdatePassword([FromBody] UpdatePassword request)
+        {
+            if (request.Password.Equals(request.PasswordConfirm))
+            {
+                await _userService.UpdatePasswordAsync(request.UserId, request.ResetToken, request.Password);
+                return Ok();
+            }
+            else
+            {
+                throw new Exception($"Parolalar uyuşmuyor! Lütfen kontrol edin.");
             }
         }
     }

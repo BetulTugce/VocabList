@@ -9,5 +9,6 @@ namespace VocabList.Core.Services
         Task<CreateUserResponse> GetUserByIdAsync(string userId);
         Task<List<CreateUserResponse>> GetAllUsersAsync();
         Task UpdateRefreshTokenAsync(string refreshToken, AppUser user, DateTime accessTokenDate, int addOnAccessTokenDate);
+        Task UpdatePasswordAsync(string userId, string resetToken, string newPassword);
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using VocabList.Core.DTOs.Identity;
 using VocabList.Core.Entities.Identity;
 using VocabList.Core.Services;
+using VocabList.Service.Helpers;
 
 namespace VocabList.Service.Services
 {
@@ -91,5 +92,21 @@ namespace VocabList.Service.Services
                 throw new Exception("Kullanıcı veya şifre hatalı!");
         }
 
+        public async Task UpdatePasswordAsync(string userId, string resetToken, string newPassword)
+        {
+            AppUser user = await _userManager.FindByIdAsync(userId);
+            if (user != null)
+            {
+                // Kullanıcı bulunduysa resetToken decode ediliyor..
+                resetToken = resetToken.UrlDecode();
+                // Parola güncellemesi yapılıyor..
+                IdentityResult result = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
+                if (result.Succeeded)
+                    // Kullanıcının kimlik bilgilerindeki değişiklik sisteme yansıtılır, bu sayede resetToken çürütülür yani parola değiştirmek için aynı resetToken kullanılamaz.
+                    await _userManager.UpdateSecurityStampAsync(user);
+                else
+                    throw new Exception($"Parola değişikliği sırasında bir sorun oluştu, işlem başarısız!");
+            }
+        }
     }
 }
