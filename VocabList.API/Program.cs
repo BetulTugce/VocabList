@@ -8,11 +8,13 @@ using VocabList.Core.Authentications;
 using VocabList.Core.Entities.Identity;
 using VocabList.Core.Repositories;
 using VocabList.Core.Services;
+using VocabList.Core.Services.Configurations;
 using VocabList.Core.UnitOfWorks;
 using VocabList.Repository.Contexts;
 using VocabList.Repository.Repositories;
 using VocabList.Repository.Token;
 using VocabList.Repository.UnitOfWorks;
+using VocabList.Service.Configurations;
 using VocabList.Service.Mail;
 using VocabList.Service.Mapping;
 using VocabList.Service.Services;
@@ -50,6 +52,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IInternalAuthentication, AuthService>();
 builder.Services.AddScoped<ITokenHandler, VocabList.Service.Token.TokenHandler>();
 builder.Services.AddScoped<IMailService, MailService>();
+builder.Services.AddScoped<IApplicationService, ApplicationService>();
 
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     policy.WithOrigins("http://localhost:4200", "https://localhost:4200").AllowAnyHeader().AllowAnyMethod().AllowCredentials()
