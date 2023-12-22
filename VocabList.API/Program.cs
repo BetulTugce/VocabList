@@ -53,6 +53,7 @@ builder.Services.AddScoped<IInternalAuthentication, AuthService>();
 builder.Services.AddScoped<ITokenHandler, VocabList.Service.Token.TokenHandler>();
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     policy.WithOrigins("http://localhost:4200", "https://localhost:4200").AllowAnyHeader().AllowAnyMethod().AllowCredentials()

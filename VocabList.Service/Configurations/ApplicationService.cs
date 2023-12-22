@@ -11,7 +11,7 @@ namespace VocabList.Service.Configurations
 {
     public class ApplicationService : IApplicationService
     {
-        // Authorize gerektiren bütün endpointlerin bilgileri menu bazlı alınıyor..
+        // Authorize gerektiren, rol tabanlı yetkilendirmeye tabi tutulacak bütün endpointlerin bilgileri menu bazlı alınıyor..
         public List<Menu> GetAuthorizeDefinitionEndpoints(Type type)
         {
             Assembly assembly = Assembly.GetAssembly(type);
