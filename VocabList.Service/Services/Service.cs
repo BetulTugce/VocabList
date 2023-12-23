@@ -46,6 +46,11 @@ namespace VocabList.Service.Services
             return await _repository.GetByIdAsync(id);
         }
 
+        public async Task<T> GetSingleAsync(Expression<Func<T, bool>> method, bool tracking = true)
+        {
+            return await _repository.GetSingleAsync(method, tracking);
+        }
+
         public async Task<int> GetTotalCountAsync()
         {
             return await _repository.GetTotalCountAsync();

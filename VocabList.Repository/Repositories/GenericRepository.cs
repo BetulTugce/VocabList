@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using VocabList.Core.Repositories;
 using VocabList.Repository.Contexts;
 
@@ -37,13 +38,22 @@ namespace VocabList.Repository.Repositories
         // Tüm nesneleri getirir ve bu nesnelerin izlenmesini devre dışı bırakır.
         public IQueryable<T> GetAll()
         {
-            return _dbSet.AsNoTracking().AsQueryable();
+            //return _dbSet.AsNoTracking().AsQueryable();
+            return _dbSet.AsQueryable();
         }
 
         // Belirli bir ID'ye sahip nesneyi asenkron olarak getirir.
         public async Task<T> GetByIdAsync(int id)
         {
             return await _dbSet.FindAsync(id);
+        }
+
+        public async Task<T> GetSingleAsync(Expression<Func<T, bool>> method, bool tracking = true)
+        {
+            var query = _dbSet.AsQueryable();
+            if (!tracking)
+                query = _dbSet.AsNoTracking();
+            return await query.FirstOrDefaultAsync(method);
         }
 
         // Tüm nesneleri alır ve asenkron olarak sayısını getirir.

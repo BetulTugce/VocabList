@@ -18,6 +18,9 @@ namespace VocabList.Core.Repositories
 
         // Belirli bir koşula uyan nesne var mı yok mu kontrolünü asenkron olarak yapar.
         Task<bool> AnyAsync(Expression<Func<T, bool>> expression);
+
+        // Belirtilen koşulu sağlayan ilk öğeyi asenkron olarak getirir.
+        Task<T> GetSingleAsync(Expression<Func<T, bool>> method, bool tracking = true);
         #endregion
 
 
