@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VocabList.Core.DTOs.Identity;
 using VocabList.Core.Services;
+using VocabList.Repository.CustomAttributes;
+using VocabList.Repository.Enums;
 
 
 namespace VocabList.API.Controllers
@@ -53,13 +56,28 @@ namespace VocabList.API.Controllers
             }
         }
 
+        //[HttpGet]
+        //[Authorize(AuthenticationSchemes = "Admin")]
+        //public async Task<IActionResult> GetAllUsers()
+        //{
+        //    try
+        //    {
+        //        return Ok(await _userService.GetAllUsersAsync());
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { ErrorMessage = "Kullanıcıları listeleme işlemi başarısız oldu. " + ex.Message });
+        //    }
+        //}
+
         [HttpGet]
         [Authorize(AuthenticationSchemes = "Admin")]
-        public async Task<IActionResult> GetAllUsers()
+        [AuthorizeDefinition(ActionType = ActionType.Reading, Definition = "Get All Users", Menu = "Users")]
+        public async Task<IActionResult> GetAllUsers([FromQuery] GetAllUsersQueryRequest request)
         {
             try
             {
-                return Ok(await _userService.GetAllUsersAsync());
+                return Ok(await _userService.GetAllUsersAsync(request.Page, request.Size));
             }
             catch (Exception ex)
             {

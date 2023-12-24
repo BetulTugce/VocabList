@@ -58,12 +58,12 @@ namespace VocabList.Service.Services
             return response;
         }
 
-        public async Task<List<CreateUserResponse>> GetAllUsersAsync()
-        {
-            // Tüm kullanıcıları getirir, hepsini MapToUserDto metodunu kullanarak CreateUserResponse tipine dönüştürür ve bir liste oluşturur.
-            var users = await _userManager.Users.ToListAsync();
-            return users.Select(user => MapToUserDto(user)).ToList();
-        }
+        //public async Task<List<CreateUserResponse>> GetAllUsersAsync()
+        //{
+        //    // Tüm kullanıcıları getirir, hepsini MapToUserDto metodunu kullanarak CreateUserResponse tipine dönüştürür ve bir liste oluşturur.
+        //    var users = await _userManager.Users.ToListAsync();
+        //    return users.Select(user => MapToUserDto(user)).ToList();
+        //}
 
         private CreateUserResponse MapToUserDto(AppUser user)
         {
@@ -107,6 +107,39 @@ namespace VocabList.Service.Services
                 else
                     throw new Exception($"Parola değişikliği sırasında bir sorun oluştu, işlem başarısız!");
             }
+        }
+
+        public async Task<List<CreateUserResponse>> GetAllUsersAsync(int page, int size)
+        {
+            List<AppUser> users;
+            if (page <= 0 && size > 0)
+            {
+                // Sayfa dikkate alınmadan belirtilen size kadar kullanıcı getirir.
+                users = await _userManager.Users.Take(size).ToListAsync();
+            }
+            else if (page <= 0 && size <= 0)
+            {
+                // Tüm kullanıcıları getirir.
+                users = await _userManager.Users.ToListAsync();
+            }
+            else if (page > 0 && size <= 0)
+            {
+                size = 10;
+                users = await _userManager.Users
+                  .Skip((page - 1) * size)
+                  .Take(size)
+                  .ToListAsync();
+            }
+            else
+            {
+                users = await _userManager.Users
+                  .Skip((page - 1) * size)
+                  .Take(size)
+                  .ToListAsync();
+                
+            }
+            // MapToUserDto metodunu kullanarak CreateUserResponse tipine dönüştürür ve bir liste oluşturur.
+            return users.Select(user => MapToUserDto(user)).ToList();
         }
     }
 }
