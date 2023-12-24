@@ -103,5 +103,30 @@ namespace VocabList.API.Controllers
                 throw new Exception($"Parolalar uyuşmuyor! Lütfen kontrol edin.");
             }
         }
+
+        [HttpGet("get-roles-to-user/{userIdOrName}")]
+        [Authorize(AuthenticationSchemes = "Admin")]
+        [AuthorizeDefinition(ActionType = ActionType.Reading, Definition = "Get Roles To Users", Menu = "Users")]
+        public async Task<IActionResult> GetRolesToUser(string userIdOrName)
+        {
+            string[] userRoles = await _userService.GetRolesToUserAsync(userIdOrName);
+            return Ok(userRoles);
+        }
+
+        [HttpPost("assign-role-to-user")]
+        [Authorize(AuthenticationSchemes = "Admin")]
+        [AuthorizeDefinition(ActionType = ActionType.Reading, Definition = "Assign Role To User", Menu = "Users")]
+        public async Task<IActionResult> AssignRoleToUser(AssignRoleToUserRequest request)
+        {
+            try
+            {
+                await _userService.AssignRoleToUserAsnyc(request.UserId, request.Roles);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { ErrorMessage = "İşlem başarısız! " + ex.Message });
+            }
+        }
     }
 }

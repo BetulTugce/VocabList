@@ -14,5 +14,7 @@ namespace VocabList.Core.Services
         Task UpdatePasswordAsync(string userId, string resetToken, string newPassword);
         //int TotalUsersCount { get; }
         Task<int> GetTotalCountAsync();
+        Task AssignRoleToUserAsnyc(string userId, string[] roles);
+        Task<string[]> GetRolesToUserAsync(string userIdOrName);
     }
 }
