@@ -77,7 +77,12 @@ namespace VocabList.API.Controllers
         {
             try
             {
-                return Ok(await _userService.GetAllUsersAsync(request.Page, request.Size));
+                List<CreateUserResponse> users = await _userService.GetAllUsersAsync(request.Page, request.Size);
+                GetAllUsersQueryResponse response = new(){
+                    TotalUsersCount = await _userService.GetTotalCountAsync(),
+                    Users = users
+                };
+                return Ok(response);
             }
             catch (Exception ex)
             {

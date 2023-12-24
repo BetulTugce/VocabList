@@ -11,6 +11,8 @@ namespace VocabList.Service.Services
     {
         readonly UserManager<AppUser> _userManager;
 
+        //public int TotalUsersCount => _userManager.Users.Count();
+
         public UserService(UserManager<AppUser> userManager)
         {
             // Dependency Injection ile UserManager<AppUser> sınıfının bir örneğini bu servise enjekte eder.
@@ -140,6 +142,11 @@ namespace VocabList.Service.Services
             }
             // MapToUserDto metodunu kullanarak CreateUserResponse tipine dönüştürür ve bir liste oluşturur.
             return users.Select(user => MapToUserDto(user)).ToList();
+        }
+
+        public async Task<int> GetTotalCountAsync()
+        {
+            return await _userManager.Users.CountAsync();
         }
     }
 }
