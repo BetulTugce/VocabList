@@ -5,6 +5,7 @@ using VocabList.Core.Entities;
 using VocabList.Core.Entities.Identity;
 using VocabList.Core.Repositories;
 using VocabList.Core.Services;
+using VocabList.Service.Exceptions;
 using VocabList.Service.Helpers;
 
 namespace VocabList.Service.Services
@@ -25,30 +26,56 @@ namespace VocabList.Service.Services
 
         public async Task<CreateUserResponse> CreateAsync(CreateUser model)
         {
-            // Yeni bir kullanıcı oluşturur.
-            IdentityResult result = await _userManager.CreateAsync(new()
+            // E-posta adresinin benzersiz olup olmadığını kontrol eder..
+            var existingEmailUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingEmailUser != null)
             {
-                Id = Guid.NewGuid().ToString(), // Yeni bir GUID oluşturarak kullanıcıya bir ID atar.
-                UserName = model.Username,
-                Email = model.Email,
-                Name = model.Name,
-                Surname = model.Surname,
-            }, model.Password);
+                // Eğer e-posta adresi başka bir kullanıcı tarafından kullanılıyorsa hata döndürür..
+                //throw new UserCreationException("Bu e-posta adresi zaten kullanımda.", 409.ToString());
 
-            // İşlem başarılıysa, oluşturulan kullanıcının bilgilerini alır ve CreateUserResponse tipine dönüştürür.
-            if (result.Succeeded)
-            {
-                var user = await _userManager.FindByNameAsync(model.Username);
-                CreateUserResponse response = MapToUserDto(user);
-                return response;
+                return new()
+                {
+                    
+                };
             }
             else
             {
-                // İşlem başarısız olursa, IdentityResult nesnesindeki hata mesajlarını birleştirerek bir hata fırlatır.
-                var errors = result.Errors.Select(error => error.Description);
-                var errorMessage = string.Join(", ", errors);
+                // Yeni bir kullanıcı oluşturur.
+                IdentityResult result = await _userManager.CreateAsync(new()
+                {
+                    Id = Guid.NewGuid().ToString(), // Yeni bir GUID oluşturarak kullanıcıya bir ID atar.
+                    UserName = model.Username,
+                    Email = model.Email,
+                    Name = model.Name,
+                    Surname = model.Surname,
+                }, model.Password);
 
-                throw new Exception($"Kullanıcı kayıt işlemi başarısız oldu. Hata: {errorMessage}");
+                // İşlem başarılıysa, oluşturulan kullanıcının bilgilerini alır ve CreateUserResponse tipine dönüştürür.
+                if (result.Succeeded)
+                {
+                    var user = await _userManager.FindByNameAsync(model.Username);
+                    CreateUserResponse response = MapToUserDto(user);
+                    return response;
+                }
+                else
+                {
+                    // İşlem başarısız olursa, IdentityResult nesnesindeki hata kodlarına özel durumları ele alır.
+
+                    foreach (var error in result.Errors)
+                    {
+                        if (error.Code == "DuplicateUserName")
+                        {
+                            // Bu kullanıcı adı zaten kullanımda ise 409 Conflict durum kodu ile birlikte hata döner.
+                            throw new UserCreationException("Bu kullanıcı adı zaten kullanımda.", 409.ToString());
+                        }
+                    }
+
+                    // İşlem başarısız olursa, IdentityResult nesnesindeki hata mesajlarını birleştirerek bir hata fırlatır.
+                    var errors = result.Errors.Select(error => error.Description);
+                    var errorMessage = string.Join(", ", errors);
+
+                    throw new Exception($"Kullanıcı kayıt işlemi başarısız oldu. Hata: {errorMessage}");
+                }
             }
         }
 

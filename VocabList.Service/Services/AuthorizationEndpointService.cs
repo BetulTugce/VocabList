@@ -37,6 +37,7 @@ namespace VocabList.Service.Services
             {
                 _menu = new()
                 {
+                    //Id = Guid.NewGuid(),
                     Name = menu
                 };
                 await _menuService.AddAsync(_menu);

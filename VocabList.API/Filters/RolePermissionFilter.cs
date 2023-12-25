@@ -74,7 +74,7 @@ namespace VocabList.API.Filters
                 // httpAttribute işaretlenmemişse varsayılan olarak GET atanıyor..
                 var code = $"{(httpAttribute != null ? httpAttribute.HttpMethods.First() : HttpMethods.Get)}.{attribute.ActionType}.{attribute.Definition.Replace(" ", "")}";
 
-                //
+                // Endpointe atanan rollerden birisi ile kullanıcının sahip olduğu rollerden kesişen var mı kontrol ediliyor..
                 var hasRole = await _userService.HasRolePermissionToEndpointAsync(name, code);
 
                 // Rol yoksa yetkin yok..

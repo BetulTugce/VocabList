@@ -5,6 +5,7 @@ using VocabList.Core.DTOs.Identity;
 using VocabList.Core.Services;
 using VocabList.Repository.CustomAttributes;
 using VocabList.Repository.Enums;
+using VocabList.Service.Exceptions;
 
 
 namespace VocabList.API.Controllers
@@ -21,17 +22,26 @@ namespace VocabList.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateUser(CreateUser model)
+        public async Task<IActionResult> CreateUser([FromBody] CreateUser model)
         {
             try
             {
                 var createdUser = await _userService.CreateAsync(model);
-                return CreatedAtAction(nameof(CreateUser), new { id = createdUser.Id }, createdUser);
+                if (createdUser is not null)
+                {
+                    return CreatedAtAction(nameof(CreateUser), new { id = createdUser.Id }, createdUser);
+                }
+                return Created(string.Empty, createdUser);
+            }
+            catch (UserCreationException ex)
+            {
+                // UserCreationException'dan StatusCode'u alarak uygun HTTP durum kodunu döner.
+                return StatusCode(int.Parse(ex.StatusCode), new { ErrorMessage = ex.Message });
             }
             catch (Exception ex)
             {
-                //return StatusCode(500, new { ErrorMessage = "Kullanıcı kayıt işlemi başarısız oldu. " + ex.Message });
-                return StatusCode(500, new { ex.Message });
+                // Genel hata durumu için 500 Internal Server Error döner.
+                return StatusCode(500, new { ErrorMessage = "Kullanıcı kayıt işlemi başarısız oldu. " + ex.Message });
             }
         }
 
