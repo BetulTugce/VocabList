@@ -7,6 +7,7 @@ namespace VocabList.Core.Services
     {
         Task<CreateUserResponse> CreateAsync(CreateUser model);
         Task<CreateUserResponse> GetUserByIdAsync(string userId);
+        Task<CreateUserResponse> GetUserByNameorEmailAsync(string userName);
         //Task<List<CreateUserResponse>> GetAllUsersAsync();
         //Task<List<ListUser>> GetAllUsersAsync(int page, int size);
         Task<List<CreateUserResponse>> GetAllUsersAsync(int page, int size);
@@ -16,5 +17,6 @@ namespace VocabList.Core.Services
         Task<int> GetTotalCountAsync();
         Task AssignRoleToUserAsnyc(string userId, string[] roles);
         Task<string[]> GetRolesToUserAsync(string userIdOrName);
+        Task<bool> HasRolePermissionToEndpointAsync(string name, string code);
     }
 }

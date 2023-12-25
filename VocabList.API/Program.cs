@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
+using System.Security.Claims;
 using System.Text;
+using VocabList.API.Filters;
 using VocabList.Core.Authentications;
 using VocabList.Core.Entities.Identity;
 using VocabList.Core.Repositories;
@@ -23,7 +25,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<RolePermissionFilter>();
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -66,7 +71,7 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 
 // Uygulamaya token üzerinden bir istek gelirse tokený doðrularken JWT olduðunu bilecek ve buradaki konfigürasyonlar üzerinden tokený doðrulayacak.
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer("Admin", options =>
+    .AddJwtBearer(builder.Configuration["Administrator:Role"], options =>
     {
         // JWT ile ilgili temel konfigürasyonlar..
         options.TokenValidationParameters = new()
@@ -81,10 +86,48 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Token:Issuer"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Token:SecurityKey"])),
             LifetimeValidator = (notBefore, expires, securityToken, validationParameters) => expires != null ? expires > DateTime.UtcNow : false,
+
+            NameClaimType = ClaimTypes.Name // JWT üzerinde Name claime karþýlýk gelen deðeri User.Identity.Name propertysinden elde edebiliriz.
         };
     });
 
 var app = builder.Build();
+
+// API ayaða kalkarken appsettings.jsondaki Administrator altýndaki Emaile sahip kullanýcý yoksa default olarak eklenip Administrator rolü atanýyor..
+using (var serviceScope = app.Services.CreateScope())
+{
+    var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+    var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
+    var user = userManager.FindByEmailAsync(builder.Configuration["Administrator:Email"]).Result;
+    if (user == null)
+    {
+        IdentityResult result = await userManager.CreateAsync(new()
+        {
+            Id = Guid.NewGuid().ToString(),
+            Email = builder.Configuration["Administrator:Email"],
+            Name = builder.Configuration["Administrator:Name"],
+            Surname = builder.Configuration["Administrator:Surname"],
+            UserName = builder.Configuration["Administrator:Username"],
+        }, builder.Configuration["Administrator:Password"]);
+
+        if (result.Succeeded)
+        {
+            AppUser? defaultUser = await userManager.FindByEmailAsync(builder.Configuration["Administrator:Email"]);
+            if (roleManager.FindByNameAsync(builder.Configuration["Administrator:Role"]).Result == null)
+            {
+                AppRole role = new AppRole();
+                role.Id = Guid.NewGuid().ToString();
+                role.Name = builder.Configuration["Administrator:Role"];
+
+                var createdRole = roleManager.CreateAsync(role).Result;
+                if (createdRole.Succeeded)
+                {
+                    userManager.AddToRoleAsync(defaultUser, builder.Configuration["Administrator:Role"]).Wait();
+                }
+            }
+        }
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -57,6 +57,19 @@ namespace VocabList.Service.Services
             }
         }
 
+        public async Task<bool> HasRoleByNameAsync(string name)
+        {
+            AppRole appRole = await _roleManager.FindByNameAsync(name);
+            if (appRole is not null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         public async Task<bool> UpdateRole(string id, string name)
         {
             AppRole role = await _roleManager.FindByIdAsync(id);

@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VocabList.Core.DTOs.Identity;
+using VocabList.Core.Entities;
 using VocabList.Core.Entities.Identity;
+using VocabList.Core.Repositories;
 using VocabList.Core.Services;
 using VocabList.Service.Helpers;
 
@@ -10,13 +12,15 @@ namespace VocabList.Service.Services
     public class UserService : IUserService
     {
         readonly UserManager<AppUser> _userManager;
+        readonly IEndpointRepository _endpointRepository;
 
         //public int TotalUsersCount => _userManager.Users.Count();
 
-        public UserService(UserManager<AppUser> userManager)
+        public UserService(UserManager<AppUser> userManager, IEndpointRepository endpointRepository)
         {
             // Dependency Injection ile UserManager<AppUser> sınıfının bir örneğini bu servise enjekte eder.
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _endpointRepository = endpointRepository;
         }
 
         public async Task<CreateUserResponse> CreateAsync(CreateUser model)
@@ -173,6 +177,75 @@ namespace VocabList.Service.Services
                 return userRoles.ToArray();
             }
             return new string[] { };
+        }
+
+        public async Task<bool> HasRolePermissionToEndpointAsync(string name, string code)
+        {
+            // Kullanıcının nameine karşılık tüm rolleri çekilir..
+            var userRoles = await GetRolesToUserAsync(name);
+
+            // Kullanıcının rolü yoksa yetkisi yok demektir..
+            if (!userRoles.Any())
+                return false;
+
+            // Codeu parametrede gelen codea karşılık olan endpoint rollerle beraber elde edilir..
+            Endpoint? endpoint = await _endpointRepository.GetAll()
+                     .Include(e => e.Roles)
+                     .FirstOrDefaultAsync(e => e.Code == code);
+
+            // Endpoint nullsa yetki yok..
+            if (endpoint == null)
+                return false;
+
+            var hasRole = false;
+
+            // Endpointe atanan rollerin sadece isimleri alınıyor..
+            var endpointRoles = endpoint.Roles.Select(r => r.Name);
+
+            //foreach (var userRole in userRoles)
+            //{
+            //    if (!hasRole)
+            //    {
+            //        foreach (var endpointRole in endpointRoles)
+            //            if (userRole == endpointRole)
+            //            {
+            //                hasRole = true;
+            //                break;
+            //            }
+            //    }
+            //    else
+            //        break;
+            //}
+
+            //return hasRole;
+
+            // Eğer endpointe atanan rollerden birisi ile kullanıcının sahip olduğu rol ya da rollerden biri uyuşuyorsa yetkisi var demektir..
+            foreach (var userRole in userRoles)
+            {
+                foreach (var endpointRole in endpointRoles)
+                    if (userRole == endpointRole)
+                        return true;
+            }
+
+            // Yetki yok..
+            return false;
+        }
+
+        public async Task<CreateUserResponse> GetUserByNameorEmailAsync(string userNameorEmail)
+        {
+            // İlgili idye sahip kullanıcıyı bulur ve CreateUserResponse tipine dönüştürerek geriye döndürür.
+            var user = await _userManager.FindByEmailAsync(userNameorEmail);
+            if (user == null)
+            {
+                user = await _userManager.FindByNameAsync(userNameorEmail);
+                if (user == null)
+                {
+                    return null;
+                }
+               
+            }
+            CreateUserResponse response = MapToUserDto(user);
+            return response;
         }
     }
 }

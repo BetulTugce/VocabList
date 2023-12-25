@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using VocabList.Core.Entities.Identity;
@@ -36,7 +37,8 @@ namespace VocabList.Service.Token
                 issuer: _configuration["Token:Issuer"],
                 expires: token.Expiration,
                 notBefore: DateTime.UtcNow, //O anki tarih bilgisini vererek token üretildiği an devreye girmesini sağlar.
-                signingCredentials: signingCredentials
+                signingCredentials: signingCredentials, 
+                claims: new List<Claim> { new(ClaimTypes.Name, appUser.UserName) }
                 );
 
             // Token oluşturucu sınıfından bir örnek alınıyor.
