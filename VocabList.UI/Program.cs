@@ -2,8 +2,19 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor.Services;
 using VocabList.UI.Data;
+using VocabList.UI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddHttpClient<UserApiService>(options =>
+{
+    options.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]);
+});
+
+builder.Services.AddHttpClient<AuthApiService>(options =>
+{
+    options.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]);
+});
 
 // Add services to the container.
 builder.Services.AddRazorPages();
