@@ -96,10 +96,10 @@ namespace VocabList.Service.Services
         }
 
         // RefreshToken ile giriş yapmak için..
-        public async Task<Core.DTOs.Token> RefreshTokenLoginAsync(string refreshToken)
+        public async Task<LoginUserResponse> RefreshTokenLoginAsync(string refreshToken)
         {
             // İlgili RefreshTokena sahip kullanıcı aranıyor..
-            AppUser? user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+            AppUser user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
 
             // Eğer kullanıcı bulunmuşsa ve RefreshToken expire olmamışsa..
             if (user != null && user?.RefreshTokenEndDate > DateTime.UtcNow)
@@ -109,7 +109,12 @@ namespace VocabList.Service.Services
 
                 // User tablosundaki RefreshToken ve RefreshTokenın expire edileceği zaman oluşturulan token bilgisinden alınarak güncelleniyor..
                 await _userService.UpdateRefreshTokenAsync(token.RefreshToken, user, token.Expiration, 300);
-                return token;
+                LoginUserResponse response = new()
+                {
+                    Token = token,
+                    User = MapToUserDto(user)
+                };
+                return response;
             }
             else // İlgili RefreshTokena sahip kullanıcı bulunamamışsa veya RefreshToken expire olmuşsa hata verir..
                 throw new Exception("Lütfen tekrar giriş yapın!");

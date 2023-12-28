@@ -29,12 +29,13 @@ namespace VocabList.API.Controllers
         }
 
         [HttpPost("[action]")]
-        public async Task<IActionResult> RefreshTokenLogin([FromBody] RefreshTokenLogin refreshTokenLogin)
+        public async Task<IActionResult> RefreshTokenLogin(RefreshTokenLogin refreshTokenLogin)
         {
-            Token token = await _authService.RefreshTokenLoginAsync(refreshTokenLogin.RefreshToken);
+            var data = await _authService.RefreshTokenLoginAsync(refreshTokenLogin.RefreshToken);
             LoginUserResponse response = new()
             {
-                Token = token
+                Token = data.Token,
+                User = data.User
             };
             return Ok(response);
         }

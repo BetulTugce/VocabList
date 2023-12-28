@@ -6,6 +6,6 @@ namespace VocabList.Core.Authentications
     public interface IInternalAuthentication
     {
         Task<LoginUserResponse> LoginAsync(string usernameOrEmail, string password, int accessTokenLifeTime);
-        Task<Token> RefreshTokenLoginAsync(string refreshToken);
+        Task<LoginUserResponse> RefreshTokenLoginAsync(string refreshToken);
     }
 }

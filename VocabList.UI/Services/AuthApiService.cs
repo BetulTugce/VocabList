@@ -1,4 +1,5 @@
 ﻿using VocabList.UI.Data;
+using VocabList.UI.Data.Users;
 
 namespace VocabList.UI.Services
 {
@@ -17,6 +18,23 @@ namespace VocabList.UI.Services
         {
             //İlgili urle verilen model verilerine sahip bir json içeriği gönderiliyor..
             var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}Auth/Login", model);
+            if (response.IsSuccessStatusCode)
+            {
+                ////HTTP yanıtının başarı durum kodu içerip içermediği kontrol edilir..
+                //response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<LoginUserResponse>();
+            }
+            else
+            {
+                return null;
+            }
+
+        }
+
+        public async Task<LoginUserResponse> RefreshTokenLoginAsync(RefreshTokenLoginRequest model)
+        {
+            //İlgili urle verilen model verilerine sahip bir json içeriği gönderiliyor..
+            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}Auth/RefreshTokenLogin", model);
             if (response.IsSuccessStatusCode)
             {
                 ////HTTP yanıtının başarı durum kodu içerip içermediği kontrol edilir..
