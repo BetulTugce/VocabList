@@ -21,6 +21,13 @@
                 <MudTextField T="string" Label="Parola" @bind-Value="requestModel.Password" InputType="InputType.Password" Required="true" RequiredError="Parola zorunlu!" />
                 <br />
                 <div class="d-flex align-center justify-space-between">
+                    <div class="d-flex align-center"></div>
+                    <div class="d-flex align-center">
+                        <MudLink Target="_blank" Href="/" Typo="Typo.body2">Şifremi unuttum</MudLink>
+                    </div>
+                </div>
+                <br />
+                <div class="d-flex align-center justify-space-between">
                     <div class="d-flex align-center">
                         @* <MudCheckBox T="bool" Required="true" RequiredError="Kabul etmelisin!" />
                         <MudLink Href="/KVKK" Typo="Typo.body2">Kişisel Veriler Hakkındaki Protokolü okudum, kabul ediyorum.</MudLink> *@
@@ -81,6 +88,10 @@
                 severity = Severity.Success;
                 resultMessage = "Giriş başarılı! Anasayfaya yönlendiriliyorsunuz..";
                 ShowNotification(resultMessage, severity);
+                
+                // Anasayfaya yönlendirmeden evvel 5sn gecikme eklendi. Kaldırıldığı zaman navigate ederken forcereload kullanıldığı için notification görüntülenemiyor..
+                await Task.Delay(5000);
+
                 navigationManager.NavigateTo("/", true);
             }
             else

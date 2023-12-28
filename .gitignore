@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /VocabList.API/appsettings.json
 /VocabList.Repository/Migrations
+/VocabList.UI/appsettings.json
