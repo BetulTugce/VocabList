@@ -42,7 +42,7 @@ namespace VocabList.API.Controllers
             {
                 return NotFound(model);
             }
-            model.UpdatedDate = DateTime.Now;
+            model.UpdatedDate = DateTime.UtcNow;
             await _wordListService.UpdateAsync(_mapper.Map<WordList>(model));
             return Ok();
         }
