@@ -1,0 +1,42 @@
+﻿@* @page "/logout" *@
+@using VocabList.UI.Utilities
+
+<button @onclick=LogOut>Logout</button>
+
+@code {
+    [Inject]
+    AuthenticationStateProvider authenticationStateProvider { get; set; }
+
+    [Inject]
+    ILocalStorageService localStorageService { get; set; }
+
+    [Inject]
+    HttpClient Client { get; set; }
+
+    [Inject]
+    NavigationManager navigationManager { get; set; }
+
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     // await localStorageService.RemoveItemAsync("AccessToken");
+    //     // await localStorageService.RemoveItemAsync("Username");
+    //     await localStorageService.ClearAsync();
+
+    //     (authenticationStateProvider as AuthStateProvider).NotifyUserLogout();
+    //     Client.DefaultRequestHeaders.Authorization = null;
+
+    //     navigationManager.NavigateTo("/login");
+    // }
+
+    async Task LogOut()
+    {
+        // await localStorageService.RemoveItemAsync("AccessToken");
+        // await localStorageService.RemoveItemAsync("Username");
+        await localStorageService.ClearAsync();
+
+        (authenticationStateProvider as AuthStateProvider).NotifyUserLogout();
+        Client.DefaultRequestHeaders.Authorization = null;
+
+        navigationManager.NavigateTo("/login", true);
+    }
+}

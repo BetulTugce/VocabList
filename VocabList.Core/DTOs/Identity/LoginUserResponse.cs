@@ -3,5 +3,6 @@
     public class LoginUserResponse
     {
         public Token Token { get; set; }
+        public CreateUserResponse User { get; set; }
     }
 }

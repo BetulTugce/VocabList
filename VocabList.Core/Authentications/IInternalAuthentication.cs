@@ -1,10 +1,11 @@
 ﻿using VocabList.Core.DTOs;
+using VocabList.Core.DTOs.Identity;
 
 namespace VocabList.Core.Authentications
 {
     public interface IInternalAuthentication
     {
-        Task<Token> LoginAsync(string usernameOrEmail, string password, int accessTokenLifeTime);
+        Task<LoginUserResponse> LoginAsync(string usernameOrEmail, string password, int accessTokenLifeTime);
         Task<Token> RefreshTokenLoginAsync(string refreshToken);
     }
 }

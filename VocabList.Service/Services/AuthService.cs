@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using VocabList.Core.DTOs.Identity;
 using VocabList.Core.Entities.Identity;
 using VocabList.Core.Services;
 using VocabList.Repository.Token;
@@ -26,7 +27,7 @@ namespace VocabList.Service.Services
         }
 
         // Username/e-posta ve parola ile giriş yapmak için..
-        public async Task<Core.DTOs.Token> LoginAsync(string usernameOrEmail, string password, int accessTokenLifeTime)
+        public async Task<LoginUserResponse> LoginAsync(string usernameOrEmail, string password, int accessTokenLifeTime)
         {
             // Önce kullanıcı adı o yoksa e-posta ile kimlik doğrulama yapılıyor.
             AppUser user = await _userManager.FindByNameAsync(usernameOrEmail);
@@ -46,9 +47,27 @@ namespace VocabList.Service.Services
                 // User tablosundaki RefreshToken ve bu tokenın expire edileceği zaman güncelleniyor..
                 await _userService.UpdateRefreshTokenAsync(token.RefreshToken, user, token.Expiration, 15);
 
-                return token;
+                LoginUserResponse response = new()
+                {
+                    Token = token,
+                    User = MapToUserDto(user)
+                };
+                return response;
+                
             }
             throw new Exception("Giriş başarısız! Lütfen bilgilerinizi kontrol edin.");
+        }
+
+        public CreateUserResponse MapToUserDto(AppUser user)
+        {
+            return new CreateUserResponse
+            {
+                Id = user.Id,
+                Username = user.UserName,
+                Email = user.Email,
+                Name = user.Name,
+                Surname = user.Surname
+            };
         }
 
         // Kullanıcı veritabanında kayıtlı ise bir ResetToken oluşturup kullanıcıya mail atacak..

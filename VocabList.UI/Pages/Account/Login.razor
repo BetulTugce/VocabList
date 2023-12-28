@@ -6,9 +6,11 @@
 @using System.ComponentModel.DataAnnotations
 @using VocabList.UI.Data
 @using VocabList.UI.Services
+@using VocabList.UI.Utilities
 @inject AuthApiService _authApiService
 @inject NavigationManager navigationManager
 @inject ISnackbar SnackbarService
+@inject Blazored.LocalStorage.ILocalStorageService localStorageService
 
 <MudGrid Class="d-flex align-center justify-center">
     <MudItem xs="12" sm="7">
@@ -52,6 +54,12 @@
     Severity severity = new();
     LoginUserRequest requestModel = new LoginUserRequest();
 
+    [Inject]
+    HttpClient Client { get; set; }
+
+    [Inject]
+    AuthenticationStateProvider authenticationStateProvider { get; set; }
+
     async Task LoginAsync()
     {
         try
@@ -61,11 +69,19 @@
             if (response is not null)
             {
                 LoginUserResponse responseModel = response;
-                // TODO: Dönen responsedaki accessToken değeri localstoragea kayıt edilecek..
+                await localStorageService.SetItemAsync("AccessToken", responseModel.Token.AccessToken);
+                await localStorageService.SetItemAsync("Username", responseModel.User.Username);
+                StateHasChanged();
+                // await localStorageService.SetItemAsync("Email", responseModel.User.Email);
+                // await localStorageService.SetItemAsync("RefreshToken", responseModel.Token.RefreshToken);
+
+                (authenticationStateProvider as AuthStateProvider).NotifyUserLogin(responseModel.User.Username);
+                Client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", responseModel.Token.AccessToken);
+
                 severity = Severity.Success;
                 resultMessage = "Giriş başarılı! Anasayfaya yönlendiriliyorsunuz..";
                 ShowNotification(resultMessage, severity);
-                navigationManager.NavigateTo("/");
+                navigationManager.NavigateTo("/", true);
             }
             else
             {  // response null ise..
@@ -88,4 +104,5 @@
         SnackbarService.Add(resultMessage, severity);
     }
 
+    //TODO: Bu sayfaya parolamı unuttum sayfası için bağlantı eklenecek..
 }

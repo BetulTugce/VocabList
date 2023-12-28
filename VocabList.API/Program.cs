@@ -25,10 +25,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers(options =>
-{
-    options.Filters.Add<RolePermissionFilter>();
-});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -68,7 +65,10 @@ builder.Services.AddScoped<IAuthorizationEndpointService, AuthorizationEndpointS
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     policy.WithOrigins("http://localhost:4200", "https://localhost:4200").AllowAnyHeader().AllowAnyMethod().AllowCredentials()
 ));
-
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<RolePermissionFilter>();
+});
 // Uygulamaya token üzerinden bir istek gelirse tokený doðrularken JWT olduðunu bilecek ve buradaki konfigürasyonlar üzerinden tokený doðrulayacak.
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(builder.Configuration["Administrator:Role"], options =>

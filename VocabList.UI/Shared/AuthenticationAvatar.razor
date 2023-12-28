@@ -1,0 +1,23 @@
+﻿@inject NavigationManager navigationManager
+
+@if (!String.IsNullOrEmpty(username))
+{
+    <MudAvatar Color="Color.Primary">@username.Substring(1, 1)</MudAvatar>
+    <VocabList.UI.Pages.Account.Logout></VocabList.UI.Pages.Account.Logout>
+}
+else
+{
+    <button @onclick="Register">Üye Ol</button>
+}
+
+@code {
+    [CascadingParameter(Name = "AvatarChar")]
+    string username { get; set; }
+
+    void Register()
+    {
+        navigationManager.NavigateTo($"/register");
+    }
+
+    
+}

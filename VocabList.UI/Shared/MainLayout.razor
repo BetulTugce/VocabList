@@ -1,17 +1,23 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager navigationManager
 
 <PageTitle>VocabList.UI</PageTitle>
+
 <MudThemeProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
+
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+    @*     <div class="sidebar">
+    <NavMenu />
+    </div> *@
 
     <main>
         <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            @* <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a> *@
+            <CascadingValue Value="username" Name="AvatarChar">
+                <AuthenticationAvatar></AuthenticationAvatar>
+            </CascadingValue>
         </div>
 
         <article class="content px-4">
@@ -19,3 +25,40 @@
         </article>
     </main>
 </div>
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthState { get; set; }
+
+    [Inject]
+    ILocalStorageService localStorageService { get; set; }
+
+    string username = String.Empty;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthState;
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            username = await localStorageService.GetItemAsStringAsync("Username");
+            // await InvokeAsync(StateHasChanged);
+            if (String.IsNullOrEmpty(username))
+            {
+                await ClearLocalStorageAndNavigateToLogin();
+            }
+            // await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            await ClearLocalStorageAndNavigateToLogin();
+        }
+    }
+
+    private async Task ClearLocalStorageAndNavigateToLogin()
+    {
+        await localStorageService.ClearAsync();
+        navigationManager.NavigateTo($"/login");
+    }
+}

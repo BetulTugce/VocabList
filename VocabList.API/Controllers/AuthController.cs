@@ -23,8 +23,8 @@ namespace VocabList.API.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> Login(LoginUser model)
         {
-            Token token = await _authService.LoginAsync(model.UsernameOrEmail, model.Password, 900);
-            LoginUserResponse response = new() { Token = token };
+            LoginUserResponse response = new LoginUserResponse();
+            response = await _authService.LoginAsync(model.UsernameOrEmail, model.Password, 900);
             return Ok(response);
         }
 
