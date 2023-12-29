@@ -1,4 +1,5 @@
-﻿using VocabList.UI.Data.Users;
+﻿using System.Text;
+using VocabList.UI.Data.Users;
 
 namespace VocabList.UI.Services
 {
@@ -26,6 +27,21 @@ namespace VocabList.UI.Services
             else
             {
                 return null;
+            }
+
+        }
+
+        public async Task<bool> PasswordReset(ForgotPasswordRequest request)
+        {
+            //İlgili urle verilen model verilerine sahip bir json içeriği gönderiliyor..
+            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}Auth/password-reset", request);
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
             }
 
         }

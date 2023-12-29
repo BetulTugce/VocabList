@@ -42,9 +42,9 @@ namespace VocabList.API.Controllers
 
         // Bu endpoint, kullanıcıdan email bilgisini alıp veritabanında ilgili kullanıcıyı bulursa ResetToken oluşturarak kullanıcıya parola değişikliği için mail gönderiyor..
         [HttpPost("password-reset")]
-        public async Task<IActionResult> PasswordReset(string email)
+        public async Task<IActionResult> PasswordReset(PasswordResetRequest request)
         {
-            await _authService.PasswordResetAsnyc(email);
+            await _authService.PasswordResetAsnyc(request.Email);
             return Ok();
         }
 
