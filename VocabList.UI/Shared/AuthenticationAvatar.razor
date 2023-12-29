@@ -1,9 +1,21 @@
 ﻿@inject NavigationManager navigationManager
+@using VocabList.UI.Utilities
 
 @if (!String.IsNullOrEmpty(username))
 {
-    <MudAvatar Color="Color.Primary">@username.Substring(1, 1)</MudAvatar>
-    <VocabList.UI.Pages.Account.Logout></VocabList.UI.Pages.Account.Logout>
+    @* <MudAvatar Color="Color.Primary">@username.Substring(1, 1)</MudAvatar>
+    <VocabList.UI.Pages.Account.Logout></VocabList.UI.Pages.Account.Logout> *@
+
+    <MudMenu>
+        <ActivatorContent>
+            @* <MudAvatar Image="images/toiletvisit.jpg" /> *@
+            <MudAvatar Color="Color.Primary">@username.Substring(1, 1)</MudAvatar>
+        </ActivatorContent>
+        <ChildContent>
+            <MudMenuItem @onclick=AccountSettings>Hesap Ayarları</MudMenuItem>
+            <MudMenuItem @onclick=LogOut>Oturumu Kapat</MudMenuItem>
+        </ChildContent>
+    </MudMenu>
 }
 else
 {
@@ -14,10 +26,34 @@ else
     [CascadingParameter(Name = "AvatarChar")]
     string username { get; set; }
 
+    [Inject]
+    AuthenticationStateProvider authenticationStateProvider { get; set; }
+
+    [Inject]
+    ILocalStorageService localStorageService { get; set; }
+
+    [Inject]
+    HttpClient Client { get; set; }
+
     void Register()
     {
         navigationManager.NavigateTo($"/register");
     }
 
-    
+    void AccountSettings()
+    {
+        navigationManager.NavigateTo($"/account-settings");
+    }
+
+    async Task LogOut()
+    {
+        // await localStorageService.RemoveItemAsync("AccessToken");
+        // await localStorageService.RemoveItemAsync("Username");
+        await localStorageService.ClearAsync();
+
+        (authenticationStateProvider as AuthStateProvider).NotifyUserLogout();
+        Client.DefaultRequestHeaders.Authorization = null;
+
+        navigationManager.NavigateTo("/login", true);
+    }
 }
