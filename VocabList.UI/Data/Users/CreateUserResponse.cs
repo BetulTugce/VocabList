@@ -1,4 +1,4 @@
-﻿namespace VocabList.UI.Data
+﻿namespace VocabList.UI.Data.Users
 {
     public class CreateUserResponse
     {

@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Globalization;
 using System.Security.Claims;
-using VocabList.UI.Data;
+using VocabList.UI.Data.Users;
 using VocabList.UI.Services;
 
 namespace VocabList.UI.Utilities

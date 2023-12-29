@@ -1,5 +1,4 @@
-﻿using VocabList.UI.Data;
-using VocabList.UI.Data.Users;
+﻿using VocabList.UI.Data.Users;
 
 namespace VocabList.UI.Services
 {

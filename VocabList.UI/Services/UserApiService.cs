@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Text;
-using VocabList.UI.Data;
+using VocabList.UI.Data.Users;
 using static System.Net.WebRequestMethods;
 
 namespace VocabList.UI.Services
