@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VocabList.Core.DTOs.Identity;
 using VocabList.Core.Services;
+using VocabList.Repository.Consts;
 using VocabList.Repository.CustomAttributes;
 using VocabList.Repository.Enums;
 using VocabList.Service.Exceptions;
@@ -12,6 +13,7 @@ namespace VocabList.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Admin")]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -22,6 +24,7 @@ namespace VocabList.API.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> CreateUser([FromBody] CreateUser model)
         {
             try
@@ -46,7 +49,7 @@ namespace VocabList.API.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(AuthenticationSchemes = "Admin")]
+        [AuthorizeDefinition(ActionType = ActionType.Reading, Definition = "Get User By UserId", Menu = AuthorizeDefinitionConstants.Users)]
         public async Task<IActionResult> GetUser(string id)
         {
             try
@@ -81,8 +84,7 @@ namespace VocabList.API.Controllers
         //}
 
         [HttpGet]
-        [Authorize(AuthenticationSchemes = "Admin")]
-        [AuthorizeDefinition(ActionType = ActionType.Reading, Definition = "Get All Users", Menu = "Users")]
+        [AuthorizeDefinition(ActionType = ActionType.Reading, Definition = "Get All Users", Menu = AuthorizeDefinitionConstants.Users)]
         public async Task<IActionResult> GetAllUsers([FromQuery] GetAllUsersQueryRequest request)
         {
             try
@@ -101,6 +103,7 @@ namespace VocabList.API.Controllers
         }
 
         [HttpPost("update-password")]
+        [AllowAnonymous]
         public async Task<IActionResult> UpdatePassword([FromBody] UpdatePassword request)
         {
             if (request.Password.Equals(request.PasswordConfirm))
@@ -115,8 +118,7 @@ namespace VocabList.API.Controllers
         }
 
         [HttpGet("get-roles-to-user/{userIdOrName}")]
-        [Authorize(AuthenticationSchemes = "Admin")]
-        [AuthorizeDefinition(ActionType = ActionType.Reading, Definition = "Get Roles To Users", Menu = "Users")]
+        [AuthorizeDefinition(ActionType = ActionType.Reading, Definition = "Get Roles To Users", Menu = AuthorizeDefinitionConstants.Users)]
         public async Task<IActionResult> GetRolesToUser(string userIdOrName)
         {
             string[] userRoles = await _userService.GetRolesToUserAsync(userIdOrName);
@@ -124,8 +126,7 @@ namespace VocabList.API.Controllers
         }
 
         [HttpPost("assign-role-to-user")]
-        [Authorize(AuthenticationSchemes = "Admin")]
-        [AuthorizeDefinition(ActionType = ActionType.Reading, Definition = "Assign Role To User", Menu = "Users")]
+        [AuthorizeDefinition(ActionType = ActionType.Writing, Definition = "Assign Role To User", Menu = AuthorizeDefinitionConstants.Users)]
         public async Task<IActionResult> AssignRoleToUser(AssignRoleToUserRequest request)
         {
             try

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using VocabList.Core.DTOs.Identity;
 using VocabList.Core.Services;
+using VocabList.Repository.Consts;
 using VocabList.Repository.CustomAttributes;
 using VocabList.Repository.Enums;
 
@@ -20,7 +21,7 @@ namespace VocabList.API.Controllers
         }
 
         [HttpGet]
-        [AuthorizeDefinition(ActionType = ActionType.Reading, Definition = "Get Roles", Menu = "Roles")]
+        [AuthorizeDefinition(ActionType = ActionType.Reading, Definition = "Get Roles", Menu = AuthorizeDefinitionConstants.Roles)]
         public async Task<IActionResult> GetRoles([FromQuery] GetRolesQueryRequest getRolesQueryRequest)
         {
             try
@@ -38,7 +39,7 @@ namespace VocabList.API.Controllers
         }
 
         [HttpPost()]
-        [AuthorizeDefinition(ActionType = ActionType.Writing, Definition = "Create Role", Menu = "Roles")]
+        [AuthorizeDefinition(ActionType = ActionType.Writing, Definition = "Create Role", Menu = AuthorizeDefinitionConstants.Roles)]
         public async Task<IActionResult> CreateRole([FromBody] CreateRoleRequest request)
         {
             try
@@ -65,7 +66,7 @@ namespace VocabList.API.Controllers
         }
 
         [HttpPut("{Id}")]
-        [AuthorizeDefinition(ActionType = ActionType.Updating, Definition = "Update Role", Menu = "Roles")]
+        [AuthorizeDefinition(ActionType = ActionType.Updating, Definition = "Update Role", Menu = AuthorizeDefinitionConstants.Roles)]
         public async Task<IActionResult> UpdateRole([FromBody, FromRoute] UpdateRoleRequest request)
         {
             try
@@ -87,7 +88,7 @@ namespace VocabList.API.Controllers
         }
 
         [HttpDelete("{Id}")]
-        [AuthorizeDefinition(ActionType = ActionType.Deleting, Definition = "Delete Role", Menu = "Roles")]
+        [AuthorizeDefinition(ActionType = ActionType.Deleting, Definition = "Delete Role", Menu = AuthorizeDefinitionConstants.Roles)]
         public async Task<IActionResult> DeleteRole([FromRoute] DeleteRoleRequest request)
         {
             try
@@ -109,7 +110,7 @@ namespace VocabList.API.Controllers
         }
 
         [HttpGet("{Id}")]
-        [AuthorizeDefinition(ActionType = ActionType.Reading, Definition = "Get Role By Id", Menu = "Roles")]
+        [AuthorizeDefinition(ActionType = ActionType.Reading, Definition = "Get Role By Id", Menu = AuthorizeDefinitionConstants.Roles)]
         public async Task<IActionResult> GetRoles([FromRoute] GetRoleByIdQueryRequest request)
         {
             try

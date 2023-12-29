@@ -1,10 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using VocabList.Core.DTOs.Identity;
 using VocabList.Core.Services;
+using VocabList.Repository.Consts;
+using VocabList.Repository.CustomAttributes;
+using VocabList.Repository.Enums;
 
 namespace VocabList.API.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize(AuthenticationSchemes = "Admin")]
     [ApiController]
     public class AuthorizationEndpointsController : ControllerBase
     {
@@ -17,6 +22,7 @@ namespace VocabList.API.Controllers
 
         // Requestte gelen menunun altındaki code (endpointin unique değeri) ile ilişkilendirilmiş rolleri getirir..
         [HttpPost("[action]")]
+        [AuthorizeDefinition(ActionType = ActionType.Reading, Definition = "Get Roles To Endpoint", Menu = AuthorizeDefinitionConstants.AuthorizationEndpoints)]
         public async Task<IActionResult> GetRolesToEndpoint(GetRolesToEndpointQueryRequest request)
         {
             try
@@ -37,6 +43,7 @@ namespace VocabList.API.Controllers
 
         // Request ile gelen rolleri ilgili menunun altındaki code ile işaretlenmiş olan endpointe atar yani, endpointleri rollerle ilişkilendirir.
         [HttpPost]
+        [AuthorizeDefinition(ActionType = ActionType.Writing, Definition = "Assign Role To Endpoint", Menu = AuthorizeDefinitionConstants.AuthorizationEndpoints)]
         public async Task<IActionResult> AssignRoleEndpoint(AssignRoleEndpointRequest request)
         {
             try
