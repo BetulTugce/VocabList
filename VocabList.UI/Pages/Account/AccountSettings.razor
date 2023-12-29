@@ -8,10 +8,44 @@
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
 @inject ISnackbar SnackbarService
 
-<p>Name : @userResponseModel.Name</p>
-<p>Surname : @userResponseModel.Surname</p>
-<p>Username : @userResponseModel.Username</p>
-<p>Email : @userResponseModel.Email</p>
+<div class="mud-paper-container">
+    <MudContainer MaxWidth="MaxWidth.Small">
+        <MudTabs Elevation="2" Rounded="true" Centered="true" Class="m-6" Color="Color.Dark">
+            <MudTabPanel Icon="@Icons.Material.Filled.Build" Text="PROFİLİM" BadgeColor="Color.Success">
+                <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                    <table style="margin-top:10px; font-size:16px;">
+                        <tr>
+                            <th style="text-align: left;">Ad : </th>
+                            <td>
+                                @userResponseModel.Name
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="text-align: left;">Soyad : </th>
+                            <td>
+                                @userResponseModel.Surname
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="text-align: left;">Kullanıcı Adı : </th>
+                            <td>
+                                @userResponseModel.Username
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="text-align: left;">E-Posta Adresi : </th>
+                            <td>
+                                @userResponseModel.Email
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </MudTabPanel>
+            <MudTabPanel Text="AYARLARIM" />
+        </MudTabs>
+    </MudContainer>
+</div>
+
 
 
 @code {
