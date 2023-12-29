@@ -81,6 +81,7 @@
                 await localStorageService.SetItemAsync("AccessTokenExpiration", responseModel.Token.Expiration.ToUniversalTime());
                 await localStorageService.SetItemAsync("RefreshToken", responseModel.Token.RefreshToken);
                 await localStorageService.SetItemAsync("Username", responseModel.User.Username);
+                await localStorageService.SetItemAsync("id", responseModel.User.Id);
                 StateHasChanged();
                 // await localStorageService.SetItemAsync("Email", responseModel.User.Email);
                 // await localStorageService.SetItemAsync("RefreshToken", responseModel.Token.RefreshToken);

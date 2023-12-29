@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using Microsoft.AspNetCore.Http;
+using System.Net;
 using System.Text;
 using VocabList.UI.Data.Users;
 using static System.Net.WebRequestMethods;
@@ -37,6 +38,22 @@ namespace VocabList.UI.Services
                 return null;
             }
 
+        }
+
+        public async Task<(User user, HttpStatusCode statusCode)> GetUserByIdAsync(string id, string accessToken)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                var response = await _httpClient.GetAsync($"{_baseUrl}Users/{id}");
+                var user = await response.Content.ReadFromJsonAsync<User>();
+                return (user, response.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                //Console.WriteLine($"Exception: {ex.Message}");
+                return (null, HttpStatusCode.InternalServerError);
+            }
         }
     }
 }
