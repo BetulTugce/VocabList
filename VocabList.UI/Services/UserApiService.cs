@@ -55,5 +55,19 @@ namespace VocabList.UI.Services
                 return (null, HttpStatusCode.InternalServerError);
             }
         }
+
+        public async Task<HttpStatusCode> UpdatePasswordAsync(UpdatePasswordRequest model)
+        {
+            try
+            {
+                //İlgili urle verilen model verilerine sahip bir json içeriği gönderiliyor..
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}Users/update-password", model);
+                return response.StatusCode;
+            }
+            catch (Exception)
+            {
+                return HttpStatusCode.InternalServerError;
+            }
+        }
     }
 }
