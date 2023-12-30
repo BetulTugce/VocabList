@@ -4,6 +4,7 @@
 @using VocabList.UI.Services
 @using VocabList.UI.Data.Users
 @inject UserApiService _userApiService
+@inject AuthApiService _authApiService
 @inject NavigationManager navigationManager
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
 @inject ISnackbar SnackbarService
@@ -11,7 +12,7 @@
 <div class="mud-paper-container">
     <MudContainer MaxWidth="MaxWidth.Small">
         <MudTabs Elevation="2" Rounded="true" Centered="true" Class="m-6" Color="Color.Dark">
-            <MudTabPanel Icon="@Icons.Material.Filled.Build" Text="PROFİLİM" BadgeColor="Color.Success">
+            <MudTabPanel Icon="@Icons.Material.Filled.Person" Text="PROFİLİM" BadgeColor="Color.Success">
                 <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
                     <table style="margin-top:10px; font-size:16px;">
                         <tr>
@@ -41,7 +42,11 @@
                     </table>
                 </div>
             </MudTabPanel>
-            <MudTabPanel Text="AYARLARIM" />
+            <MudTabPanel Icon="@Icons.Material.Filled.Build" Text="AYARLARIM">
+                <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SendEmailAsync" Style="margin-top: 10px;">Parolamı Sıfırla</MudButton>
+                </div>
+            </MudTabPanel>
         </MudTabs>
     </MudContainer>
 </div>
@@ -95,5 +100,24 @@
     private void ShowNotification(string resultMessage, Severity severity)
     {
         SnackbarService.Add(resultMessage, severity);
+    }
+
+    async Task SendEmailAsync()
+    {
+        try
+        {
+            // ApiService üzerinden parola sıfırlama methodu çağırılıyor..
+            await _authApiService.PasswordReset(new() { Email = userResponseModel.Email });
+
+            severity = Severity.Info;
+            resultMessage = $"Parolanızı sıfırlayabilmeniz için size bir e-posta gönderdik. Lütfen gelen kutunuzu ve gereksiz e-posta klasörünüzü kontrol edin.";
+            ShowNotification(resultMessage, severity);
+        }
+        catch (Exception ex)
+        {
+            severity = Severity.Error;
+            resultMessage = $"Sunucu Hatası - Beklenmeyen bir hata meydana geldi!";
+            ShowNotification(resultMessage, severity);
+        }
     }
 }
