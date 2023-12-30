@@ -48,17 +48,24 @@ namespace VocabList.UI.Services
         }
 
         // Parola sıfırlama linkine tıklandığında resetTokenı doğrulayacak olan actiona istek atıyor.. ResetToken doğrulanırsa kullanıcı parolasını güncellemek için ilgili sayfada yeni parolasını girebilecek. UsersControllerdaki UpdatePassword actionına istek atılarak işlem tamamlanacak..
-        public async Task<bool> VerifyResetTokenAsync(VerifyPasswordResetTokenRequest request)
+        public async Task<VerifyPasswordResetTokenResponse> VerifyResetTokenAsync(VerifyPasswordResetTokenRequest request)
         {
             //İlgili urle verilen model verilerine sahip bir json içeriği gönderiliyor..
             var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}Auth/verify-reset-token", request);
             if (response.IsSuccessStatusCode)
             {
-                return true;
+                var data = await response.Content.ReadFromJsonAsync<VerifyPasswordResetTokenResponse>();
+                return new()
+                {
+                    State = data.State,
+                };
             }
             else
             {
-                return false;
+                return new()
+                {
+                    State = false
+                };
             }
 
         }

@@ -134,7 +134,13 @@ namespace VocabList.Service.Services
                 resetToken = resetToken.UrlDecode();
 
                 // ResetToken doğrulanıyor ve true ya da false şeklinde ilgili değeri dönüyor..
-                return await _userManager.VerifyUserTokenAsync(user, _userManager.Options.Tokens.PasswordResetTokenProvider, "ResetPassword", resetToken);
+                var isTokenValid = await _userManager.VerifyUserTokenAsync(user, _userManager.Options.Tokens.PasswordResetTokenProvider, "ResetPassword", resetToken);
+                if (isTokenValid)
+                {
+                    //Tokenı kullanılmış olarak işaretler.. Bu kod parçası olmadığı zaman token doğrulansa bile UserServicedeki UpdatePasswordAsync methodundaki await _userManager.UpdateSecurityStampAsync(user); komut ile reset token çürütülmüş olacak. SetAuthenticationTokenAsync ile formu göndermeden tokenın geçerli ya da geçersiz olduğunu anlayabiliriz..
+                    await _userManager.SetAuthenticationTokenAsync(user, _userManager.Options.Tokens.PasswordResetTokenProvider, "ResetPassword", null);
+                }
+                return isTokenValid;
             }
 
             // Kullanıcı bulunamadıysa false dönüyor.
