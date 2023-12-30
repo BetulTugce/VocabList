@@ -31,10 +31,27 @@ namespace VocabList.UI.Services
 
         }
 
+        // Parola sıfırlamak için kullanıcıdan email bilgisi alınarak ilgili actiona post isteği atılıyor. Eğer istek başarılı olursa girilen e-posta adresine parola sıfırlamak için bir link gönderiliyor..
         public async Task<bool> PasswordReset(ForgotPasswordRequest request)
         {
             //İlgili urle verilen model verilerine sahip bir json içeriği gönderiliyor..
             var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}Auth/password-reset", request);
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
+        // Parola sıfırlama linkine tıklandığında resetTokenı doğrulayacak olan actiona istek atıyor.. ResetToken doğrulanırsa kullanıcı parolasını güncellemek için ilgili sayfada yeni parolasını girebilecek. UsersControllerdaki UpdatePassword actionına istek atılarak işlem tamamlanacak..
+        public async Task<bool> VerifyResetTokenAsync(VerifyPasswordResetTokenRequest request)
+        {
+            //İlgili urle verilen model verilerine sahip bir json içeriği gönderiliyor..
+            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}Auth/verify-reset-token", request);
             if (response.IsSuccessStatusCode)
             {
                 return true;

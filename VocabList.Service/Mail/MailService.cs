@@ -3,6 +3,7 @@ using System.Net.Mail;
 using System.Net;
 using VocabList.Core.Services;
 using System.Text;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace VocabList.Service.Mail
 {
@@ -46,11 +47,21 @@ namespace VocabList.Service.Mail
         {
             StringBuilder mail = new();
             mail.AppendLine("<strong>Merhaba,</strong><br>Parolanızı sıfırlama talebiniz için bir link gönderdik.<br><strong><a target=\"_blank\" href=\"");
-            mail.AppendLine(_configuration["BlazorServerClientUrl"]);
-            mail.AppendLine("/update-password/");
-            mail.AppendLine(userId);
-            mail.AppendLine("/");
-            mail.AppendLine(resetToken);
+            //mail.AppendLine(_configuration["BlazorServerClientUrl"]);
+            //mail.AppendLine("update-password/");
+            //mail.AppendLine(userId);
+            //mail.AppendLine("/");
+            //mail.AppendLine(resetToken);
+
+            //string resetUrl = $"{_configuration["BlazorServerClientUrl"]}update-password/{userId}/{resetToken}";
+
+            //Oluşturulan urle reset token parametresini query string ile veriyorum..
+            var origin = _configuration["BlazorServerClientUrl"];
+            var route = $"update-password/{userId}";
+            var enpointUri = new Uri(string.Concat($"{origin}", route));
+            var resetUrl = QueryHelpers.AddQueryString(enpointUri.ToString(), "Token", resetToken);
+            
+            mail.AppendLine(resetUrl);
             mail.AppendLine("\">Parolanızı yenilemek için tıklayınız...</a></strong><br><br><span style=\"font-size:12px;\">NOT : Parola sıfırlama isteğinde bulunmadıysanız, bu e-postayı dikkate almayınız.</span><br>Sevgiler..<br><br><br>BTD | VocabList");
 
             await SendMailAsync(to, "Parola Sıfırlama İsteği", mail.ToString());
