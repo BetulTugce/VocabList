@@ -1,0 +1,72 @@
+﻿@page "/authorize-menu"
+
+<PageTitle>VocabList | Yetkilendirme Menüsü</PageTitle>
+
+@using VocabList.UI.Data.ApplicationServices
+@using VocabList.UI.Services
+@using VocabList.UI.Utilities
+@inject ApplicationServiceApiService _applicationServiceApiService
+@inject NavigationManager navigationManager
+@inject ISnackbar SnackbarService
+@inject Blazored.LocalStorage.ILocalStorageService localStorageService
+
+@if (Menus.Any())
+{
+    <MudTreeView T="string" ExpandOnDoubleClick="true">
+        @foreach (var menu in Menus)
+        {
+            <MudTreeViewItem Value="@(menu.Name)">
+                @if (menu.Actions.Any())
+                {
+                    foreach (var action in menu.Actions)
+                    {
+                        <MudTreeViewItem Value="@(action.Definition)" />
+                    }
+                }
+            </MudTreeViewItem>
+        }
+    </MudTreeView>
+}
+@if (isUnauthorized)
+{
+    <UnauthorizedTransactions></UnauthorizedTransactions>
+}
+
+
+@code {
+    List<GetAuthorizeDefinitionEndpointsResponse> Menus { get; set; } = new List<GetAuthorizeDefinitionEndpointsResponse>();
+    bool isUnauthorized = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        String accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
+        accessToken = accessToken.Substring(1, (accessToken.Length - 2));
+
+        // AuthorizeDefinition attributeu ile işaretlenmiş tüm endpointleri getirecek olan methoda istek gönderiliyor..
+        var response = await _applicationServiceApiService.GetAuthorizeDefinitionEndpoints(accessToken);
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            // İstek başarılıysa elemanlar listeye atanıyor..
+            Menus = response.Item1;
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkilendirilmemiş kullanıcı ise..
+            isUnauthorized = true;
+        }
+        // else if (response.Item2 == System.Net.HttpStatusCode.BadRequest)
+        // {
+
+        // }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    private void ShowNotification(string resultMessage, Severity severity)
+    {
+        SnackbarService.Add(resultMessage, severity);
+    }
+}
