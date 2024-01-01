@@ -22,7 +22,7 @@ namespace VocabList.UI.Services
                 //İlgili urle verilen model verilerine sahip bir json içeriği gönderiliyor..
                 _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
                 var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}AuthorizationEndpoints/GetRolesToEndpoint", request);
-                return (await response.Content.ReadFromJsonAsync<GetRolesToEndpointQueryResponse>(), HttpStatusCode.OK);
+                return (await response.Content.ReadFromJsonAsync<GetRolesToEndpointQueryResponse>(), response.StatusCode);
             }
             catch (Exception)
             {
