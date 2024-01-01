@@ -3,11 +3,13 @@
 <PageTitle>VocabList | Yetkilendirme Menüsü</PageTitle>
 
 @using VocabList.UI.Data.ApplicationServices
+@using VocabList.UI.Data.AuthorizationEndpoints
 @using VocabList.UI.Data.Roles
 @using VocabList.UI.Services
 @using VocabList.UI.Utilities
 @inject ApplicationServiceApiService _applicationServiceApiService
 @inject RoleApiService _roleApiService
+@inject AuthorizationEndpointApiService _authorizationEndpointApiService
 @inject NavigationManager navigationManager
 @inject ISnackbar SnackbarService
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
@@ -53,11 +55,12 @@
         <p>@_selectedAction.Definition</p>
         <p>@_selectedAction.Code</p>
 
-        <p>Roller</p>
-        @foreach (var role in Roles.datas)
-        {
-            <MudCheckBox @bind-Value="@checkboxValues">@role.name</MudCheckBox>
-        }
+        <MudSelect T="string" Label="Roller" HelperText="Endpointe atamak istediğiniz rolleri seçin.." MultiSelection="true" @bind-SelectedValues="rolesOfTheEndpoint">
+            @foreach (var role in Roles.datas)
+            {
+                <MudSelectItem T="string" Value="@role.name">@role.name</MudSelectItem>
+            }
+        </MudSelect>
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseDialog" Class="px-10">Kapat</MudButton>
@@ -67,12 +70,21 @@
 @code {
     List<GetAuthorizeDefinitionEndpointsResponse> Menus { get; set; } = new List<GetAuthorizeDefinitionEndpointsResponse>();
     bool isUnauthorized = false;
+    String accessToken = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        String accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
+        // AccessToken bilgisi localstorageden alınıyor..
+        accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
         accessToken = accessToken.Substring(1, (accessToken.Length - 2));
 
+        // AuthorizeDefinition attributeu ile işaretli endpoint bilgileri alınıyor..
+        await GetAuthorizeDefinitionEndpoints();
+    }
+
+    // AuthorizeDefinition attributeu ile işaretli endpoint bilgileri alınıyor..
+    async Task GetAuthorizeDefinitionEndpoints()
+    {
         // AuthorizeDefinition attributeu ile işaretlenmiş tüm endpointleri getirecek olan methoda istek gönderiliyor..
         var response = await _applicationServiceApiService.GetAuthorizeDefinitionEndpoints(accessToken);
         if (response.Item2 == System.Net.HttpStatusCode.OK)
@@ -94,8 +106,6 @@
             // Diğer hata durumları..
             ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
         }
-
-        await GetAllRoles(accessToken);
     }
 
     private void ShowNotification(string resultMessage, Severity severity)
@@ -115,15 +125,23 @@
 
     async Task ShowDetails(string selectedMenu, GetAuthorizeDefinitionEndpointsResponse.Action selectedAction)
     {
-
         _selectedMenu = selectedMenu;
         _selectedAction = selectedAction;
+
+        // Tüm roller çekiliyor..
+        await GetAllRoles();
+
+        // Endpoinlere atanmış rolleri çekiliyor..
+        await GetRolesToEndpoint(new(){ Code = selectedAction.Code, Menu = selectedMenu});
+
+        // Dialog penceresi görünür hale getiriliyor..
         visible = true;
     }
 
     GetRolesQueryResponse Roles { get; set; } = new GetRolesQueryResponse();
 
-    async Task GetAllRoles(string accessToken)
+    // Tüm rolleri getirir..
+    async Task GetAllRoles()
     {
         var response = await _roleApiService.GetAllRoles(accessToken, new()
         {
@@ -139,6 +157,7 @@
         {
             // Yetkilendirilmemiş kullanıcı ise..
             isUnauthorized = true;
+            // ShowNotification("Rolleri görme yetkiniz bulunmamaktadır.", Severity.Warning);
         }
         else
         {
@@ -146,6 +165,30 @@
             ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
         }
     }
-    bool checkboxValues { get; set; } = false;
-    //TODO : Endpointe atanmış roller çekilerek dialog penceresi açıldığında ilgili roller işaretli olarak gösterilecek. Endpointlere rol ataması yapılacak..
+    
+    //TODO : Endpointlere rol ataması yapma işlemi eklenecek..
+
+    // Seçili endpointin rollerini tutar..
+    IEnumerable<string> rolesOfTheEndpoint = new List<string>();
+
+    // Endpoinlere atanmış rolleri çeker..
+    async Task GetRolesToEndpoint(GetRolesToEndpointQueryRequest request)
+    {
+        var response = await _authorizationEndpointApiService.GetRolesToEndpointAsync(request, accessToken);
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            rolesOfTheEndpoint = response.Item1.Roles;
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkilendirilmemiş kullanıcı ise..
+            isUnauthorized = true;
+            // ShowNotification("Rollerle ilgili yetkiniz bulunmamaktadır..", Severity.Warning);
+        }
+        else
+        {
+            // Sunucu Hatası
+            ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
 }

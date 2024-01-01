@@ -30,6 +30,11 @@ builder.Services.AddHttpClient<RoleApiService>(options =>
     options.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]);
 });
 
+builder.Services.AddHttpClient<AuthorizationEndpointApiService>(options =>
+{
+    options.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]);
+});
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
