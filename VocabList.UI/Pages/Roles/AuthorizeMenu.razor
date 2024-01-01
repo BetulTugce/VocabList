@@ -55,7 +55,7 @@
         <p>@_selectedAction.Definition</p>
         <p>@_selectedAction.Code</p>
 
-        <MudSelect T="string" Label="Roller" HelperText="Endpointe atamak istediğiniz rolleri seçin.." MultiSelection="true" @bind-SelectedValues="rolesOfTheEndpoint">
+        <MudSelect T="string" Label="Roller" HelperText="Endpointe atamak istediğiniz rolleri seçin.." MultiSelection="true" @bind-SelectedValues="rolesOfTheEndpoint" >
             @foreach (var role in Roles.datas)
             {
                 <MudSelectItem T="string" Value="@role.name">@role.name</MudSelectItem>
@@ -63,6 +63,7 @@
         </MudSelect>
     </DialogContent>
     <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => AssignSelectedRoles(_selectedMenu, _selectedAction.Code, rolesOfTheEndpoint.ToArray()))" Class="px-10">Kaydet</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseDialog" Class="px-10">Kapat</MudButton>
     </DialogActions>
 </MudDialog>
@@ -165,8 +166,6 @@
             ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
         }
     }
-    
-    //TODO : Endpointlere rol ataması yapma işlemi eklenecek..
 
     // Seçili endpointin rollerini tutar..
     IEnumerable<string> rolesOfTheEndpoint = new List<string>();
@@ -190,5 +189,32 @@
             // Sunucu Hatası
             ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
         }
+    }
+
+    // İlgili endpointe seçili rolleri atar..
+    async Task AssignRoleEndpoint(AssignRoleEndpointRequest request)
+    {
+        var response = await _authorizationEndpointApiService.AssignRoleEndpoint(request, accessToken);
+        if (response == System.Net.HttpStatusCode.OK)
+        {
+            // Rol ataması başarılıysa..
+            ShowNotification("Seçili roller endpointe başarıyla atanmıştır.", Severity.Success);
+        }
+        else if (response == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkilendirilmemiş kullanıcı ise..
+            isUnauthorized = true;
+        }
+        else
+        {
+            // Sunucu Hatası
+            ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    // Dialog penceresindeki kaydet butonuna tıklandığında AssignRoleEndpointi çağırır..
+    async Task AssignSelectedRoles(string menu, string code, string[] roles)
+    {
+        await AssignRoleEndpoint(new() { Code = code, Menu = menu, Roles = roles });
     }
 }

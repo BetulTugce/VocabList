@@ -30,5 +30,22 @@ namespace VocabList.UI.Services
             }
 
         }
+
+        // Request ile gelen rolleri ilgili menunun altındaki code ile işaretlenmiş olan endpointe atar yani, endpointleri rollerle ilişkilendirir.
+        public async Task<HttpStatusCode> AssignRoleEndpoint(AssignRoleEndpointRequest request, string accessToken)
+        {
+            try
+            {
+                //İlgili urle verilen model verilerine sahip bir json içeriği gönderiliyor..
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}AuthorizationEndpoints", request);
+                return response.StatusCode;
+            }
+            catch (Exception)
+            {
+                return HttpStatusCode.InternalServerError;
+            }
+
+        }
     }
 }
