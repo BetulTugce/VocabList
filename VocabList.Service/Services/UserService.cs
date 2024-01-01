@@ -144,33 +144,10 @@ namespace VocabList.Service.Services
 
         public async Task<List<CreateUserResponse>> GetAllUsersAsync(int page, int size)
         {
-            List<AppUser> users;
-            if (page <= 0 && size > 0)
-            {
-                // Sayfa dikkate alınmadan belirtilen size kadar kullanıcı getirir.
-                users = await _userManager.Users.Take(size).ToListAsync();
-            }
-            else if (page <= 0 && size <= 0)
-            {
-                // Tüm kullanıcıları getirir.
-                users = await _userManager.Users.ToListAsync();
-            }
-            else if (page > 0 && size <= 0)
-            {
-                size = 10;
-                users = await _userManager.Users
-                  .Skip((page - 1) * size)
+            var users = await _userManager.Users
+                  .Skip(page * size)
                   .Take(size)
                   .ToListAsync();
-            }
-            else
-            {
-                users = await _userManager.Users
-                  .Skip((page - 1) * size)
-                  .Take(size)
-                  .ToListAsync();
-                
-            }
             // MapToUserDto metodunu kullanarak CreateUserResponse tipine dönüştürür ve bir liste oluşturur.
             return users.Select(user => MapToUserDto(user)).ToList();
         }

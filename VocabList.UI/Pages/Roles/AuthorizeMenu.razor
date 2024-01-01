@@ -3,16 +3,19 @@
 <PageTitle>VocabList | Yetkilendirme Menüsü</PageTitle>
 
 @using VocabList.UI.Data.ApplicationServices
+@using VocabList.UI.Data.Roles
 @using VocabList.UI.Services
 @using VocabList.UI.Utilities
 @inject ApplicationServiceApiService _applicationServiceApiService
+@inject RoleApiService _roleApiService
 @inject NavigationManager navigationManager
 @inject ISnackbar SnackbarService
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
+@inject IDialogService DialogService
 
 @if (Menus.Any())
 {
-    <MudTreeView T="string" ExpandOnDoubleClick="true">
+    <MudTreeView T="string" ExpandOnDoubleClick="true" Width="100%" Hover="true">
         @foreach (var menu in Menus)
         {
             <MudTreeViewItem Value="@(menu.Name)">
@@ -20,7 +23,13 @@
                 {
                     foreach (var action in menu.Actions)
                     {
-                        <MudTreeViewItem Value="@(action.Definition)" />
+                        @* <MudTreeViewItem Value="@(action.Definition)" /> *@
+                        <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                            <MudTreeViewItem Value="@(action.Definition)" />
+                                <div style="justify-self: end;">
+                                <MudIconButton OnClick="@(() => ShowDetails(menu.Name, action))" Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" />
+                                </div>
+                            </div>
                     }
                 }
             </MudTreeViewItem>
@@ -32,6 +41,28 @@
     <UnauthorizedTransactions></UnauthorizedTransactions>
 }
 
+<MudDialog @bind-IsVisible="visible" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3" /> @_selectedMenu
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <p>@_selectedAction.HttpType</p>
+        <p>@_selectedAction.ActionType</p>
+        <p>@_selectedAction.Definition</p>
+        <p>@_selectedAction.Code</p>
+
+        <p>Roller</p>
+        @foreach (var role in Roles.datas)
+        {
+            <MudCheckBox @bind-Value="@checkboxValues">@role.name</MudCheckBox>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseDialog" Class="px-10">Kapat</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
     List<GetAuthorizeDefinitionEndpointsResponse> Menus { get; set; } = new List<GetAuthorizeDefinitionEndpointsResponse>();
@@ -63,10 +94,58 @@
             // Diğer hata durumları..
             ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
         }
+
+        await GetAllRoles(accessToken);
     }
 
     private void ShowNotification(string resultMessage, Severity severity)
     {
         SnackbarService.Add(resultMessage, severity);
     }
+
+    private bool visible;
+    private int rating;
+    // private void OpenDialog() => visible = true;
+    void CloseDialog() => visible = false;
+
+    private DialogOptions dialogOptions = new() { FullWidth = true };
+
+    GetAuthorizeDefinitionEndpointsResponse.Action _selectedAction;
+    string _selectedMenu = string.Empty;
+
+    async Task ShowDetails(string selectedMenu, GetAuthorizeDefinitionEndpointsResponse.Action selectedAction)
+    {
+
+        _selectedMenu = selectedMenu;
+        _selectedAction = selectedAction;
+        visible = true;
+    }
+
+    GetRolesQueryResponse Roles { get; set; } = new GetRolesQueryResponse();
+
+    async Task GetAllRoles(string accessToken)
+    {
+        var response = await _roleApiService.GetAllRoles(accessToken, new()
+        {
+
+        });
+
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            // İstek başarılıysa elemanlar listeye atanıyor..
+            Roles = response.Item1;
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkilendirilmemiş kullanıcı ise..
+            isUnauthorized = true;
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+    bool checkboxValues { get; set; } = false;
+    //TODO : Endpointe atanmış roller çekilerek dialog penceresi açıldığında ilgili roller işaretli olarak gösterilecek. Endpointlere rol ataması yapılacak..
 }
