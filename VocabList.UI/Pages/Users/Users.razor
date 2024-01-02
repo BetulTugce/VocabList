@@ -3,8 +3,10 @@
 @using System.Text.RegularExpressions
 @using System.ComponentModel.DataAnnotations
 @using VocabList.UI.Data.Users
+@using VocabList.UI.Data.Roles
 @using VocabList.UI.Services
 @inject UserApiService _userApiService
+@inject RoleApiService _roleApiService
 @inject NavigationManager navigationManager
 @inject ISnackbar SnackbarService
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
@@ -27,16 +29,21 @@ else
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Username">@context.Username</MudTd>
-                <MudTd DataLabel="Name">@context.Name</MudTd>
-                <MudTd DataLabel="Surname">@context.Surname</MudTd>
-                <MudTd DataLabel="Email">@context.Email</MudTd>
-            </RowTemplate>
-            <PagerContent>
-                <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="PageChanged" Count="@pageCount" Class="pa-4" />
-            </PagerContent>
-        </MudTable>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Surname">@context.Surname</MudTd>
+                    <MudTd DataLabel="Email">@context.Email</MudTd>
+                    <MudTd Style="text-align: right">
+                        <MudIconButton OnClick="@(() => GetUser(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
+                        @* <MudIconButton OnClick="@(() => DeleteUser(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" /> *@
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="PageChanged" Count="@pageCount" Class="pa-4" />
+                </PagerContent>
+            </MudTable>
     }
 }
+
 
 <MudDialog @bind-IsVisible="createUserDialogIsVisible" Options="dialogOptions">
     <TitleContent>
@@ -78,9 +85,35 @@ else
     </DialogActions> *@
 </MudDialog>
 
+<MudDialog @bind-IsVisible="updateUserDialogIsVisible" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> Kullanıcıyı Düzenle
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <p>Kullanıcı Adı : @SelectedUser.Username</p>
+        <p>Adı : @SelectedUser.Name</p>
+        <p>Soyadı : @SelectedUser.Surname</p>
+        <p>E-Posta Adresi : @SelectedUser.Email</p>
+        
+        <MudSelect T="string" Label="Roller" HelperText="Kullanıcıya atamak istediğiniz rolleri seçin.." MultiSelection="true" @bind-SelectedValues="rolesOfTheUser">
+            @foreach (var role in Roles.datas)
+            {
+                <MudSelectItem T="string" Value="@role.name">@role.name</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        @* <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="UpdateUser" Class="px-10">Kaydet</MudButton> *@
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseUpdateUserDialog" Class="px-10">Kapat</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     GetAllUsersQueryResponse UsersResponse { get; set; } = new GetAllUsersQueryResponse();
     String accessToken = string.Empty;
+
     bool isUnauthorized = false;
 
     const int rowsPerPage = 10; // Sayfa başına gösterilecek user sayısı
@@ -97,6 +130,7 @@ else
         await GetAllUsers(0, rowsPerPage);
     }
 
+    // Seçili sayfa ve sayfa başına düşen kullanıcı sayısına göre kullanıcıları çeker..
     async Task GetAllUsers(int page, int size)
     {
         var response = await _userApiService.GetAllUsers(accessToken, new()
@@ -112,10 +146,12 @@ else
             UsersResponse = response.Item1;
             if (UsersResponse.TotalUsersCount % rowsPerPage == 0)
             {
+                // Eğer toplam kullanıcı sayısı, sayfa başına düşen kullanıcı sayısına tam bölünüyorsa..
                 pageCount = UsersResponse.TotalUsersCount / rowsPerPage;
             }
             else
             {
+                // Toplam kullanıcı sayısının, sayfa başına düşen kullanıcı sayısına bölümü sonucunda kalan varsa, sayfa sayısını + 1 yap..
                 pageCount = (UsersResponse.TotalUsersCount / rowsPerPage) + 1;
             }
         }
@@ -132,8 +168,10 @@ else
         StateHasChanged();
     }
 
+    // Sayfa değiştirildiğinde çalışır..
     private async Task PageChanged(int selectedPage)
     {
+        // Seçili sayfa bilgisi alınıyor..
         _selectedPage = selectedPage;
         // Seçili olan sayfa 1 ise aslında 0.sayfayı getirmesi gerekiyor, bu yüzden 1 eksiği parametre olarak veriliyor..
         await GetAllUsers((selectedPage - 1), rowsPerPage);
@@ -143,7 +181,7 @@ else
     {
         SnackbarService.Add(resultMessage, severity);
     }
-    
+
     #region Kullanıcı Ekleme İşlemleri
     private DialogOptions dialogOptions = new() { FullWidth = true };
     private bool createUserDialogIsVisible;
@@ -185,6 +223,7 @@ else
         return null;
     }
 
+    // Kullanıcı ekleme methodu..
     async Task CreateUser()
     {
         var response = await _userApiService.CreateUserAsync(createUserRequest);
@@ -192,15 +231,17 @@ else
         {
             if (!response.IsConflictError)
             {
-                // Rol tablosu güncelleniyor..
+                // Kullanıcı tablosu güncelleniyor..
                 await GetAllUsers(_selectedPage - 1, rowsPerPage);
 
                 createUserRequest = new();
-                // RolesResponse.datas.Append(new(){ name = createRoleRequest.Name});
+
+                // Dialog penceresi kapatılıyor..
                 CloseCreateUserDialog();
 
                 ShowNotification("Kullanıcı başarıyla eklenmiştir.", Severity.Success);
-            }else
+            }
+            else
             {
                 ShowNotification("Bu kullanıcı adı zaten alınmış. Lütfen yeni bir kullanıcı adı belirleyin.", Severity.Success);
             }
@@ -209,7 +250,86 @@ else
         {
             ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
         }
+
+    }
+    #endregion
+
+    #region Kullanıcı Güncelleme/Rol Atama İşlemleri
+
+    private bool updateUserDialogIsVisible;
+    private void OpenUpdateUserDialog() => updateUserDialogIsVisible = true;
+    void CloseUpdateUserDialog() => updateUserDialogIsVisible = false;
+    User SelectedUser = new User(); // Seçili kullanıcının bilgilerini tutar..
+
+    // Seçili userın rollerini tutar..
+    IEnumerable<string> rolesOfTheUser = new List<string>();
+
+    // Kullanıcı tablosunda edit butonuna tıklandığı zaman kullanıcının bilgilerini ve kullanıcıya atanmış rolleri getirecek olan method.. Sonuçları bir dialog penceresi açarak sunar..
+    async Task GetUser(User user)
+    {
+        // Parametrede gelen user SelectedUser modeline atanıyor..
+        SelectedUser = user;
+
+        // Kullanıcıya atanmış roller çekiliyor..
+        await GetRolesToUser(SelectedUser.Id);
+
+        // Kullanıcıya rol atama işlemlerini gerçekleştirebilmek için tüm roller çekiliyor..
+        await GetAllRoles();
         
+        // Dialog penceresini açar..
+        OpenUpdateUserDialog();
+    }
+
+    // İlgili kullanıcının rolleri çekiliyor..
+    async Task GetRolesToUser(string userId)
+    {
+        // Servis aracılığıyla kullanıcıya ait roller çekiliyor..
+        var response = await _userApiService.GetRolesToUserAsync(userId, accessToken);
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            // Seçili usera ait rolleri başarıyla çekmişse..
+            rolesOfTheUser = response.Item1.ToList();
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kişiyse..
+            isUnauthorized = true;
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    // Tüm rol bilgilerini barındırır..
+    GetRolesQueryResponse Roles { get; set; } = new GetRolesQueryResponse();
+
+    // Tüm rolleri getirir.. Kullanıcıya rol atama işlemlerinde tüm rolleri görmek için ihtiyaç var..
+    async Task GetAllRoles()
+    {
+        var response = await _roleApiService.GetAllRoles(accessToken, new()
+            {
+                Page = -1,
+                Size = -1
+            });
+
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            // İstek başarılıysa elemanlar listeye atanıyor..
+            Roles = response.Item1;
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkilendirilmemiş kullanıcı ise..
+            isUnauthorized = true;
+            // ShowNotification("Rolleri görme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
     }
     #endregion
 }

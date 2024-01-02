@@ -100,5 +100,32 @@ namespace VocabList.UI.Services
                 return HttpStatusCode.InternalServerError;
             }
         }
+
+        public async Task<(string[], HttpStatusCode)> GetRolesToUserAsync(string userIdOrName, string accessToken)
+        {
+            try
+            {
+                // AccessToken ile Authorization başlığı ayarlanıyor..
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+                // HTTP GET isteği gönderiliyor..
+                var response = await _httpClient.GetAsync($"{_baseUrl}Users/get-roles-to-user/{userIdOrName}");
+
+                // Başarı durumunda rolleri içeren dizi okunuyor ve status codeu ile beraber tuple dönüyor..
+                if (response.IsSuccessStatusCode)
+                {
+                    return (await response.Content.ReadFromJsonAsync<string[]>(), response.StatusCode);
+                }
+                else
+                {
+                    // Diğer durumlar..
+                    return (null, response.StatusCode);
+                }
+            }
+            catch (Exception)
+            {
+                return (null, HttpStatusCode.InternalServerError);
+            }
+        }
     }
 }
