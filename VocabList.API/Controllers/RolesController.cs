@@ -78,7 +78,7 @@ namespace VocabList.API.Controllers
                 }
                 else
                 {
-                    return StatusCode(500, new { Message = "İşlem başarısız, rol güncellenemedi." });
+                    return StatusCode(400, new { Message = "İşlem başarısız, rol güncellenemedi." });
                 }
             }
             catch (Exception ex)

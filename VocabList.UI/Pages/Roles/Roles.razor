@@ -10,28 +10,28 @@
 @if (isUnauthorized)
 {
     <UnauthorizedTransactions></UnauthorizedTransactions>
-}
-
-<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenDialog" Color="Color.Info">Rol Ekle</MudButton>
-
-@if (RolesResponse.datas is not null)
+}else
 {
-    <MudTable Items="@RolesResponse.datas" Hover="true" FixedHeader="true" Style="width:max-content">
-        <HeaderContent>
-            <MudTh>Rol</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Nr">@context.name</MudTd>
-                <MudIconButton Style="text-align: right" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
-                <MudIconButton Style="text-align: right" OnClick="@(() => DeleteRole(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
-            </RowTemplate>
-            <PagerContent>
-                <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="PageChanged" Count="@pageCount" Class="pa-4" />
-            </PagerContent>
-        </MudTable>
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateRoleDialog" Color="Color.Info">Rol Ekle</MudButton>
+    @if (RolesResponse.datas is not null)
+    {
+        <MudTable Items="@RolesResponse.datas" Hover="true" FixedHeader="true" Style="width:max-content">
+            <HeaderContent>
+                <MudTh>Rol</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Nr">@context.name</MudTd>
+                    <MudIconButton Style="text-align: right" OnClick="@(() => GetRole(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
+                    <MudIconButton Style="text-align: right" OnClick="@(() => DeleteRole(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
+                </RowTemplate>
+                <PagerContent>
+                    <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="PageChanged" Count="@pageCount" Class="pa-4" />
+                </PagerContent>
+            </MudTable>
+    }
 }
 
-<MudDialog @bind-IsVisible="visible" Options="dialogOptions">
+<MudDialog @bind-IsVisible="createRoleDialogIsVisible" Options="dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6">
             <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> Yeni Rol Ekle
@@ -42,23 +42,42 @@
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateRole" Class="px-10">Kaydet</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseDialog" Class="px-10">Kapat</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseCreateRoleDialog" Class="px-10">Kapat</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-IsVisible="updateRoleDialogIsVisible" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> @updateRoleRequest.Name Rolünü Düzenle
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="@updateRoleRequest.Name" Label="Rol" HelperText="Lütfen rol için bir isim belirleyin.." Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="UpdateRole" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseUpdateRoleDialog" Class="px-10">Kapat</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
     GetRolesQueryResponse RolesResponse { get; set; } = new GetRolesQueryResponse();
     CreateRoleRequest createRoleRequest { get; set; } = new CreateRoleRequest();
+    UpdateRoleRequest updateRoleRequest { get; set; } = new UpdateRoleRequest();
     String accessToken = string.Empty;
     bool isUnauthorized = false;
 
     const int rowsPerPage = 10; // Sayfa başına gösterilecek rol sayısı
     int pageCount; // Toplam sayfa sayısı
 
-    private bool visible;
-    private int rating;
-    private void OpenDialog() => visible = true;
-    void CloseDialog() => visible = false;
+    private bool createRoleDialogIsVisible;
+    private void OpenCreateRoleDialog() => createRoleDialogIsVisible = true;
+    void CloseCreateRoleDialog() => createRoleDialogIsVisible = false;
+
+    private bool updateRoleDialogIsVisible;
+    private void OpenUpdateRoleDialog() => updateRoleDialogIsVisible = true;
+    void CloseUpdateRoleDialog() => updateRoleDialogIsVisible = false;
 
     private DialogOptions dialogOptions = new() { FullWidth = true };
 
@@ -94,7 +113,6 @@
             {
                 pageCount = (RolesResponse.totalCount / rowsPerPage) + 1;
             }
-            StateHasChanged();
         }
         else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
         {
@@ -107,6 +125,7 @@
             // Diğer hata durumları..
             ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
         }
+        StateHasChanged();
     }
 
     private void ShowNotification(string resultMessage, Severity severity)
@@ -132,7 +151,7 @@
             await GetAllRoles(_selectedPage - 1, rowsPerPage);
 
             // RolesResponse.datas.Append(new(){ name = createRoleRequest.Name});
-            CloseDialog();
+            CloseCreateRoleDialog();
 
             ShowNotification("Rol başarıyla eklenmiştir.", Severity.Success);
         }
@@ -141,6 +160,32 @@
             ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
         }
         createRoleRequest = new();
+    }
+
+    async Task GetRole(GetRolesQueryResponse.Data role)
+    {
+        // Parametrede gelen rol updateRoleRequest modeline atanıyor..
+        updateRoleRequest.Id = role.id;
+        updateRoleRequest.Name = role.name;
+
+        OpenUpdateRoleDialog();
+    }
+
+    async Task UpdateRole()
+    {
+        var response = await _roleApiService.UpdateRoleAsync(updateRoleRequest, accessToken);
+        if (response)
+        {
+            // Rol tablosu güncelleniyor..
+            await GetAllRoles(_selectedPage - 1, rowsPerPage);
+
+            CloseUpdateRoleDialog();
+
+            ShowNotification("Rol başarıyla güncellenmiştir.", Severity.Success);
+        }else
+        {
+            ShowNotification("İşlem başarısız, bir hata meydana geldi.", Severity.Error);
+        }
     }
 
     async Task DeleteRole(GetRolesQueryResponse.Data role)

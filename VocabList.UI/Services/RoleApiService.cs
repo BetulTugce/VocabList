@@ -77,5 +77,22 @@ namespace VocabList.UI.Services
             }
             return false;
         }
+
+        // Rol güncellemek için kulanılır..
+        public async Task<bool> UpdateRoleAsync(UpdateRoleRequest request, string accessToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            // İlgili URL'ye verilen model verilerine sahip bir JSON içeriği gönderiliyor.
+            var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}Roles/{request.Id}", request);
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }

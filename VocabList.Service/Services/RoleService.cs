@@ -38,7 +38,7 @@ namespace VocabList.Service.Services
             else
                 rolesQuery = query;
 
-            return (rolesQuery.Select(r => new { r.Id, r.Name }), query.Count());
+            return (rolesQuery.OrderBy(i => i.Name).Select(r => new { r.Id, r.Name }), query.Count());
         }
 
         public async Task<(string id, string name)> GetRoleById(string id)
