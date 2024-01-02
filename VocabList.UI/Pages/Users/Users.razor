@@ -105,8 +105,8 @@ else
         </MudSelect>
     </DialogContent>
     <DialogActions>
-        @* <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="UpdateUser" Class="px-10">Kaydet</MudButton> *@
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseUpdateUserDialog" Class="px-10">Kapat</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="@(() => UpdateUser(SelectedUser.Id, rolesOfTheUser.ToArray()))" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseUpdateUserDialog" Class="px-10">İptal</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -275,7 +275,7 @@ else
 
         // Kullanıcıya rol atama işlemlerini gerçekleştirebilmek için tüm roller çekiliyor..
         await GetAllRoles();
-        
+
         // Dialog penceresini açar..
         OpenUpdateUserDialog();
     }
@@ -330,6 +330,31 @@ else
             // Diğer hata durumları..
             ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
         }
+    }
+
+    // Kullanıcının rol bilgilerini günceller..
+    async Task UpdateUser(string id, string[] roles)
+    {
+        // İlgili idye sahip kullanıcıya parametrede gelen rolleri atamak için endpointe istek gönderiliyor..
+        var response = await _userApiService.AssignRoleToUserAsync(new() { UserId = id, Roles = roles }, accessToken);
+        if (response == System.Net.HttpStatusCode.OK)
+        {
+            // Rol ataması başarılıysa..
+            ShowNotification("Kullanıcının rol bilgileri başarıyla güncellenmiştir..", Severity.Success);
+        }
+        else if (response == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kullanıcıysa..
+            isUnauthorized = true;
+        }
+        else
+        {
+            // Diğer hata durumları ise..
+            ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+        // Dialog penceresini kapatır..
+        CloseUpdateUserDialog();
+        SelectedUser = null;
     }
     #endregion
 }

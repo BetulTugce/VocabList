@@ -127,5 +127,23 @@ namespace VocabList.UI.Services
                 return (null, HttpStatusCode.InternalServerError);
             }
         }
+
+        // Requestteki userid bilgisine göre ilgili kullanıcıya seçili rolleri atar..
+        public async Task<HttpStatusCode> AssignRoleToUserAsync(AssignRoleToUserRequest request, string accessToken)
+        {
+            try
+            {
+                // AccessToken ile Authorization başlığı ayarlanıyor..
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+                //İlgili urle verilen model verilerine sahip bir json içeriği gönderiliyor..
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}Users/assign-role-to-user", request);
+                return response.StatusCode;
+            }
+            catch (Exception)
+            {
+                return HttpStatusCode.InternalServerError;
+            }
+        }
     }
 }
