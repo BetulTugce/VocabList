@@ -35,7 +35,7 @@ namespace VocabList.Service.Services
 
                 return new()
                 {
-                    
+
                 };
             }
             else
@@ -144,12 +144,12 @@ namespace VocabList.Service.Services
 
         public async Task<List<CreateUserResponse>> GetAllUsersAsync(int page, int size)
         {
-            var users = await _userManager.Users
+            var users = await _userManager.Users.OrderBy(i => i.UserName)
                   .Skip(page * size)
                   .Take(size)
                   .ToListAsync();
             // MapToUserDto metodunu kullanarak CreateUserResponse tipine dönüştürür ve bir liste oluşturur.
-            return users.Select(user => MapToUserDto(user)).ToList();
+            return users.OrderBy(i => i.UserName).Select(user => MapToUserDto(user)).ToList();
         }
 
         public async Task<int> GetTotalCountAsync()
@@ -246,7 +246,7 @@ namespace VocabList.Service.Services
                 {
                     return null;
                 }
-               
+
             }
             CreateUserResponse response = MapToUserDto(user);
             return response;

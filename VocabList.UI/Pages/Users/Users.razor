@@ -1,0 +1,104 @@
+﻿@page "/users"
+
+@using VocabList.UI.Data.Users
+@using VocabList.UI.Services
+@inject UserApiService _userApiService
+@inject NavigationManager navigationManager
+@inject ISnackbar SnackbarService
+@inject Blazored.LocalStorage.ILocalStorageService localStorageService
+
+@if (isUnauthorized)
+{
+    <UnauthorizedTransactions></UnauthorizedTransactions>
+}
+else
+{
+    @* <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateRoleDialog" Color="Color.Info">Rol Ekle</MudButton> *@
+    @if (UsersResponse.Users is not null)
+    {
+        <MudTable Items="@UsersResponse.Users" Hover="true" FixedHeader="true" Style="width:100%">
+            <HeaderContent>
+                <MudTh>Kullanıcı Adı</MudTh>
+                <MudTh>Adı</MudTh>
+                <MudTh>Soyadı</MudTh>
+                <MudTh>E-Posta Adresi</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Name">@context.Username</MudTd>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Name">@context.Surname</MudTd>
+                <MudTd DataLabel="Name">@context.Email</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="PageChanged" Count="@pageCount" Class="pa-4" />
+            </PagerContent>
+        </MudTable>
+    }
+}
+
+@code {
+    GetAllUsersQueryResponse UsersResponse { get; set; } = new GetAllUsersQueryResponse();
+    String accessToken = string.Empty;
+    bool isUnauthorized = false;
+
+    const int rowsPerPage = 10; // Sayfa başına gösterilecek user sayısı
+    int pageCount; // Toplam sayfa sayısı
+    int _selectedPage; // Seçili olan sayfanın numarası
+
+    protected override async Task OnInitializedAsync()
+    {
+        // AccessToken bilgisi localstorageden alınıyor..
+        accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
+        accessToken = accessToken.Substring(1, (accessToken.Length - 2));
+
+        // Userları getiriyor.. (İlk sayfa - 10 tane user)
+        await GetAllUsers(0, rowsPerPage);
+    }
+
+    async Task GetAllUsers(int page, int size)
+    {
+        var response = await _userApiService.GetAllUsers(accessToken, new()
+            {
+                Page = page,
+                Size = size
+            });
+
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            UsersResponse.Users = null;
+            // İstek başarılıysa elemanlar listeye atanıyor..
+            UsersResponse = response.Item1;
+            if (UsersResponse.TotalUsersCount % rowsPerPage == 0)
+            {
+                pageCount = UsersResponse.TotalUsersCount / rowsPerPage;
+            }
+            else
+            {
+                pageCount = (UsersResponse.TotalUsersCount / rowsPerPage) + 1;
+            }
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkilendirilmemiş kullanıcı ise..
+            isUnauthorized = true;
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+        StateHasChanged();
+    }
+
+    private async Task PageChanged(int selectedPage)
+    {
+        _selectedPage = selectedPage;
+        // Seçili olan sayfa 1 ise aslında 0.sayfayı getirmesi gerekiyor, bu yüzden 1 eksiği parametre olarak veriliyor..
+        await GetAllUsers((selectedPage - 1), rowsPerPage);
+    }
+
+    private void ShowNotification(string resultMessage, Severity severity)
+    {
+        SnackbarService.Add(resultMessage, severity);
+    }
+}

@@ -40,6 +40,37 @@ namespace VocabList.UI.Services
 
         }
 
+        // Userları (page ve size parametrelerine göre) getirir..
+        public async Task<(GetAllUsersQueryResponse, HttpStatusCode)> GetAllUsers(string accessToken, GetAllUsersQueryRequest request)
+        {
+            try
+            {
+                //string apiUrl = $"{_baseUrl}/authorize-definition-endpoints";
+                //String accessToken = await _localStorageService.GetItemAsStringAsync("AccessToken");
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                var queryString = $"?Page={request.Page}&Size={request.Size}";
+                HttpResponseMessage response = await _httpClient.GetAsync($"{_baseUrl}Users{queryString}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<GetAllUsersQueryResponse>();
+                    return (data, response.StatusCode);
+                }
+                else if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    return (null, HttpStatusCode.Unauthorized);
+                }
+                else
+                {
+                    return (null, HttpStatusCode.BadRequest);
+                }
+            }
+            catch (Exception ex)
+            {
+                return (null, HttpStatusCode.InternalServerError);
+            }
+        }
+
         public async Task<(User user, HttpStatusCode statusCode)> GetUserByIdAsync(string id, string accessToken)
         {
             try

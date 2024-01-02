@@ -15,17 +15,29 @@
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateRoleDialog" Color="Color.Info">Rol Ekle</MudButton>
     @if (RolesResponse.datas is not null)
     {
-        <MudTable Items="@RolesResponse.datas" Hover="true" FixedHeader="true" Style="width:max-content">
+        <MudTable Items="@RolesResponse.datas" Hover="true" FixedHeader="true" Style="width:100%">
             <HeaderContent>
+                @* <MudTh>ID</MudTh> *@
                 <MudTh>Rol</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="Nr">@context.name</MudTd>
-                    <MudIconButton Style="text-align: right" OnClick="@(() => GetRole(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
-                    <MudIconButton Style="text-align: right" OnClick="@(() => DeleteRole(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
+                @* <MudTd DataLabel="Id">@context.id</MudTd> *@
+                <MudTd DataLabel="Name">@context.name</MudTd>
+                <MudTd Style="text-align: right">
+                    @if (context.name != "Admin")
+                    {
+                        <MudIconButton OnClick="@(() => GetRole(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
+                        <MudIconButton OnClick="@(() => DeleteRole(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
+                    }
+                    else
+                    {
+                        <MudIconButton Disabled OnClick="@(() => GetRole(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
+                        <MudIconButton Disabled OnClick="@(() => DeleteRole(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
+                    }
+                </MudTd>
                 </RowTemplate>
                 <PagerContent>
-                    <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="PageChanged" Count="@pageCount" Class="pa-4" />
+                <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="PageChanged" Count="@pageCount" Class="pa-4" />
                 </PagerContent>
             </MudTable>
     }
