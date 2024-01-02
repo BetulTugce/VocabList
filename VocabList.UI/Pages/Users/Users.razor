@@ -1,5 +1,7 @@
 ﻿@page "/users"
 
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
 @using VocabList.UI.Data.Users
 @using VocabList.UI.Services
 @inject UserApiService _userApiService
@@ -13,7 +15,7 @@
 }
 else
 {
-    @* <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateRoleDialog" Color="Color.Info">Rol Ekle</MudButton> *@
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateUserDialog" Color="Color.Info">Kullanıcı Ekle</MudButton>
     @if (UsersResponse.Users is not null)
     {
         <MudTable Items="@UsersResponse.Users" Hover="true" FixedHeader="true" Style="width:100%">
@@ -24,10 +26,10 @@ else
                 <MudTh>E-Posta Adresi</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="Name">@context.Username</MudTd>
+                <MudTd DataLabel="Username">@context.Username</MudTd>
                 <MudTd DataLabel="Name">@context.Name</MudTd>
-                <MudTd DataLabel="Name">@context.Surname</MudTd>
-                <MudTd DataLabel="Name">@context.Email</MudTd>
+                <MudTd DataLabel="Surname">@context.Surname</MudTd>
+                <MudTd DataLabel="Email">@context.Email</MudTd>
             </RowTemplate>
             <PagerContent>
                 <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="PageChanged" Count="@pageCount" Class="pa-4" />
@@ -35,6 +37,46 @@ else
         </MudTable>
     }
 }
+
+<MudDialog @bind-IsVisible="createUserDialogIsVisible" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> Yeni Kullanıcı Ekle
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+            <MudTextField T="string" Label="Ad" Required="true" @bind-Value=createUserRequest.Name RequiredError="Ad zorunlu!" />
+            <MudTextField T="string" Label="Soyad" Required="true" @bind-Value="createUserRequest.Surname" RequiredError="Soyad zorunlu!" />
+            <MudTextField T="string" Label="Kullanıcı Adı" Required="true" @bind-Value="createUserRequest.Username" RequiredError="Kullanıcı adı zorunlu!" />
+            <MudTextField T="string" Label="Email" Required="true" @bind-Value="createUserRequest.Email" RequiredError="Email zorunlu!" HelperText="@emailCustomMask.Mask"
+                          Validation="@(new EmailAddressAttribute() {ErrorMessage = "Email adresi geçersiz"})" />
+            <MudTextField T="string" Label="Parola" HelperText="Güçlü bir parola seç" @bind-Value="createUserRequest.Password"
+                          InputType="InputType.Password"
+                          Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true"
+                          RequiredError="Parola zorunlu!" />
+            <MudTextField T="string"
+                          Label="Parola" HelperText="Parolayı tekrarla" @bind-Value="createUserRequest.PasswordConfirm" InputType="InputType.Password"
+                          Validation="@(new Func<string, string>(PasswordMatch))" />
+            <div class="d-flex align-center justify-space-between">
+                <div class="d-flex align-center">
+                    @* <MudCheckBox T="bool" Required="true" RequiredError="Kabul etmelisin!" />
+                    <MudLink Href="/kvkk" Target="_blank" Typo="Typo.body2">Kişisel Veriler Hakkındaki Protokolü okudum, kabul ediyorum.</MudLink> *@
+                </div>
+                <div class="d-flex align-center">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseCreateUserDialog" Class="px-10">İptal</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" DisableElevation="true" OnClick="@(()=>form.ResetAsync())" Class="ml-2">TEMİZLE</MudButton>
+                    <div class="ml-2"></div>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateUser" Class="ml-auto">KAYDET</MudButton>
+                </div>
+                @* <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" OnClick="RegisterAsync" Class="ml-auto">Üye Ol</MudButton> *@
+            </div>
+        </MudForm>
+    </DialogContent>
+    @* <DialogActions>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseCreateUserDialog" Class="px-10">İptal</MudButton>
+    </DialogActions> *@
+</MudDialog>
 
 @code {
     GetAllUsersQueryResponse UsersResponse { get; set; } = new GetAllUsersQueryResponse();
@@ -101,4 +143,73 @@ else
     {
         SnackbarService.Add(resultMessage, severity);
     }
+    
+    #region Kullanıcı Ekleme İşlemleri
+    private DialogOptions dialogOptions = new() { FullWidth = true };
+    private bool createUserDialogIsVisible;
+    private void OpenCreateUserDialog() => createUserDialogIsVisible = true;
+    void CloseCreateUserDialog()
+    {
+        createUserRequest = new();
+        createUserDialogIsVisible = false;
+    }
+
+    CreateUserRequest createUserRequest { get; set; } = new CreateUserRequest();
+    bool success;
+    string[] errors = { };
+    MudForm form;
+    public IMask emailMask = RegexMask.Email();
+    public IMask emailCustomMask = RegexMask.Email("<kullanici>@<domain.com>");
+    private IEnumerable<string> PasswordStrength(string pw)
+    {
+        if (string.IsNullOrWhiteSpace(pw))
+        {
+            yield return "Parola zorunlu!";
+            yield break;
+        }
+        if (pw.Length < 8)
+            yield return "Parola en az 8 karakter uzunluğunda olmalıdır!";
+        if (!Regex.IsMatch(pw, @"[A-Z]"))
+            yield return "Parola en az bir büyük harf içermelidir!";
+        if (!Regex.IsMatch(pw, @"[a-z]"))
+            yield return "Parola en az bir küçük harf içermelidir!";
+        if (!Regex.IsMatch(pw, @"[0-9]"))
+            yield return "Parola en az bir rakam içermelidir!";
+    }
+
+    private string PasswordMatch(string arg)
+    {
+        if (createUserRequest.Password != arg)
+            // return "Passwords don't match";
+            return "Parolalar eşleşmiyor!";
+        return null;
+    }
+
+    async Task CreateUser()
+    {
+        var response = await _userApiService.CreateUserAsync(createUserRequest);
+        if (response is not null)
+        {
+            if (!response.IsConflictError)
+            {
+                // Rol tablosu güncelleniyor..
+                await GetAllUsers(_selectedPage - 1, rowsPerPage);
+
+                createUserRequest = new();
+                // RolesResponse.datas.Append(new(){ name = createRoleRequest.Name});
+                CloseCreateUserDialog();
+
+                ShowNotification("Kullanıcı başarıyla eklenmiştir.", Severity.Success);
+            }else
+            {
+                ShowNotification("Bu kullanıcı adı zaten alınmış. Lütfen yeni bir kullanıcı adı belirleyin.", Severity.Success);
+            }
+        }
+        else
+        {
+            ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+        
+    }
+    #endregion
 }
