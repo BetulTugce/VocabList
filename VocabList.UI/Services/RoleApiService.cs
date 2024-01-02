@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using VocabList.UI.Data.Roles;
+using VocabList.UI.Data.Users;
 
 namespace VocabList.UI.Services
 {
@@ -15,6 +16,7 @@ namespace VocabList.UI.Services
             //_baseUrl = configuration.GetValue<string>("ApiSettings:BaseUrl");
         }
 
+        // Rolleri (page ve size parametrelerine göre) getirir..
         public async Task<(GetRolesQueryResponse, HttpStatusCode)> GetAllRoles(string accessToken, GetRolesQueryRequest request)
         {
             try
@@ -43,6 +45,37 @@ namespace VocabList.UI.Services
             {
                 return (null, HttpStatusCode.InternalServerError);
             }
+        }
+
+        // Rol eklemek için kullanılır..
+        public async Task<bool> CreateRoleAsync(CreateRoleRequest request, string accessToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            //İlgili urle verilen model verilerine sahip bir json içeriği gönderiliyor..
+            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}Roles", request);
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
+        // Rol silmek için kullanılır..
+        public async Task<bool> DeleteRoleAsync(DeleteRoleRequest request, string accessToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            var response = await _httpClient.DeleteAsync($"{_baseUrl}Roles/{request.Id}");
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

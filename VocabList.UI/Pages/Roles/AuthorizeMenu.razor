@@ -146,7 +146,7 @@
     {
         var response = await _roleApiService.GetAllRoles(accessToken, new()
         {
-
+             Page = -1, Size = -1
         });
 
         if (response.Item2 == System.Net.HttpStatusCode.OK)

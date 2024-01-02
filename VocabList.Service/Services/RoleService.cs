@@ -34,7 +34,7 @@ namespace VocabList.Service.Services
             IQueryable<AppRole> rolesQuery = null;
 
             if (page != -1 && size != -1)
-                rolesQuery = query.Skip(page * size).Take(size);
+                rolesQuery = query.OrderBy(i => i.Name).Skip(page * size).Take(size);
             else
                 rolesQuery = query;
 

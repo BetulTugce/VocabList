@@ -56,7 +56,7 @@ namespace VocabList.API.Controllers
                 }
                 else
                 {
-                    return StatusCode(500, new { Message = "İşlem başarısız, rol oluşturulamadı." });
+                    return BadRequest(new { Message = "İşlem başarısız, rol oluşturulamadı." });
                 }
             }
             catch (Exception ex)
@@ -96,11 +96,12 @@ namespace VocabList.API.Controllers
                 var result = await _roleService.DeleteRole(request.Id);
                 if (result)
                 {
-                    return StatusCode(200, result);
+                    //return StatusCode(200, result);
+                    return Ok(result);
                 }
                 else
                 {
-                    return StatusCode(500, new { Message = "İşlem başarısız, rol silinemedi." });
+                    return StatusCode(400, new { Message = "İşlem başarısız, rol silinemedi." });
                 }
             }
             catch (Exception ex)

@@ -1,0 +1,178 @@
+﻿@page "/roles"
+
+@using VocabList.UI.Data.Roles
+@using VocabList.UI.Services
+@inject RoleApiService _roleApiService
+@inject NavigationManager navigationManager
+@inject ISnackbar SnackbarService
+@inject Blazored.LocalStorage.ILocalStorageService localStorageService
+
+@if (isUnauthorized)
+{
+    <UnauthorizedTransactions></UnauthorizedTransactions>
+}
+
+<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenDialog" Color="Color.Info">Rol Ekle</MudButton>
+
+@if (RolesResponse.datas is not null)
+{
+    <MudTable Items="@RolesResponse.datas" Hover="true" FixedHeader="true" Style="width:max-content">
+        <HeaderContent>
+            <MudTh>Rol</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Nr">@context.name</MudTd>
+                <MudIconButton Style="text-align: right" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
+                <MudIconButton Style="text-align: right" OnClick="@(() => DeleteRole(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
+            </RowTemplate>
+            <PagerContent>
+                <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="PageChanged" Count="@pageCount" Class="pa-4" />
+            </PagerContent>
+        </MudTable>
+}
+
+<MudDialog @bind-IsVisible="visible" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> Yeni Rol Ekle
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="createRoleRequest.Name" Label="Rol" HelperText="Lütfen eklemek istediğiniz rol için bir isim belirleyin.." Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateRole" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseDialog" Class="px-10">Kapat</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    GetRolesQueryResponse RolesResponse { get; set; } = new GetRolesQueryResponse();
+    CreateRoleRequest createRoleRequest { get; set; } = new CreateRoleRequest();
+    String accessToken = string.Empty;
+    bool isUnauthorized = false;
+
+    const int rowsPerPage = 10; // Sayfa başına gösterilecek rol sayısı
+    int pageCount; // Toplam sayfa sayısı
+
+    private bool visible;
+    private int rating;
+    private void OpenDialog() => visible = true;
+    void CloseDialog() => visible = false;
+
+    private DialogOptions dialogOptions = new() { FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        // AccessToken bilgisi localstorageden alınıyor..
+        accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
+        accessToken = accessToken.Substring(1, (accessToken.Length - 2));
+
+        // Rolleri getiriyor..(İlk sayfa - 10 rol)
+        await GetAllRoles(0, rowsPerPage);
+    }
+
+    // Parametreye göre rolleri getirir..
+    async Task GetAllRoles(int page, int size)
+    {
+        var response = await _roleApiService.GetAllRoles(accessToken, new()
+            {
+                Page = page,
+                Size = size
+            });
+
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            RolesResponse.datas = null;
+            // İstek başarılıysa elemanlar listeye atanıyor..
+            RolesResponse = response.Item1;
+            if (RolesResponse.totalCount % rowsPerPage == 0)
+            {
+                pageCount = RolesResponse.totalCount / rowsPerPage;
+            }
+            else
+            {
+                pageCount = (RolesResponse.totalCount / rowsPerPage) + 1;
+            }
+            StateHasChanged();
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkilendirilmemiş kullanıcı ise..
+            isUnauthorized = true;
+            // ShowNotification("Rolleri görme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("Beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    private void ShowNotification(string resultMessage, Severity severity)
+    {
+        SnackbarService.Add(resultMessage, severity);
+    }
+
+    int _selectedPage; // Seçili olan sayfanın numarası
+
+    private async Task PageChanged(int selectedPage)
+    {
+        _selectedPage = selectedPage;
+        // Seçili olan sayfa 1 ise aslında 0.sayfayı getirmesi gerekiyor, bu yüzden 1 eksiği parametre olarak veriliyor..
+        await GetAllRoles((selectedPage - 1), rowsPerPage);
+    }
+
+    async Task CreateRole()
+    {
+        var response = await _roleApiService.CreateRoleAsync(createRoleRequest, accessToken);
+        if (response)
+        {
+            // Rol tablosu güncelleniyor..
+            await GetAllRoles(_selectedPage - 1, rowsPerPage);
+
+            // RolesResponse.datas.Append(new(){ name = createRoleRequest.Name});
+            CloseDialog();
+
+            ShowNotification("Rol başarıyla eklenmiştir.", Severity.Success);
+        }
+        else
+        {
+            ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+        createRoleRequest = new();
+    }
+
+    async Task DeleteRole(GetRolesQueryResponse.Data role)
+    {
+        var response = await _roleApiService.DeleteRoleAsync(new() { Id = role.id }, accessToken);
+        if (response)
+        {
+            // RolesResponse.datas.Remove(role);
+
+            // Rol silindiğinde toplam rol sayısı 1 azalacak, sayfa sayısı da 1 azalmış olabilir.. Eğer son sayfa seçiliyse ve sayfa sayısı 1 azaldıysa seçili olan sayfa da 1 azalmalı..
+            RolesResponse.totalCount -= 1;
+            if (RolesResponse.totalCount % rowsPerPage == 0)
+            {
+                pageCount = RolesResponse.totalCount / rowsPerPage;
+            }
+            else
+            {
+                pageCount = (RolesResponse.totalCount / rowsPerPage) + 1;
+            }
+            if (_selectedPage > pageCount)
+            {
+                _selectedPage -= - 1;
+            }
+
+            // Rol tablosu güncelleniyor..
+            await GetAllRoles(_selectedPage - 1, rowsPerPage);
+
+            ShowNotification("Rol başarıyla silinmiştir.", Severity.Success);
+        }
+        else
+        {
+            ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+}
