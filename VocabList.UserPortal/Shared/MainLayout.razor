@@ -1,6 +1,11 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager navigationManager
 
 <PageTitle>VocabList.UserPortal</PageTitle>
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
 <div class="page">
     <div class="sidebar">
@@ -9,7 +14,10 @@
 
     <main>
         <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            @* <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a> *@
+            <CascadingValue Value="username" Name="AvatarChar">
+                <AuthenticationAvatar></AuthenticationAvatar>
+            </CascadingValue>
         </div>
 
         <article class="content px-4">
@@ -17,3 +25,71 @@
         </article>
     </main>
 </div>
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthState { get; set; }
+
+    [Inject]
+    ILocalStorageService localStorageService { get; set; }
+
+    string username = String.Empty;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthState;
+        if (!IsAllowAnonymous())
+        {
+            if (authState.User.Identity.IsAuthenticated)
+            {
+                username = await localStorageService.GetItemAsStringAsync("Username");
+                // await InvokeAsync(StateHasChanged);
+                if (String.IsNullOrEmpty(username))
+                {
+                    await ClearLocalStorageAndNavigateToLogin();
+                }
+                // await InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                await ClearLocalStorageAndNavigateToLogin();
+            }
+        }
+        username = await localStorageService.GetItemAsStringAsync("Username");
+    }
+
+    
+
+    private bool IsAllowAnonymous()
+    {
+        // Kontrol edilecek URL parçacıkları..
+        string[] allowedUrlFragments = { "/register", "/kvkk", "/forgot-password", "/update-password" };
+
+        // Mevcut URL alınıyor..
+        string currentUrl = navigationManager.Uri;
+        // if (currentUrl.Contains("/register") || currentUrl.Contains("/kvkk") || currentUrl.Contains("/forgot-password") || currentUrl.Contains("/update-password"))
+        // {
+        //     return true;
+        // }
+
+        // Herhangi bir URL parçacığı ile başlıyorsa true..
+        foreach (var urlFragment in allowedUrlFragments)
+        {
+            if (currentUrl.Contains(urlFragment))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private async Task ClearLocalStorageAndNavigateToLogin()
+    {
+        await localStorageService.RemoveItemAsync("AccessToken");
+        await localStorageService.ClearAsync();
+        navigationManager.NavigateTo($"/login");
+    }
+}

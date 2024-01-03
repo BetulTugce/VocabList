@@ -1,0 +1,123 @@
+﻿@page "/account-settings"
+
+<PageTitle>VocabList | Hesap Ayarları</PageTitle>
+@using VocabList.UserPortal.Services
+@using VocabList.UserPortal.Data.Users
+@inject UserApiService _userApiService
+@inject AuthApiService _authApiService
+@inject NavigationManager navigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorageService
+@inject ISnackbar SnackbarService
+
+<div class="mud-paper-container">
+    <MudContainer MaxWidth="MaxWidth.Small">
+        <MudTabs Elevation="2" Rounded="true" Centered="true" Class="m-6" Color="Color.Dark">
+            <MudTabPanel Icon="@Icons.Material.Filled.Person" Text="PROFİLİM" BadgeColor="Color.Success">
+                <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                    <table style="margin-top:10px; font-size:16px;">
+                        <tr>
+                            <th style="text-align: left;">Ad : </th>
+                            <td>
+                                @userResponseModel.Name
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="text-align: left;">Soyad : </th>
+                            <td>
+                                @userResponseModel.Surname
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="text-align: left;">Kullanıcı Adı : </th>
+                            <td>
+                                @userResponseModel.Username
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="text-align: left;">E-Posta Adresi : </th>
+                            <td>
+                                @userResponseModel.Email
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </MudTabPanel>
+            <MudTabPanel Icon="@Icons.Material.Filled.Build" Text="AYARLARIM">
+                <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SendEmailAsync" Style="margin-top: 10px;">Parolamı Sıfırla</MudButton>
+                </div>
+            </MudTabPanel>
+        </MudTabs>
+    </MudContainer>
+</div>
+
+
+
+@code {
+    User userResponseModel = new User();
+    string resultMessage = string.Empty;
+    Severity severity = new();
+    // public Task<AuthenticationState> AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // var authState = await AuthState;
+            String accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
+            accessToken = accessToken.Substring(1, (accessToken.Length - 2));
+
+            string userId = await localStorageService.GetItemAsStringAsync("id");
+            userId = userId.Substring(1, (userId.Length - 2));
+            // ApiService üzerinden giriş methodu çağırılıyor..
+            var response = await _userApiService.GetUserByIdAsync(userId, accessToken);
+            if (response.user is not null && response.statusCode == System.Net.HttpStatusCode.OK)
+            {
+                userResponseModel = response.user;
+            }
+            else if (response.statusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                severity = Severity.Warning;
+                resultMessage = $"Bu sayfaya erişim yetkiniz yok!";
+                ShowNotification(resultMessage, severity);
+            }
+            else
+            {
+                severity = Severity.Error;
+                resultMessage = $"Kullanıcı bilgileri çekilirken beklenmeyen bir hata ile karşılaşıldı.";
+                ShowNotification(resultMessage, severity);
+            }
+        }
+        catch (Exception ex)
+        {
+            severity = Severity.Error;
+            resultMessage = $"SUNUCU HATASI - Kullanıcı bilgileri çekilirken beklenmeyen bir hata ile karşılaşıldı.";
+            ShowNotification(resultMessage, severity);
+            // Console.WriteLine($"Hata oluştu: {ex.Message}");
+        }
+    }
+
+    private void ShowNotification(string resultMessage, Severity severity)
+    {
+        SnackbarService.Add(resultMessage, severity);
+    }
+
+    async Task SendEmailAsync()
+    {
+        try
+        {
+            // ApiService üzerinden parola sıfırlama methodu çağırılıyor..
+            await _authApiService.PasswordReset(new() { Email = userResponseModel.Email });
+
+            severity = Severity.Info;
+            resultMessage = $"Parolanızı sıfırlayabilmeniz için size bir e-posta gönderdik. Lütfen gelen kutunuzu ve gereksiz e-posta klasörünüzü kontrol edin.";
+            ShowNotification(resultMessage, severity);
+        }
+        catch (Exception ex)
+        {
+            severity = Severity.Error;
+            resultMessage = $"Sunucu Hatası - Beklenmeyen bir hata meydana geldi!";
+            ShowNotification(resultMessage, severity);
+        }
+    }
+}

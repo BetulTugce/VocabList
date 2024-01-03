@@ -1,0 +1,163 @@
+﻿@page "/register"
+<PageTitle>VocabList | Üye Ol</PageTitle>
+
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using VocabList.UserPortal.Data
+@using VocabList.UserPortal.Data.Users
+@using VocabList.UserPortal.Services
+@inject UserApiService _userApiService
+@inject NavigationManager navigationManager
+@inject ISnackbar SnackbarService
+
+@* @if (@isVisibleAlert)
+{
+    <div style="display: flex; justify-content: flex-end; width: 100%; position: fixed; top: 0; left: 0; right: 0; z-index: 1000;">
+        <MudAlert Severity=severity Variant="Variant.Filled" style="max-width: 80%;">
+            @resultMessage
+        </MudAlert>
+    </div>
+} *@
+
+<MudGrid Class="d-flex align-center justify-center">
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            @* <div class="text-center"> *@
+            <h2 class="mb-4">Kayıt Ol</h2>
+            @* </div> *@
+            @* <MudForm @ref="form" OnValidSubmit="RegisterAsync" @bind-IsValid="@success" @bind-Errors="@errors"> *@
+            <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                <MudTextField T="string" Label="Ad" Required="true" @bind-Value=model.Name RequiredError="Ad zorunlu!" />
+                <MudTextField T="string" Label="Soyad" Required="true" @bind-Value="model.Surname" RequiredError="Soyad zorunlu!" />
+                <MudTextField T="string" Label="Kullanıcı Adı" Required="true" @bind-Value="model.Username" RequiredError="Kullanıcı adı zorunlu!" />
+                <MudTextField T="string" Label="Email" Required="true" @bind-Value="model.Email" RequiredError="Email zorunlu!" HelperText="@emailCustomMask.Mask"
+                              Validation="@(new EmailAddressAttribute() {ErrorMessage = "Email adresi geçersiz"})" />
+                <MudTextField T="string" Label="Parola" HelperText="Güçlü bir parola seç" @bind-Value="model.Password"
+                              InputType="InputType.Password"
+                              Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true"
+                              RequiredError="Parola zorunlu!" />
+                <MudTextField T="string"
+                              Label="Parola" HelperText="Parolayı tekrarla" @bind-Value="model.PasswordConfirm" InputType="InputType.Password"
+                              Validation="@(new Func<string, string>(PasswordMatch))" />
+                @* <div class="d-flex">
+                <MudRadioGroup T="string" Required="true" RequiredError="Account type is required!">
+                <MudRadio Option="@("Personal")">Personal</MudRadio>
+                <MudRadio Option="@("Professional")">Professional</MudRadio>
+                </MudRadioGroup>
+                </div> *@
+                <div class="d-flex align-center justify-space-between">
+                    <div class="d-flex align-center">
+                        <MudCheckBox T="bool" Required="true" RequiredError="Kabul etmelisin!" />
+                        <MudLink Href="/kvkk" Target="_blank" Typo="Typo.body2">Kişisel Veriler Hakkındaki Protokolü okudum, kabul ediyorum.</MudLink>
+                    </div>
+                    <div class="d-flex align-center">
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" DisableElevation="true" OnClick="@(()=>form.ResetAsync())" Class="ml-2">TEMİZLE</MudButton>
+                        <div class="ml-2"></div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" OnClick="RegisterAsync" Class="ml-auto">Üye Ol</MudButton>
+                    </div>
+                    @* <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" OnClick="RegisterAsync" Class="ml-auto">Üye Ol</MudButton> *@
+                </div>
+            </MudForm>
+        </MudPaper>
+        @*  <MudPaper Class="pa-4 mt-4">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" DisableElevation="true" OnClick="@(()=>form.Validate())">Validate</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" DisableElevation="true" OnClick="@(()=>form.ResetAsync())" Class="mx-2">Reset</MudButton>
+        <MudButton Variant="Variant.Filled" DisableElevation="true" OnClick="@(()=>form.ResetValidation())">Reset Validation</MudButton>
+        </MudPaper> *@
+    </MudItem>
+    @* <MudItem xs="12" sm="5">
+    <MudPaper Class="pa-4 mud-height-full">
+    <MudText Typo="Typo.subtitle2">@($"Errors ({errors.Length})")</MudText>
+    @foreach (var error in errors)
+    {
+    <MudText Color="@Color.Error">@error</MudText>
+    }
+    </MudPaper>
+    </MudItem> *@
+</MudGrid>
+
+
+@code {
+    bool success;
+    string[] errors = { };
+    // MudTextField<string> Name;
+    MudForm form;
+    string resultMessage = string.Empty;
+    Severity severity = new();
+    CreateUserRequest model = new CreateUserRequest();
+    public IMask emailMask = RegexMask.Email();
+    public IMask emailCustomMask = RegexMask.Email("<kullanici>@<domain.com>");
+
+    private IEnumerable<string> PasswordStrength(string pw)
+    {
+        if (string.IsNullOrWhiteSpace(pw))
+        {
+            yield return "Parola zorunlu!";
+            yield break;
+        }
+        if (pw.Length < 8)
+            yield return "Parola en az 8 karakter uzunluğunda olmalıdır!";
+        if (!Regex.IsMatch(pw, @"[A-Z]"))
+            yield return "Parola en az bir büyük harf içermelidir!";
+        if (!Regex.IsMatch(pw, @"[a-z]"))
+            yield return "Parola en az bir küçük harf içermelidir!";
+        if (!Regex.IsMatch(pw, @"[0-9]"))
+            yield return "Parola en az bir rakam içermelidir!";
+    }
+
+    private string PasswordMatch(string arg)
+    {
+        if (model.Password != arg)
+            // return "Passwords don't match";
+            return "Parolalar eşleşmiyor!";
+        return null;
+    }
+
+    async Task RegisterAsync()
+    {
+        try
+        {
+            // ApiService üzerinden kullanıcı ekleme methodu çağırılıyor..
+            var response = await _userApiService.CreateUserAsync(model);
+            if (response is not null)
+            {
+                if (!response.IsConflictError)
+                {
+                    // Emailin çakışması durumunda responseu null döndürüp IsConflictErroru falseda bırakıyorum, kayıt başarılıymış gibi süreç devam ettiriliyor. Kötü niyetli birisinin kullanıcının email adresini siteye kayıtlı olup olmadığını anlamak için deneme ihtimaline karşılık bir önlem olarak bu davranışı sergiletiyorum.. Bu durum için alternatif olarak kullanıcı adı uyarısını vererek email yüzünden kayıt olamadığını anlamasını engeller ancak işlemin başarısız olduğunu bildirebilirdim.
+                    severity = Severity.Success;
+                    resultMessage = "Kayıt işlemi başarıyla tamamlandı.";
+                    ShowNotification(resultMessage, severity);
+                    navigationManager.NavigateTo("/login");
+                }
+                else
+                {
+                    // HTTP durumu 409 (Conflict) ise özel bir uyarı gösterir..
+                    severity = Severity.Warning;
+                    resultMessage = "Bu kullanıcı adı zaten alınmış. Lütfen yeni bir kullanıcı adı belirleyin.";
+                    ShowNotification(resultMessage, severity);
+                }
+            }
+            else
+            {  // response null ise..
+                severity = Severity.Success;
+                resultMessage = "Kayıt işlemi başarıyla tamamlandı.";
+                ShowNotification(resultMessage, severity);
+                navigationManager.NavigateTo("/login");
+            }
+        }
+        catch (Exception ex)
+        {
+            severity = Severity.Error;
+            resultMessage = $"İşlem başarısız! (Sunucu hatası)";
+            // resultMessage = $"Kayıt işlemi sırasında bir hata oluştu: {ex.Message}";
+            ShowNotification(resultMessage, severity);
+            // Console.WriteLine($"Hata oluştu: {ex.Message}");
+        }
+    }
+
+    private void ShowNotification(string resultMessage, Severity severity)
+    {
+        SnackbarService.Add(resultMessage, severity);
+    }
+
+}

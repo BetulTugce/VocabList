@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /VocabList.API/appsettings.json
 /VocabList.Repository/Migrations
 /VocabList.UI/appsettings.json
+/VocabList.UserPortal/appsettings.json
