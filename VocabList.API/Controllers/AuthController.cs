@@ -44,7 +44,7 @@ namespace VocabList.API.Controllers
         [HttpPost("password-reset")]
         public async Task<IActionResult> PasswordReset(PasswordResetRequest request)
         {
-            await _authService.PasswordResetAsnyc(request.Email);
+            await _authService.PasswordResetAsnyc(request.Email, request.IsUserPortal);
             return Ok();
         }
 

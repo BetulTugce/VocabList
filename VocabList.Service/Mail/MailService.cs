@@ -43,20 +43,32 @@ namespace VocabList.Service.Mail
             await smtp.SendMailAsync(mail);
         }
 
-        public async Task SendPasswordResetMailAsync(string to, string userId, string resetToken)
+        public async Task SendPasswordResetMailAsync(string to, string userId, string resetToken, bool IsUserPortal)
         {
             StringBuilder mail = new();
             mail.AppendLine("<strong>Merhaba,</strong><br>Parolanızı sıfırlama talebiniz için bir link gönderdik.<br><strong><a target=\"_blank\" href=\"");
-            //mail.AppendLine(_configuration["BlazorServerClientUrl"]);
+            //mail.AppendLine(_configuration["BlazorServerClientAdminUrl"]);
             //mail.AppendLine("update-password/");
             //mail.AppendLine(userId);
             //mail.AppendLine("/");
             //mail.AppendLine(resetToken);
 
-            //string resetUrl = $"{_configuration["BlazorServerClientUrl"]}update-password/{userId}/{resetToken}";
+            //string resetUrl = $"{_configuration["BlazorServerClientAdminUrl"]}update-password/{userId}/{resetToken}";
 
             //Oluşturulan urle reset token parametresini query string ile veriyorum..
-            var origin = _configuration["BlazorServerClientUrl"];
+            //var origin = _configuration["BlazorServerClientUrl"];
+            string origin;
+            if (IsUserPortal)
+            {
+                // Kullanıcı portalı ise kullanılacak url..
+                origin = _configuration["BlazorServerClientUserPortalUrl"];
+            }
+            else
+            {
+                // Admin paneli ise kullanılacak url..
+                origin = _configuration["BlazorServerClientAdminUrl"];
+            }
+            
             var route = $"update-password/{userId}";
             var enpointUri = new Uri(string.Concat($"{origin}", route));
             var resetUrl = QueryHelpers.AddQueryString(enpointUri.ToString(), "Token", resetToken);

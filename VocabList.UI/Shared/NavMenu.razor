@@ -1,6 +1,9 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject NavigationManager navigationManager
+@using VocabList.UI.Utilities
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">VocabList.UI</a>
+        <a class="navbar-brand" href="">Yönetim Paneli</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -12,9 +15,14 @@
 
         <AuthorizeView>
             <Authorized>
-                <div class="nav-item px-3">
+                @* <div class="nav-item px-3">
                     <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                         <span class="oi oi-home" aria-hidden="true"></span> Anasayfa
+                    </NavLink>
+                </div> *@
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <span class="oi"><img src="icons/house-solid.svg" /></span>Anasayfa
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
@@ -37,6 +45,11 @@
                         <span class="oi"><img src="icons/screwdriver-wrench-solid.svg" /></span> Hesap Ayarları
                     </NavLink>
                 </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" @onclick=@LogOut style="cursor:pointer;">
+                        <span class="oi"><img src="icons/right-from-bracket-solid.svg" /></span> Oturumu Kapat
+                    </NavLink>
+                </div>
             </Authorized>
             <NotAuthorized>
                 @* Kullanıcının giriş yapmadığında görebileceği alan.. *@
@@ -54,4 +67,23 @@
     {
         collapseNavMenu = !collapseNavMenu;
     }
+
+    async Task LogOut()
+    {
+        await localStorageService.ClearAsync();
+
+        (authenticationStateProvider as AuthStateProvider).NotifyUserLogout();
+        Client.DefaultRequestHeaders.Authorization = null;
+
+        navigationManager.NavigateTo("/login", true);
+    }
+
+    [Inject]
+    AuthenticationStateProvider authenticationStateProvider { get; set; }
+
+    [Inject]
+    ILocalStorageService localStorageService { get; set; }
+
+    [Inject]
+    HttpClient Client { get; set; }
 }

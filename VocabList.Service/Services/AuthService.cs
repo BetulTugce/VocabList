@@ -71,7 +71,7 @@ namespace VocabList.Service.Services
         }
 
         // Kullanıcı veritabanında kayıtlı ise bir ResetToken oluşturup kullanıcıya mail atacak..
-        public async Task PasswordResetAsnyc(string email)
+        public async Task PasswordResetAsnyc(string email, bool IsUserPortal)
         {
             // Gelen email ile bir kullanıcı kayıtlı ise..
             AppUser user = await _userManager.FindByEmailAsync(email);
@@ -91,7 +91,7 @@ namespace VocabList.Service.Services
                 resetToken = resetToken.UrlEncode();
 
                 // Kullanıcıya parola değişikliği yapabilmesi için mail gönderiliyor..
-                await _mailService.SendPasswordResetMailAsync(email, user.Id, resetToken);
+                await _mailService.SendPasswordResetMailAsync(email, user.Id, resetToken, IsUserPortal);
             }
         }
 
