@@ -55,6 +55,10 @@ namespace VocabList.Service.Services
                 {
                     var user = await _userManager.FindByNameAsync(model.Username);
                     CreateUserResponse response = MapToUserDto(user);
+
+                    // Bir kullanıcı oluşturulduğunda varsayılan olarak üye rolünü alacak.. Gerektiğinde kişiye diğer rol atamalarını yönetim panelindeki yetkili kullanıcı yapacak..
+                    await _userManager.AddToRoleAsync(user, "Member");
+
                     return response;
                 }
                 else

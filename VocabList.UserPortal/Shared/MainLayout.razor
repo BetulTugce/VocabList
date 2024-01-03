@@ -1,24 +1,34 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager navigationManager
 
-<PageTitle>VocabList.UserPortal</PageTitle>
+<PageTitle>VocabList</PageTitle>
 
 <MudThemeProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+    @* <div class="sidebar">
+    <NavMenu />
+    </div> *@
 
     <main>
-        <div class="top-row px-4">
-            @* <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a> *@
-            <CascadingValue Value="username" Name="AvatarChar">
-                <AuthenticationAvatar></AuthenticationAvatar>
-            </CascadingValue>
-        </div>
+        <nav class="navbar bg-dark border-bottom border-body" data-bs-theme="dark">
+            <a class="navbar-brand ms-2" style="color: #f7f7f8;" href="/">VocabList</a>
+            <!-- Navbar content -->
+            <div class="ml-auto">
+                <div class="mr-2">
+                    <CascadingValue Value="username" Name="AvatarChar">
+                        <AuthenticationAvatar></AuthenticationAvatar>
+                    </CascadingValue>
+                </div>
+            </div>
+        </nav>
+        @* <div class="top-row px-4">
+        <CascadingValue Value="username" Name="AvatarChar">
+        <AuthenticationAvatar></AuthenticationAvatar>
+        </CascadingValue>
+        </div> *@
 
         <article class="content px-4">
             @Body
@@ -60,7 +70,7 @@
         username = await localStorageService.GetItemAsStringAsync("Username");
     }
 
-    
+
 
     private bool IsAllowAnonymous()
     {
