@@ -21,6 +21,11 @@ builder.Services.AddHttpClient<AuthApiService>(options =>
     options.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]);
 });
 
+builder.Services.AddHttpClient<WordListApiService>(options =>
+{
+    options.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]);
+});
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
