@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using VocabList.Core.DTOs;
+using VocabList.Core.DTOs.Common;
 using VocabList.Core.Entities;
 using VocabList.Core.Services;
 using VocabList.Repository.Consts;
 using VocabList.Repository.CustomAttributes;
 using VocabList.Repository.Enums;
+using VocabList.Service.Services;
 
 namespace VocabList.API.Controllers
 {
@@ -45,6 +47,19 @@ namespace VocabList.API.Controllers
             model.UpdatedDate = DateTime.UtcNow;
             await _wordListService.UpdateAsync(_mapper.Map<WordList>(model));
             return Ok();
+        }
+
+        [HttpPost("[action]")]
+        [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.WordLists, ActionType = ActionType.Reading, Definition = "Get All Word Lists By User Id")]
+        public async Task<IActionResult> GetAllByUserId(GetAllWordListsByUserIdRequest request)
+        {
+            var response = await _wordListService.GetAllWordListsByUserIdAsync(request.Page, request.Size, request.AppUserId); //İlgili idye sahip kullanıcının kelime listelerinin tamamını döner..
+            if (!response.Any())
+            {
+                return NotFound();
+            }
+            var wordListsDtos = _mapper.Map<List<WordListDto>>(response); //Mapleme ile entityler dtoya çevriliyor..
+            return Ok(wordListsDtos);
         }
     }
 }

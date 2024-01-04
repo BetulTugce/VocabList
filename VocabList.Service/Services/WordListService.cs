@@ -16,5 +16,10 @@ namespace VocabList.Service.Services
             _wordListRepository = wordListRepository;
             _mapper = mapper;
         }
+
+        public async Task<List<WordList>> GetAllWordListsByUserIdAsync(int page, int size, string userId)
+        {
+            return await _wordListRepository.GetAllWordListsByUserIdAsync(page, size, userId);
+        }
     }
 }
