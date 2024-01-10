@@ -68,10 +68,11 @@ namespace VocabList.Service.Services
             await _unitOfWork.CommitAsync();
         }
 
-        public async Task UpdateAsync(T entity)
+        public async Task<bool> UpdateAsync(T entity)
         {
-            _repository.Update(entity);
+            bool response = _repository.Update(entity);
             await _unitOfWork.CommitAsync();
+            return response;
         }
 
         public IQueryable<T> Where(Expression<Func<T, bool>> expression)

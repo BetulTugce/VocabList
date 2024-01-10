@@ -14,10 +14,17 @@ namespace VocabList.Repository.Repositories
             
         }
 
+        // İlgili idye sahip kullanıcının kelime listelerini page ve sizea göre liste şeklinde döndürür..
         public async Task<List<WordList>> GetAllWordListsByUserIdAsync(int page, int size, string userId)
         {
             return await _context.WordLists.AsNoTracking().Where(i => i.AppUserId == userId).Skip(page * size)
                   .Take(size).ToListAsync();
+        }
+
+        // İlgili idye sahip kullanıcının toplam kaç tane kelime listesi varsa onu döndürür..
+        public async Task<int> GetTotalCountByUserIdAsync(string userId)
+        {
+            return await _context.WordLists.Where(i => i.AppUserId == userId).CountAsync();
         }
     }
 }

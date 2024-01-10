@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Linq.Expressions;
 using VocabList.Core.Repositories;
 using VocabList.Repository.Contexts;
@@ -75,9 +76,10 @@ namespace VocabList.Repository.Repositories
         }
 
         // Bir nesneyi günceller.
-        public void Update(T entity)
+        public bool Update(T entity)
         {
-            _dbSet.Update(entity);
+            EntityEntry response = _dbSet.Update(entity);
+            return response.State == EntityState.Modified;
         }
 
         // Belirli bir koşula uyan nesneleri getirir.

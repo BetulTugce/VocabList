@@ -19,7 +19,7 @@ namespace VocabList.Core.Services
 
         Task<IEnumerable<T>> AddRangeAsync(IEnumerable<T> entities);
 
-        Task UpdateAsync(T entity);
+        Task<bool> UpdateAsync(T entity);
 
         Task RemoveAsync(T entity);
 

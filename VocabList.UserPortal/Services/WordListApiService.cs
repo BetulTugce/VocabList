@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Net.Http.Json;
 using VocabList.UserPortal.Data.WordLists;
 
 namespace VocabList.UserPortal.Services
@@ -59,6 +60,57 @@ namespace VocabList.UserPortal.Services
             catch (Exception)
             {
                 return (null, HttpStatusCode.InternalServerError);
+            }
+        }
+
+        // Kelime listesini güncellemek için kulanılır..
+        public async Task<HttpStatusCode> UpdateWordListAsync(WordList request, string accessToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            // İlgili URL'ye verilen model verilerine sahip bir JSON içeriği gönderiliyor.
+            var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}WordLists", request);
+            return response.StatusCode;
+        }
+
+        // Kelime listesini silmek için kullanılır..
+        //public async Task<bool> DeleteWordListAsync(int id, string accessToken)
+        public async Task<HttpStatusCode> DeleteWordListAsync(int id, string accessToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            var response = await _httpClient.DeleteAsync($"{_baseUrl}WordLists/{id}");
+            return response.StatusCode;
+        }
+
+        // Kelime listesini idye göre getirir..
+        public async Task<(WordList, HttpStatusCode)> GetWordListByIdAsync(int id, string accessToken)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                var response = await _httpClient.GetAsync($"{_baseUrl}WordLists/{id}");
+                var responseWordList = await response.Content.ReadFromJsonAsync<WordList>();
+                return (responseWordList, response.StatusCode);
+            }
+            catch (Exception)
+            {
+                return (null, HttpStatusCode.InternalServerError);
+            }
+        }
+
+        public async Task<(int, HttpStatusCode)> GetTotalCountByUserId(GetTotalCountByUserIdRequest request, string accessToken)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}WordLists/GetTotalCountByUserId", request);
+                var data = await response.Content.ReadFromJsonAsync<int>();
+                return (data, response.StatusCode);
+            }
+            catch (Exception)
+            {
+                return (0, HttpStatusCode.InternalServerError);
             }
         }
     }

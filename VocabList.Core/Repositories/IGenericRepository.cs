@@ -33,7 +33,7 @@ namespace VocabList.Core.Repositories
         Task AddRangeAsync(IEnumerable<T> entities);
 
         // Bir nesnenin güncellenmesini sağlar.
-        void Update(T entity);
+        bool Update(T entity);
 
         // Belirli bir nesnenin silinmesini sağlar.
         void Remove(T entity);
