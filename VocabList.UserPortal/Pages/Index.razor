@@ -1,9 +1,332 @@
 ﻿@page "/"
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Anasayfa</PageTitle>
 
-<h1>Hello, world!</h1>
+@using VocabList.UserPortal.Data
+@using VocabList.UserPortal.Data.WordLists
+@using VocabList.UserPortal.Services
+@inject WordListApiService _wordListApiService
+@inject NavigationManager navigationManager
+@inject ISnackbar SnackbarService
+@inject Blazored.LocalStorage.ILocalStorageService localStorageService
 
-Welcome to your new app.
+<SurveyPrompt Title=@SurveyTitle />
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+@* <MudGrid Spacing="10" Justify="Justify.Center">
+    <MudItem>
+        <MudTooltip Text="Yeni Liste Oluştur">
+            <MudPaper @onclick=@OpenCreateWordListDialog Height="200px" Width="200px" class="d-flex align-items-center justify-content-center" Style="cursor:pointer">
+                <img src="icons/plus-solid.svg" />
+                <MudFab Icon="@Icons.Material.Filled.Add" Color="Color.Secondary" />
+            </MudPaper>
+        </MudTooltip>
+    </MudItem>
+</MudGrid> *@
+
+@if (isUnauthorized)
+{
+    <UnauthorizedTransactions></UnauthorizedTransactions>
+}
+else
+{
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateWordListDialog" Color="Color.Info">Liste Oluştur</MudButton>
+    <br />
+    @if (wordLists is not null)
+    {
+        <MudTable Items="@wordLists" Hover="true" FixedHeader="true" Style="width:100%">
+            <HeaderContent>
+                @* <MudTh>ID</MudTh> *@
+                <MudTh>Listenin Adı</MudTh>
+                <MudTh>Oluşturulma Tarihi</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                @* <MudTd DataLabel="Id">@context.id</MudTd> *@
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Name">@context.CreatedDate.ToShortDateString()</MudTd>
+                    <MudTd Style="text-align: right">
+                        <MudIconButton OnClick="@(() => GetWordListInfo(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
+                        <MudIconButton OnClick="@(() => DeleteWordList(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="PageChanged" Count="@pageCount" Class="pa-4" />
+                </PagerContent>
+            </MudTable>
+    }
+}
+
+<MudDialog @bind-IsVisible="createWordListDialogIsVisible" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> Yeni Liste Ekle
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="createWordListRequest.Name" Label="Listenin Adı" HelperText="Lütfen eklemek istediğiniz liste için bir isim belirleyin.." Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateWordList" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseCreateWordListDialog" Class="px-10">İptal</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-IsVisible="updateWordListDialogIsVisible" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> @updateWordListRequest.Name Listesini Düzenle
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @* Buraya oluşturulma ve güncellenme tarihleri de eklenecek.. *@
+        <MudTextField @bind-Value="@updateWordListRequest.Name" Label="Listenin Adı" HelperText="Lütfen liste için bir isim belirleyin.." Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="UpdateWordList" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseUpdateWordListDialog" Class="px-10">Kapat</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    Data.WordLists.CreateWordListRequest createWordListRequest = new Data.WordLists.CreateWordListRequest();
+    Data.WordLists.WordList updateWordListRequest = new Data.WordLists.WordList();
+    List<Data.WordLists.WordList> wordLists = new List<Data.WordLists.WordList>();
+    int TotalWordListCountOfTheUser;
+
+    const int rowsPerPage = 10; // Sayfa başına gösterilecek liste sayısı
+    int pageCount; // Toplam sayfa sayısı
+    int _selectedPage = 1; // Seçili olan sayfanın numarası
+
+    string SurveyTitle = string.Empty;
+    String accessToken = string.Empty;
+    String userId = string.Empty;
+    String username = string.Empty;
+    bool isUnauthorized = false;
+
+    private DialogOptions dialogOptions = new() { FullWidth = true };
+    private bool createWordListDialogIsVisible; // Dialog penceresinin görünürlük durumu..
+    private void OpenCreateWordListDialog() => createWordListDialogIsVisible = true; // Dialog penceresini görünür hale getirir..
+    void CloseCreateWordListDialog() => createWordListDialogIsVisible = false; // Dialog penceresini kapatır..
+
+    private bool updateWordListDialogIsVisible;
+    private void OpenUpdateWordListDialog() => updateWordListDialogIsVisible = true;
+    void CloseUpdateWordListDialog() => updateWordListDialogIsVisible = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // AccessToken, username ve userId bilgisi localstorageden alınıyor.. Eğer null ise Login sayfasına yönlendiriliyor..
+        accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
+        username = await localStorageService.GetItemAsStringAsync("Username");
+        userId = await localStorageService.GetItemAsStringAsync("id");
+
+        if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(username))
+        {
+            GoToLoginPage(); 
+        }
+        else
+        {
+            accessToken = accessToken.Substring(1, (accessToken.Length - 2));
+            userId = userId.Substring(1, (userId.Length - 2));
+
+            SurveyTitle = $"Merhaba {username}, kelime listeleri oluşturabilir ve pratik yapabilirsin..";
+
+            // Kullanıcıya ait kelime listeleri çekiliyor..(İlk sayfa - 10 adet liste)
+            await GetAllWordListsByUserId(0, rowsPerPage);
+
+            // Kullanıcıya ait toplam kelime listesi sayısı çekiliyor..
+            await GetTotalCountByUserId();
+        }
+
+    }
+
+    async Task GetTotalCountByUserId()
+    {
+        var response = await _wordListApiService.GetTotalCountByUserId(new(){ AppUserId = userId }, accessToken);
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            // İşlem başarılıysa..
+
+            // Kullanıcının toplam liste sayısı alınıyor..
+            TotalWordListCountOfTheUser = response.Item1;
+
+            // Sayfa sayısı hesaplanıyor..
+            if (TotalWordListCountOfTheUser % rowsPerPage == 0)
+            {
+                // Toplam liste sayısı sayfa başına gösterilecek liste sayısına tam bölünüyorsa sayfa sayısı bölme işleminin sonucu kadardır..
+                pageCount = TotalWordListCountOfTheUser / rowsPerPage;
+            }
+            else
+            {
+                // Toplam liste sayısının sayfa başına gösterilecek liste sayısına bölümü kalanlıysa sayfa sayısı 1 fazla olacak..
+                pageCount = (TotalWordListCountOfTheUser / rowsPerPage) + 1;
+            }
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kullanıcı..
+            ShowNotification("Kullanıcı bazlı kelime listesi sayısını görme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("İşlem sırasında beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    // Kullanıcıya ait kelime listeleri (page ve size bilgine göre) çekiliyor..
+    async Task GetAllWordListsByUserId(int page, int size)
+    {
+
+        var response = await _wordListApiService.GetAllWordListsByUserIdAsync(new() { Page = page, Size = size, AppUserId = userId }, accessToken);
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            // İşlem başarılıysa..
+            wordLists = response.Item1;
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kullanıcı..
+            ShowNotification("Kelime listelerini görme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.NotFound)
+        {
+            // Bu üyenin kayıtlı bir kelime listesi bulunmuyorsa..
+            wordLists = null;
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("Kelime listelerinizi çekerken beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    private async Task PageChanged(int selectedPage)
+    {
+        _selectedPage = selectedPage;
+        // Seçili olan sayfa 1 ise aslında 0.sayfayı getirmesi gerekiyor, bu yüzden 1 eksiği parametre olarak veriliyor..
+        await GetAllWordListsByUserId((selectedPage - 1), rowsPerPage);
+    }
+
+    // Login sayfasına yönlendiriyor..
+    void GoToLoginPage()
+    {
+        navigationManager.NavigateTo("/login");
+    }
+
+    // Yeni kelime listesi oluşturur..
+    async Task CreateWordList()
+    {
+        // Kullanıcının idsi alınıyor..
+        createWordListRequest.AppUserId = userId;
+        // Actiona istekte bulunuyor..
+        var response = await _wordListApiService.CreateWordListAsync(createWordListRequest, accessToken);
+        if (response == System.Net.HttpStatusCode.Created)
+        {
+            // İşlem başarılıysa..
+
+            // Liste sayısı çekiliyor..
+            await GetTotalCountByUserId();
+
+            // Güncel listeyi çeker..
+            await GetAllWordListsByUserId(_selectedPage - 1, rowsPerPage);
+
+            CloseCreateWordListDialog(); // Dialog penceresini kapatır..
+
+            ShowNotification("Kelime listesi oluşturuldu.", Severity.Success);
+        }
+        else if (response == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kişi..
+            isUnauthorized = true;
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+        createWordListRequest = new();
+    }
+
+    // Kelime listesi tablosunda edit butonuna tıklandığı zaman listenin bilgilerini getirecek olan method.. Sonuçları bir dialog penceresi açarak sunar..
+    async Task GetWordListInfo(Data.WordLists.WordList wordList)
+    {
+        // Parametrede gelen user SelectedUser modeline atanıyor..
+        updateWordListRequest = wordList;
+
+        // Dialog penceresini açar..
+        OpenUpdateWordListDialog();
+    }
+
+    // Kelime listesini günceller..
+    async Task UpdateWordList()
+    {
+        var response = await _wordListApiService.UpdateWordListAsync(updateWordListRequest, accessToken);
+        if (response == System.Net.HttpStatusCode.OK)
+        {
+            // İşlem başarılıysa..
+
+            // Güncel listeyi çeker..
+            await GetAllWordListsByUserId(_selectedPage - 1, rowsPerPage);
+
+            CloseUpdateWordListDialog(); // Dialog penceresini kapatır..
+
+            ShowNotification("Kelime listesi güncellendi.", Severity.Success);
+        }
+        else if (response == System.Net.HttpStatusCode.NotFound)
+        {
+            // İlgili liste bulunamadı..
+            ShowNotification("İlgili liste bulunamadı.", Severity.Warning);
+        }
+        else if (response == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kişiyse..
+            isUnauthorized = true;
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    async Task DeleteWordList(Data.WordLists.WordList request)
+    {
+        var response = await _wordListApiService.DeleteWordListAsync(request.Id, accessToken);
+        if (response == System.Net.HttpStatusCode.NoContent)
+        {
+            // Liste sayısı çekiliyor..
+            await GetTotalCountByUserId();
+
+            // Bir liste silindiğinde toplam liste sayısı 1 azalacak, sayfa sayısı da 1 azalmış olabilir.. Eğer son sayfa seçiliyse ve sayfa sayısı 1 azaldıysa seçili olan sayfa da 1 azalmalı..
+           
+            if (_selectedPage > pageCount)
+            {
+                _selectedPage -= -1;
+            }
+
+            // Kelime listesi güncelleniyor..
+            await GetAllWordListsByUserId(_selectedPage - 1, rowsPerPage);
+
+            ShowNotification("Liste başarıyla silinmiştir.", Severity.Success);
+        }
+        else if (response == System.Net.HttpStatusCode.NotFound)
+        {
+            // Bu id ile kayıtlı bir liste bulunmuyorsa..
+            ShowNotification("İlgili liste bulunamadı.", Severity.Warning);
+        }
+        else if (response == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kişiyse..
+            isUnauthorized = true;
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    private void ShowNotification(string resultMessage, Severity severity)
+    {
+        SnackbarService.Add(resultMessage, severity);
+    }
+}
