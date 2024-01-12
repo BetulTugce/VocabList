@@ -12,15 +12,14 @@
 
 <PageTitle>VocabList</PageTitle>
 
-@* TODO: Tasarım yapılacak.. *@
-
-<p>Toplam kullanıcı sayısı : @TotalUsersCount</p>
-<p>Toplam rol sayısı : @TotalRolesCount</p>
-<br />
-@foreach (var role in rolesCountResponses)
+@if (data.Any() && labels.Any())
 {
-    <p>Rol : @role.Role ve Kullanıcı sayısı : @role.Count</p>
-    <br />
+    <MudChart ChartType="ChartType.Donut" Width="300px" Height="300px" InputData="@data" InputLabels="@labels" LegendPosition="Position.Bottom" >
+        <CustomGraphics>
+            <text class="donut-inner-text" x="47%" y="35%" dominant-baseline="middle" text-anchor="middle" fill="black" font-family="Helvetica" font-size="2">Toplam Kullanıcı</text>
+            <text class="donut-inner-text" x="47%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="black" font-family="Helvetica" font-size="5">@TotalUsersCount.ToString()</text>
+        </CustomGraphics>
+    </MudChart>
 }
 
 @code{
@@ -32,6 +31,9 @@
     String userId = string.Empty;
     String username = string.Empty;
     bool isUnauthorized = false;
+
+    public double[] data = Array.Empty<double>();
+    public string[] labels = Array.Empty<string>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -50,10 +52,10 @@
             userId = userId.Substring(1, (userId.Length - 2));
 
             // Toplam kullanıcı sayısı çekiliyor..
-            await GetTotalUsersCount();
+            // await GetTotalUsersCount();
 
             // Toplam rol sayısı çekiliyor..
-            await GetTotalRolesCount();
+            // await GetTotalRolesCount();
 
             // Rolleri ve her bir rolün kaç kullanıcı içerdiğinin bilgisini döner..
             await GetRolesCountAsync();
@@ -73,6 +75,14 @@
         {
             // İşlem başarılıysa..
             rolesCountResponses = response.Item1;
+            // for (int i = 0; i < rolesCountResponses.Count; i++)
+            // {
+            //     data.Append(rolesCountResponses[i].Count);
+            //     labels.Append(rolesCountResponses[i].Role);
+            // }
+            data = rolesCountResponses.Select(role => (double)role.Count).ToArray();
+            labels = rolesCountResponses.Select(role => role.Role).ToArray();
+            TotalUsersCount = (int) data.Sum();
         }
         else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
         {
