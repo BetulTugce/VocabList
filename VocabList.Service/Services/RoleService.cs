@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using VocabList.Core.Entities.Identity;
 using VocabList.Core.Services;
 
@@ -55,6 +56,11 @@ namespace VocabList.Service.Services
                 //throw new Exception("Rol bulunamadı!");
                 return (null, null);
             }
+        }
+
+        public async Task<int> GetTotalCountAsync()
+        {
+            return await _roleManager.Roles.CountAsync();
         }
 
         public async Task<bool> HasRoleByNameAsync(string name)

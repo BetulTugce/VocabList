@@ -1,12 +1,14 @@
 ﻿using Azure.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VocabList.Core.DTOs;
 using VocabList.Core.DTOs.Identity;
 using VocabList.Core.Services;
 using VocabList.Repository.Consts;
 using VocabList.Repository.CustomAttributes;
 using VocabList.Repository.Enums;
 using VocabList.Service.Exceptions;
+using VocabList.Service.Services;
 
 
 namespace VocabList.API.Controllers
@@ -138,6 +140,14 @@ namespace VocabList.API.Controllers
             {
                 return StatusCode(500, new { ErrorMessage = "İşlem başarısız! " + ex.Message });
             }
+        }
+
+        [HttpGet("[action]")]
+        [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.Users, ActionType = ActionType.Reading, Definition = "Get Total Count")]
+        public async Task<IActionResult> GetTotalCount()
+        {
+            //Toplam kullanıcı sayısını döner..
+            return Ok(await _userService.GetTotalCountAsync());
         }
     }
 }

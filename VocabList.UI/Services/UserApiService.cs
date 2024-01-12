@@ -145,5 +145,21 @@ namespace VocabList.UI.Services
                 return HttpStatusCode.InternalServerError;
             }
         }
+
+        // Toplam kullanıcı sayısını döner..
+        public async Task<(int, HttpStatusCode)> GetTotalCount(string accessToken)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                var response = await _httpClient.GetAsync($"{_baseUrl}Users/GetTotalCount");
+                var data = await response.Content.ReadFromJsonAsync<int>();
+                return (data, response.StatusCode);
+            }
+            catch (Exception)
+            {
+                return (0, HttpStatusCode.InternalServerError);
+            }
+        }
     }
 }

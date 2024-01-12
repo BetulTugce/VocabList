@@ -8,5 +8,6 @@
         (object, int) GetAllRoles(int page, int size);
         Task<(string id, string name)> GetRoleById(string id);
         Task<bool> HasRoleByNameAsync(string name);
+        Task<int> GetTotalCountAsync();
     }
 }
