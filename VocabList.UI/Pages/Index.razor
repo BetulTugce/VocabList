@@ -16,10 +16,17 @@
 
 <p>Toplam kullanıcı sayısı : @TotalUsersCount</p>
 <p>Toplam rol sayısı : @TotalRolesCount</p>
+<br />
+@foreach (var role in rolesCountResponses)
+{
+    <p>Rol : @role.Role ve Kullanıcı sayısı : @role.Count</p>
+    <br />
+}
 
 @code{
     int TotalUsersCount;
     int TotalRolesCount;
+    List<UserRolesCountResponse> rolesCountResponses = new List<UserRolesCountResponse>();
 
     String accessToken = string.Empty;
     String userId = string.Empty;
@@ -44,9 +51,12 @@
 
             // Toplam kullanıcı sayısı çekiliyor..
             await GetTotalUsersCount();
-            
+
             // Toplam rol sayısı çekiliyor..
             await GetTotalRolesCount();
+
+            // Rolleri ve her bir rolün kaç kullanıcı içerdiğinin bilgisini döner..
+            await GetRolesCountAsync();
         }
     }
 
@@ -54,6 +64,26 @@
     void GoToLoginPage()
     {
         navigationManager.NavigateTo("/login");
+    }
+
+    async Task GetRolesCountAsync()
+    {
+        var response = await _roleApiService.GetUserRolesAsync(accessToken);
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            // İşlem başarılıysa..
+            rolesCountResponses = response.Item1;
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kullanıcı..
+            ShowNotification("Rollere göre kullanıcı sayısını görme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("İşlem sırasında beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
     }
 
     async Task GetTotalUsersCount(){

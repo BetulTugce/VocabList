@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.ConstrainedExecution;
+using VocabList.Core.DTOs.Identity;
 using VocabList.Core.Entities.Identity;
 using VocabList.Core.Services;
 
@@ -7,11 +9,13 @@ namespace VocabList.Service.Services
 {
     public class RoleService : IRoleService
     {
+        readonly UserManager<AppUser> _userManager;
         readonly RoleManager<AppRole> _roleManager;
-        public RoleService(RoleManager<AppRole> roleManager)
+        public RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> userManager)
         {
             // Dependency Injection ile UserManager<AppUser> sınıfının bir örneğini bu servise enjekte eder.
             _roleManager = roleManager;
+            _userManager = userManager;
         }
 
         public async Task<bool> CreateRole(string name)
@@ -63,6 +67,7 @@ namespace VocabList.Service.Services
             return await _roleManager.Roles.CountAsync();
         }
 
+
         public async Task<bool> HasRoleByNameAsync(string name)
         {
             AppRole appRole = await _roleManager.FindByNameAsync(name);
@@ -82,6 +87,27 @@ namespace VocabList.Service.Services
             role.Name = name;
             IdentityResult result = await _roleManager.UpdateAsync(role);
             return result.Succeeded;
+        }
+
+        //Rolleri ve her rolün kaç kullanıcı içerdiği bilgisini bir liste şeklinde döndürüyor..
+        public async Task<List<UserRolesCount>> GetUserRolesAsync()
+        {
+            var roleCounts = new List<UserRolesCount>();
+
+            // Tüm roller çekiliyor..
+            var roles = _roleManager.Roles.ToList();
+
+            foreach (var role in roles)
+            {
+                // Her rol için kullanıcı sayısı alınıyor..
+                var usersInRole = await _userManager.GetUsersInRoleAsync(role.Name);
+                var count = usersInRole.Count;
+
+                // UserRolesCount tipindeki listeye ekleniyor..
+                roleCounts.Add(new UserRolesCount { Role = role.Name, Count = count });
+            }
+
+            return roleCounts;
         }
     }
 }

@@ -145,5 +145,21 @@ namespace VocabList.API.Controllers
             //Toplam rol sayısını döner..
             return Ok(await _roleService.GetTotalCountAsync());
         }
+
+        [HttpGet("[action]")]
+        [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.Roles, ActionType = ActionType.Reading, Definition = "Get Roles And Count")]
+        public async Task<IActionResult> GetUserRoles()
+        {
+            try
+            {
+                // Rolleri ve her rolün kaç kullanıcı içerdiği bilgisini bir liste şeklinde döndürüyor..
+                List<UserRolesCount> userRoles = await _roleService.GetUserRolesAsync();
+                return Ok(userRoles);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = $"Internal Server Error: {ex.Message}" });
+            }
+        }
     }
 }

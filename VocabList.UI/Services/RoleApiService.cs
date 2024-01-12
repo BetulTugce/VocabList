@@ -110,5 +110,29 @@ namespace VocabList.UI.Services
                 return (0, HttpStatusCode.InternalServerError);
             }
         }
+
+        // Rolleri ve her rolün kaç kullanıcı içerdiği bilgisini bir liste şeklinde döndürüyor..
+        public async Task<(List<UserRolesCountResponse>, HttpStatusCode)> GetUserRolesAsync(string accessToken)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                HttpResponseMessage response = await _httpClient.GetAsync($"{_baseUrl}Roles/GetUserRoles");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<List<UserRolesCountResponse>>();
+                    return (data, response.StatusCode);
+                }
+                else
+                {
+                    return (null, response.StatusCode);
+                }
+            }
+            catch (Exception ex)
+            {
+                return (null, HttpStatusCode.InternalServerError);
+            }
+        }
     }
 }
