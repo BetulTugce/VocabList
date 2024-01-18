@@ -1,0 +1,120 @@
+﻿@page "/word-lists/{Id:int}"
+
+@using VocabList.UserPortal.Data
+@using VocabList.UserPortal.Data.WordLists
+@using VocabList.UserPortal.Data.Words
+@using VocabList.UserPortal.Services
+@inject WordListApiService _wordListApiService
+@inject WordApiService _wordApiService
+@inject NavigationManager navigationManager
+@inject ISnackbar SnackbarService
+@inject Blazored.LocalStorage.ILocalStorageService localStorageService
+
+
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    String accessToken = string.Empty;
+    String userId = string.Empty;
+    String username = string.Empty;
+    bool isUnauthorized = false;
+
+    const int rowsPerPage = 10; // Sayfa başına gösterilecek kelime sayısı
+
+    WordList wordList = new WordList();
+    List<Word> Words = new List<Word>();
+
+    // Login sayfasına yönlendiriyor..
+    void GoToLoginPage()
+    {
+        navigationManager.NavigateTo("/login");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // AccessToken, username ve userId bilgisi localstorageden alınıyor.. Eğer null ise Login sayfasına yönlendiriliyor..
+        accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
+        username = await localStorageService.GetItemAsStringAsync("Username");
+        userId = await localStorageService.GetItemAsStringAsync("id");
+
+        if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(username))
+        {
+            GoToLoginPage();
+        }
+        else
+        {
+            accessToken = accessToken.Substring(1, (accessToken.Length - 2));
+            userId = userId.Substring(1, (userId.Length - 2));
+
+            // İlgili idye sahip kelime listesi userIdyi de kontrol ederek çekiliyor..
+            //Burada appuseridnin kontrol edilme sebebi, kullanıcının id kısmına rastgele bir sayı girip başkasının listesini çekmesini önlemek..
+            await GetSelectedWordList();
+
+            // UserId bilgisi de kontrol edilerek page ve sizea göre ilgili idye sahip listesinin altındaki kelimeler çekiliyor..
+            await GetAllWordsBySelectedWordList(0, rowsPerPage);
+
+        }
+
+    }
+
+    // İlgili idye sahip kelime listesi userIdyi de kontrol ederek çekiliyor..
+    async Task GetSelectedWordList()
+    {
+        var response = await _wordListApiService.GetWordListByIdAndUserIdAsync(new(){ Id = Id, AppUserId = userId}, accessToken);
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            wordList = response.Item1;
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.NotFound)
+        {
+            // Seçili liste yoksa..
+            wordList = null;
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kişiyse..
+            isUnauthorized = true;
+            // ShowNotification("Kelime listelerini görme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("Kelime listelerinizi çekerken beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    // UserId bilgisi de kontrol edilerek page ve sizea göre ilgili idye sahip listesinin altındaki kelimeler çekiliyor..
+    async Task GetAllWordsBySelectedWordList(int page, int size)
+    {
+        var response = await _wordApiService.GetAllWordsByUserIdAndWordListIdAsync(new() { Page = page, Size = size, AppUserId = userId, WordListId = Id }, accessToken);
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            // İşlem başarılıysa..
+            Words = response.Item1;
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.NotFound)
+        {
+            // Seçili listede eleman yoksa..
+            Words = null;
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kişiyse..
+            // isUnauthorized = true;
+            ShowNotification("Kelime listelerini görme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("Kelime listelerinizi çekerken beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    private void ShowNotification(string resultMessage, Severity severity)
+    {
+        SnackbarService.Add(resultMessage, severity);
+    }
+}

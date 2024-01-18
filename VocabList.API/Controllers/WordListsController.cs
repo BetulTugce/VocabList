@@ -71,10 +71,23 @@ namespace VocabList.API.Controllers
             return Ok(wordListsDtos);
         }
 
+        [HttpPost("[action]")]
+        [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.WordLists, ActionType = ActionType.Reading, Definition = "Get Word List By Id And User Id")]
+        public async Task<IActionResult> GetByIdAndUserId(GetWordListByIdAndUserIdRequest request)
+        {
+            var response = await _wordListService.GetWordListByIdAndUserIdAsync(request.Id, request.AppUserId); //İlgili idye ait datayı useridyi de kontrol ederek döner..
+            if (response == null)
+            {
+                return NotFound(request.Id);
+            }
+            var wordListDto = _mapper.Map<WordListDto>(response); //Mapleme ile entity dtoya çevriliyor..
+            return Ok(wordListDto);
+        }
+
         // İlgili idye sahip listeyi getirir..
         [HttpGet("{id}")]
         [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.WordLists, ActionType = ActionType.Reading, Definition = "Get Word List By Id")]
-        public async Task<IActionResult> GetById(int id) // TODO : Test edilecek..
+        public async Task<IActionResult> GetById(int id)
         {
             var response = await _wordListService.GetByIdAsync(id); //İlgili idye ait datayı döner..
             if (response == null)

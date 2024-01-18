@@ -98,6 +98,32 @@ namespace VocabList.UserPortal.Services
                 return (null, HttpStatusCode.InternalServerError);
             }
         }
+        
+        // Kelime listesini idye ve userIdye göre getirir..
+        public async Task<(WordList, HttpStatusCode)> GetWordListByIdAndUserIdAsync(GetWordListByIdAndUserIdRequest request, string accessToken)
+        {
+            try
+            {
+                // AccessToken ile Authorization başlığı ayarlanıyor..
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+                //İlgili urle verilen model verilerine sahip bir json içeriği gönderiliyor..
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}WordLists/GetByIdAndUserId", request);
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseWordList = await response.Content.ReadFromJsonAsync<WordList>();
+                    return (responseWordList, response.StatusCode);
+                }
+                else
+                {
+                    return (null, response.StatusCode);
+                }
+            }
+            catch (Exception)
+            {
+                return (null, HttpStatusCode.InternalServerError);
+            }
+        }
 
         public async Task<(int, HttpStatusCode)> GetTotalCountByUserId(GetTotalCountByUserIdRequest request, string accessToken)
         {

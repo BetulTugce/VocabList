@@ -26,5 +26,11 @@ namespace VocabList.Repository.Repositories
         {
             return await _context.WordLists.Where(i => i.AppUserId == userId).CountAsync();
         }
+
+        // Verilen id ve userIdye sahip WordListi arar. Eğer öğe bulunursa, bu öğe döndürülür; bulunamazsa null değeri döner.
+        public async Task<WordList> GetWordListByIdAndUserIdAsync(int id, string userId)
+        {
+            return await _context.WordLists.FirstOrDefaultAsync(i => i.Id == id && i.AppUserId == userId);
+        }
     }
 }
