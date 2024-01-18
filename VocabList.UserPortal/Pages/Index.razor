@@ -38,12 +38,15 @@ else
                 @* <MudTh>ID</MudTh> *@
                 <MudTh>Listenin Adı</MudTh>
                 <MudTh>Oluşturulma Tarihi</MudTh>
+                <MudTh>Değiştirildiği Tarih</MudTh>
             </HeaderContent>
             <RowTemplate>
                 @* <MudTd DataLabel="Id">@context.id</MudTd> *@
                 <MudTd DataLabel="Name">@context.Name</MudTd>
-                    <MudTd DataLabel="Name">@context.CreatedDate.ToShortDateString()</MudTd>
+                    <MudTd DataLabel="CreatedDate">@context.CreatedDate.ToShortDateString()</MudTd>
+                    <MudTd DataLabel="UpdatedDate">@(context.UpdatedDate is not null ? context.UpdatedDate.Value.ToShortDateString() : "-") </MudTd>
                     <MudTd Style="text-align: right">
+                        <MudIconButton OnClick="@(() => GoToWordListPage(context))" Size="@Size.Small"> <img src="icons/eye-solid.svg" /></MudIconButton>
                         <MudIconButton OnClick="@(() => GetWordListInfo(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
                         <MudIconButton OnClick="@(() => DeleteWordList(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
                     </MudTd>
@@ -297,7 +300,7 @@ else
             await GetTotalCountByUserId();
 
             // Bir liste silindiğinde toplam liste sayısı 1 azalacak, sayfa sayısı da 1 azalmış olabilir.. Eğer son sayfa seçiliyse ve sayfa sayısı 1 azaldıysa seçili olan sayfa da 1 azalmalı..
-           
+
             if (_selectedPage > pageCount)
             {
                 _selectedPage -= -1;
@@ -328,5 +331,11 @@ else
     private void ShowNotification(string resultMessage, Severity severity)
     {
         SnackbarService.Add(resultMessage, severity);
+    }
+
+    // WordList.razor sayfasına yönlendiriyor..
+    void GoToWordListPage(Data.WordLists.WordList wordList)
+    {
+        navigationManager.NavigateTo($"/word-lists/{wordList.Id}");
     }
 }
