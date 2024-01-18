@@ -1,8 +1,6 @@
-﻿using VocabList.Core.DTOs.Common;
-
-namespace VocabList.Core.DTOs
+﻿namespace VocabList.UserPortal.Data.Words
 {
-    public class WordDto : BaseDto
+    public class CreateWordRequest
     {
         public string Value { get; set; }
         public string Description { get; set; }
