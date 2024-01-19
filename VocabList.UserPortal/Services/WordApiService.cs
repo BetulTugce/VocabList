@@ -14,7 +14,7 @@ namespace VocabList.UserPortal.Services
             _baseUrl = configuration["ApiSettings:BaseUrl"];
         }
 
-        // UserId ve wordList id bilgisine göre ilgili kullanıcı için bir liste oluşturur..
+        // UserId ve wordList id bilgisine göre ilgili kullanıcı için bir kelime oluşturur..
         public async Task<HttpStatusCode> CreateWordAsync(CreateWordRequest request, string accessToken)
         {
             try
@@ -30,6 +30,15 @@ namespace VocabList.UserPortal.Services
             {
                 return HttpStatusCode.InternalServerError;
             }
+        }
+
+        // Kelimeyi silmek için kullanılır..
+        public async Task<HttpStatusCode> DeleteWordAsync(int id, string accessToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            var response = await _httpClient.DeleteAsync($"{_baseUrl}Words/{id}");
+            return response.StatusCode;
         }
 
         // UserIdnin oluşturduğu kelimeleri page ve size parametrelerine göre liste halinde getiriyor..

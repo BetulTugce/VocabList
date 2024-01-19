@@ -47,5 +47,20 @@ namespace VocabList.API.Controllers
             var wordListsDtos = _mapper.Map<List<WordDto>>(response); //Mapleme ile entityler dtoya çevriliyor..
             return Ok(wordListsDtos);
         }
+
+        // Parametredeki idye sahip kelimeyi siler..
+        [HttpDelete("{id}")]
+        [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.Words, ActionType = ActionType.Deleting, Definition = "Delete Word By Id")]
+        public async Task<IActionResult> Remove(int id)
+        {
+            //İlgili idye sahip data bulunuyor..
+            var response = await _wordService.GetByIdAsync(id);
+            if (response == null)
+            {
+                return NotFound(id);
+            }
+            await _wordService.RemoveAsync(response); //Data siliniyor..
+            return NoContent();
+        }
     }
 }

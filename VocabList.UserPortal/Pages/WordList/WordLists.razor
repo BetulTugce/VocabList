@@ -50,6 +50,10 @@ else
                     <MudTd DataLabel="Türü">@context.Type</MudTd>
                     <MudTd DataLabel="Oluşturulma Tarihi">@context.CreatedDate</MudTd>
                     <MudTd DataLabel="Değiştirilme Tarihi">@(context.UpdatedDate is not null ? context.UpdatedDate.Value.ToShortDateString() : "-")</MudTd>
+                    <MudTd Style="text-align: right">
+                        @* <MudIconButton OnClick="@(() => GetWordInfo(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" /> *@
+                        <MudIconButton OnClick="@(() => DeleteWord(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
+                    </MudTd>
                 </RowTemplate>
                 <ChildRowContent>
                     @if (context.ShowDetails)
@@ -81,6 +85,10 @@ else
                                                 <MudTd DataLabel="Cümle">@sentenceContext.Value</MudTd>
                                             <MudTd DataLabel="Oluşturulma Tarihi">@sentenceContext.CreatedDate</MudTd>
                                             <MudTd DataLabel="Değiştirilme Tarihi">@(sentenceContext.UpdatedDate is not null ? sentenceContext.UpdatedDate.Value.ToShortDateString() : "-")</MudTd>
+                                            <MudTd Style="text-align: right">
+                                                @* <MudIconButton OnClick="@(() => GetSentenceInfo(sentenceContext))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
+                                                <MudIconButton OnClick="@(() => DeleteSentence(sentenceContext))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" /> *@
+                                            </MudTd>
                                             </RowTemplate>
                                         </MudTable>
                                     </MudCardContent>
@@ -237,7 +245,7 @@ else
         {
             // İşlem başarılıysa..
 
-            // Liste sayısı çekiliyor..
+            // Kelime sayısı çekiliyor..
             // await GetTotalCountByUserId();
 
             // Güncel listeyi çeker..
@@ -262,7 +270,7 @@ else
     }
 
     Word selectedWord = new Word();
-    // Göster/Gizle butonuna tıklandığında çalışır.. Parametredeki kelime idsi ile ilişkili cümleleri çeker..
+    // Cümle Göster/Gizle butonuna tıklandığında çalışır.. Parametredeki kelime idsi ile ilişkili cümleleri çeker..
     private async Task ShowBtnPress(Word word)
     {
         if (selectedWord != word)
@@ -280,7 +288,7 @@ else
         }
         else if (response.Item2 == System.Net.HttpStatusCode.NotFound)
         {
-            // Seçili listede eleman yoksa..
+            // Seçili kelimeye ait hiç cümle yoksa..
             Sentences = null;
         }
         else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
@@ -296,5 +304,44 @@ else
         }
 
         selectedWord.ShowDetails = !selectedWord.ShowDetails;
+    }
+
+    // Kelime silme işlemi..
+    async Task DeleteWord(Word request)
+    {
+        var response = await _wordApiService.DeleteWordAsync(request.Id, accessToken);
+        if (response == System.Net.HttpStatusCode.NoContent)
+        {
+            // Kelime sayısı çekiliyor..
+            // await GetTotalCountByUserId();
+
+            // Bir kelime silindiğinde toplam kelime sayısı 1 azalacak, sayfa sayısı da 1 azalmış olabilir.. Eğer son sayfa seçiliyse ve sayfa sayısı 1 azaldıysa seçili olan sayfa da 1 azalmalı..
+
+            // if (_selectedPage > pageCount)
+            // {
+            //     _selectedPage -= -1;
+            // }
+
+            // Kelime listesi güncelleniyor..
+            await GetAllWordsBySelectedWordList(_selectedPage - 1, rowsPerPage);
+
+            ShowNotification("Kelime başarıyla silinmiştir.", Severity.Success);
+        }
+        else if (response == System.Net.HttpStatusCode.NotFound)
+        {
+            // Bu id ile kayıtlı bir kelime bulunmuyorsa..
+            ShowNotification($"{request.Value} şeklinde bir kayıt bulunamadı.", Severity.Warning);
+        }
+        else if (response == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kişiyse..
+            // isUnauthorized = true;
+            ShowNotification("Kelime silme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
     }
 }
