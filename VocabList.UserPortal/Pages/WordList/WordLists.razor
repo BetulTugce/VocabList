@@ -429,7 +429,8 @@ else
     async Task GetWordInfo(Word word)
     {
         // Parametrede gelen kelime modele atanıyor..
-        updateWordRequest = word;
+        // updateWordRequest = word; // Bu şekilde doğrudan atama yapınca işlem başarısız olsa bile güncellenmiş gibi gösteriyor..
+        updateWordRequest = new(){ Id = word.Id, CreatedDate = word.CreatedDate, UpdatedDate = word.UpdatedDate, WordListId = word.WordListId, Description = word.Description, Type = word.Description, Value = word.Value, ShowDetails = word.ShowDetails };
 
         // Dialog penceresini açar..
         OpenUpdateWordDialog();
@@ -452,7 +453,7 @@ else
         }
         else if (response == System.Net.HttpStatusCode.NotFound)
         {
-            // İlgili liste bulunamadı..
+            // İlgili kelime bulunamadı..
             ShowNotification("İlgili kelime bulunamadı.", Severity.Warning);
         }
         else if (response == System.Net.HttpStatusCode.Unauthorized)

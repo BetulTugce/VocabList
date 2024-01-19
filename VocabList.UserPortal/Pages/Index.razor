@@ -252,8 +252,9 @@ else
     // Kelime listesi tablosunda edit butonuna tıklandığı zaman listenin bilgilerini getirecek olan method.. Sonuçları bir dialog penceresi açarak sunar..
     async Task GetWordListInfo(Data.WordLists.WordList wordList)
     {
-        // Parametrede gelen user SelectedUser modeline atanıyor..
-        updateWordListRequest = wordList;
+        // Parametrede gelen liste bilgisi modele atanıyor..
+        // updateWordListRequest = wordList;
+        updateWordListRequest = new() { Id = wordList.Id, AppUserId = wordList.AppUserId, CreatedDate = wordList.CreatedDate, UpdatedDate = wordList.UpdatedDate, Name = wordList.Name };
 
         // Dialog penceresini açar..
         OpenUpdateWordListDialog();
@@ -282,7 +283,8 @@ else
         else if (response == System.Net.HttpStatusCode.Unauthorized)
         {
             // Yetkisiz kişiyse..
-            isUnauthorized = true;
+            // isUnauthorized = true;
+            ShowNotification("Kelime listesi güncelleme yetkiniz bulunmamaktadır.", Severity.Warning);
         }
         else
         {
