@@ -51,7 +51,7 @@ else
                     <MudTd DataLabel="Oluşturulma Tarihi">@context.CreatedDate</MudTd>
                     <MudTd DataLabel="Değiştirilme Tarihi">@(context.UpdatedDate is not null ? context.UpdatedDate.Value.ToShortDateString() : "-")</MudTd>
                     <MudTd Style="text-align: right">
-                        @* <MudIconButton OnClick="@(() => GetWordInfo(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" /> *@
+                        <MudIconButton OnClick="@(() => GetWordInfo(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
                         <MudIconButton OnClick="@(() => DeleteWord(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
                     </MudTd>
                 </RowTemplate>
@@ -122,8 +122,25 @@ else
     </DialogActions>
 </MudDialog>
 
+<MudDialog @bind-IsVisible="updateWordDialogIsVisible" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> @* @updateWordRequest.Value *@ Kelime Düzenle
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @* Buraya oluşturulma ve güncellenme tarihleri de eklenecek.. *@
+        <MudTextField @bind-Value="@updateWordRequest.Value" Label="Kelime" HelperText="Lütfen kelime için bir isim belirleyin.." Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="updateWordRequest.Description" Label="Anlamı" HelperText="Lütfen kelimenin anlamını girin.." Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="updateWordRequest.Type" Label="Türü" HelperText="Lütfen kelimenin türünü girin.." Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="UpdateWord" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseUpdateWordDialog" Class="px-10">Kapat</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
-    // TODO : Table için paginition eklenecek..
     [Parameter]
     public int Id { get; set; }
 
@@ -142,11 +159,16 @@ else
     List<Sentence> Sentences = new List<Sentence>();
 
     CreateWordRequest createWordRequest = new CreateWordRequest();
+    Word updateWordRequest = new Word();
 
     private DialogOptions dialogOptions = new() { FullWidth = true };
     private bool createWordDialogIsVisible; // Dialog penceresinin görünürlük durumu..
     private void OpenCreateWordDialog() => createWordDialogIsVisible = true; // Dialog penceresini görünür hale getirir..
     void CloseCreateWordDialog() => createWordDialogIsVisible = false; // Dialog penceresini kapatır..
+
+    private bool updateWordDialogIsVisible;
+    private void OpenUpdateWordDialog() => updateWordDialogIsVisible = true;
+    void CloseUpdateWordDialog() => updateWordDialogIsVisible = false;
 
     // Login sayfasına yönlendiriyor..
     void GoToLoginPage()
@@ -395,6 +417,49 @@ else
             // Yetkisiz kişiyse..
             // isUnauthorized = true;
             ShowNotification("Kelime silme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    // Kelime tablosunda edit butonuna tıklandığı zaman kelimenin bilgilerini getirecek olan method.. Sonuçları bir dialog penceresi açarak sunar..
+    async Task GetWordInfo(Word word)
+    {
+        // Parametrede gelen kelime modele atanıyor..
+        updateWordRequest = word;
+
+        // Dialog penceresini açar..
+        OpenUpdateWordDialog();
+    }
+
+    // Kelimeyi günceller..
+    async Task UpdateWord()
+    {
+        var response = await _wordApiService.UpdateWordAsync(updateWordRequest, accessToken);
+        if (response == System.Net.HttpStatusCode.OK)
+        {
+            // İşlem başarılıysa..
+
+            // Güncel listeyi çeker..
+            await GetAllWordsBySelectedWordList(_selectedPage - 1, rowsPerPage);
+
+            CloseUpdateWordDialog(); // Dialog penceresini kapatır..
+
+            ShowNotification("Kelime güncellendi.", Severity.Success);
+        }
+        else if (response == System.Net.HttpStatusCode.NotFound)
+        {
+            // İlgili liste bulunamadı..
+            ShowNotification("İlgili kelime bulunamadı.", Severity.Warning);
+        }
+        else if (response == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kişiyse..
+            // isUnauthorized = true;
+            ShowNotification("Kelime güncelleme yetkiniz bulunmamaktadır.", Severity.Warning);
         }
         else
         {

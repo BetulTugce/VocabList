@@ -35,6 +35,23 @@ namespace VocabList.API.Controllers
             return StatusCode((int)HttpStatusCode.Created);
         }
 
+        [HttpPut]
+        [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.Words, ActionType = ActionType.Updating, Definition = "Update The Word")]
+        public async Task<IActionResult> Put(WordDto model)
+        {
+            try
+            {
+                model.UpdatedDate = DateTime.UtcNow;
+                var mappedData = _mapper.Map<Word>(model);
+                bool response = await _wordService.UpdateAsync(mappedData);
+                if (response) { return Ok(); } else { return BadRequest(); }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
+        }
+
         [HttpPost("[action]")]
         [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.Words, ActionType = ActionType.Reading, Definition = "Get All Words By User Id And Word List Id")]
         public async Task<IActionResult> GetAllByUserIdAndWordListId(GetAllWordsByUserIdAndWordListIdRequest request)

@@ -32,6 +32,16 @@ namespace VocabList.UserPortal.Services
             }
         }
 
+        // Kelimeyi güncellemek için kulanılır..
+        public async Task<HttpStatusCode> UpdateWordAsync(Word request, string accessToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            // İlgili URL'ye verilen model verilerine sahip bir JSON içeriği gönderiliyor.
+            var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}Words", request);
+            return response.StatusCode;
+        }
+
         // Kelimeyi silmek için kullanılır..
         public async Task<HttpStatusCode> DeleteWordAsync(int id, string accessToken)
         {
