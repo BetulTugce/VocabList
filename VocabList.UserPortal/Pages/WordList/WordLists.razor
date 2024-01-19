@@ -10,10 +10,99 @@
 @inject ISnackbar SnackbarService
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
 
+@if (isUnauthorized)
+{
+    <UnauthorizedTransactions></UnauthorizedTransactions>
+}
+else if (wordList == null)
+{
+    @*TODO: Böyle bir liste bulunmamaktadır uyarısı eklenecek*@
+    <p>Liste yokki :D</p>
+}
+else
+{
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateWordDialog" Color="Color.Info">Kelime Ekle</MudButton>
+    <br />
+    @if (Words is not null)
+    {
+        <MudTable Items="@Words" Hover="true" Breakpoint="Breakpoint.Sm">
+            <ColGroup>
+                <col style="width:300px;" />
+                <col style="width:100px;" />
+                <col />
+                <col style="width:100px;" />
+            </ColGroup>
+            <HeaderContent>
+                <MudTh></MudTh>
+                <MudTh>Kelime</MudTh>
+                <MudTh>Anlamı</MudTh>
+                <MudTh>Türü</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => ShowBtnPress(context.Id))">@((context.ShowDetails == true) ? "Gizle" : "Göster") Örnek Cümle</MudButton></MudTd>
+                <MudTd DataLabel="Nr">@context.Value</MudTd>
+                    <MudTd DataLabel="Name">@context.Description</MudTd>
+                    <MudTd DataLabel="Age">@context.Type</MudTd>
+                </RowTemplate>
+                <ChildRowContent>
+                    @if (context.ShowDetails)
+                {
+                    @* Cümleler basılacak *@
+                   @*  <MudTr>
+                        <td colspan="4">
+                            <MudCard Elevation="0">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.body1">Address Details for <strong>@context.Name</strong></MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent Class="pa-0">
+                                    <MudTable Items="@context.Addresses" Context="AddressContext" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                        <ColGroup>
+                                            <col />
+                                            <col />
+                                            <col style="width:200px;" />
+                                        </ColGroup>
+                                        <HeaderContent>
+                                            <MudTh>Address Line 1</MudTh>
+                                            <MudTh>Address Line 2</MudTh>
+                                            <MudTh>Postal Code</MudTh>
+                                        </HeaderContent>
+                                        <RowTemplate>
+                                            <MudTd DataLabel="Address Line 1">@AddressContext.Address_Line_1</MudTd>
+                                            <MudTd DataLabel="Address Line 2">@AddressContext.Address_Line_2</MudTd>
+                                            <MudTd DataLabel="Postal Code">@AddressContext.Postal_Code</MudTd>
+                                        </RowTemplate>
+                                    </MudTable>
+                                </MudCardContent>
+                            </MudCard>
+                        </td>
+                    </MudTr> *@
+                }
+            </ChildRowContent>
+        </MudTable>
+    }
+}
 
+<MudDialog @bind-IsVisible="createWordDialogIsVisible" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> Yeni Liste Ekle
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="createWordRequest.Value" Label="Kelime" HelperText="Lütfen eklemek istediğiniz kelimeyi girin.." Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="createWordRequest.Description" Label="Anlamı" HelperText="Lütfen kelimenin anlamını girin.." Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="createWordRequest.Type" Label="Türü" HelperText="Lütfen kelimenin türünü girin.." Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateWord" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseCreateWordDialog" Class="px-10">İptal</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
-
+    // TODO : Table için paginition eklenecek..
     [Parameter]
     public int Id { get; set; }
 
@@ -22,10 +111,18 @@
     String username = string.Empty;
     bool isUnauthorized = false;
 
+    int _selectedPage = 1; // Seçili olan sayfanın numarası
     const int rowsPerPage = 10; // Sayfa başına gösterilecek kelime sayısı
 
     WordList wordList = new WordList();
     List<Word> Words = new List<Word>();
+
+    CreateWordRequest createWordRequest = new CreateWordRequest();
+
+    private DialogOptions dialogOptions = new() { FullWidth = true };
+    private bool createWordDialogIsVisible; // Dialog penceresinin görünürlük durumu..
+    private void OpenCreateWordDialog() => createWordDialogIsVisible = true; // Dialog penceresini görünür hale getirir..
+    void CloseCreateWordDialog() => createWordDialogIsVisible = false; // Dialog penceresini kapatır..
 
     // Login sayfasına yönlendiriyor..
     void GoToLoginPage()
@@ -116,5 +213,46 @@
     private void ShowNotification(string resultMessage, Severity severity)
     {
         SnackbarService.Add(resultMessage, severity);
+    }
+
+    // Yeni kelime listesi oluşturur..
+    async Task CreateWord()
+    {
+        // Kullanıcının idsi alınıyor..
+        createWordRequest.WordListId = Id;
+        // Actiona istekte bulunuyor..
+        var response = await _wordApiService.CreateWordAsync(createWordRequest, accessToken);
+        if (response == System.Net.HttpStatusCode.Created)
+        {
+            // İşlem başarılıysa..
+
+            // Liste sayısı çekiliyor..
+            // await GetTotalCountByUserId();
+
+            // Güncel listeyi çeker..
+            await GetAllWordsBySelectedWordList(_selectedPage - 1, rowsPerPage);
+
+            CloseCreateWordDialog(); // Dialog penceresini kapatır..
+
+            ShowNotification("Kelime eklendi.", Severity.Success);
+        }
+        else if (response == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kişi..
+            // isUnauthorized = true;
+            ShowNotification("Kelime ekleme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+        createWordRequest = new();
+    }
+
+    private void ShowBtnPress(int id)
+    {
+        Word selectedWord = Words.First(f => f.Id == id);
+        selectedWord.ShowDetails = !selectedWord.ShowDetails;
     }
 }
