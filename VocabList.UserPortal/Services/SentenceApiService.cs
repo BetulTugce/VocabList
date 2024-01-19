@@ -32,6 +32,15 @@ namespace VocabList.UserPortal.Services
             }
         }
 
+        // Cümleyi silmek için kullanılır..
+        public async Task<HttpStatusCode> DeleteSentenceAsync(int id, string accessToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            var response = await _httpClient.DeleteAsync($"{_baseUrl}Sentences/{id}");
+            return response.StatusCode;
+        }
+
         // İlgili idye sahip kelimenin cümlelerini getirir..
         public async Task<(List<Sentence>, HttpStatusCode)> GetSentencesByWordIdAsync(int id, string accessToken)
         {

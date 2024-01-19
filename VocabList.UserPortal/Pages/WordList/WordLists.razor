@@ -86,8 +86,8 @@ else
                                             <MudTd DataLabel="Oluşturulma Tarihi">@sentenceContext.CreatedDate</MudTd>
                                             <MudTd DataLabel="Değiştirilme Tarihi">@(sentenceContext.UpdatedDate is not null ? sentenceContext.UpdatedDate.Value.ToShortDateString() : "-")</MudTd>
                                             <MudTd Style="text-align: right">
-                                                @* <MudIconButton OnClick="@(() => GetSentenceInfo(sentenceContext))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
-                                                <MudIconButton OnClick="@(() => DeleteSentence(sentenceContext))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" /> *@
+                                                @* <MudIconButton OnClick="@(() => GetSentenceInfo(sentenceContext))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" /> *@
+                                                <MudIconButton OnClick="@(() => DeleteSentence(sentenceContext))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
                                             </MudTd>
                                             </RowTemplate>
                                         </MudTable>
@@ -270,7 +270,8 @@ else
     }
 
     Word selectedWord = new Word();
-    // Cümle Göster/Gizle butonuna tıklandığında çalışır.. Parametredeki kelime idsi ile ilişkili cümleleri çeker..
+
+    // Cümle Göster/Gizle butonuna tıklandığında çalışır.. Parametredeki kelime idsi ile ilişkili cümleleri çekerek gösterir..
     private async Task ShowBtnPress(Word word)
     {
         if (selectedWord != word)
@@ -280,7 +281,16 @@ else
         // Words.ForEach(word => word.ShowDetails = false);
         selectedWord = word;
 
-        var response = await _sentenceApiService.GetSentencesByWordIdAsync(word.Id, accessToken);
+        // Parametredeki kelime idsi ile ilişkili cümleleri çeker..
+        await GetSentencesByWordIdAsync(word.Id);
+
+        selectedWord.ShowDetails = !selectedWord.ShowDetails;
+    }
+
+    // Parametredeki kelime idsi ile ilişkili cümleleri çeker..
+    async Task GetSentencesByWordIdAsync(int WordId)
+    {
+        var response = await _sentenceApiService.GetSentencesByWordIdAsync(WordId, accessToken);
         if (response.Item2 == System.Net.HttpStatusCode.OK)
         {
             // İşlem başarılıysa..
@@ -302,8 +312,6 @@ else
             // Diğer hata durumları..
             ShowNotification("Kelimeye ait cümleleri çekerken beklenmeyen bir hata meydana geldi.", Severity.Error);
         }
-
-        selectedWord.ShowDetails = !selectedWord.ShowDetails;
     }
 
     // Kelime silme işlemi..
@@ -337,6 +345,46 @@ else
             // Yetkisiz kişiyse..
             // isUnauthorized = true;
             ShowNotification("Kelime silme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    // Cümle silme işlemi..
+    async Task DeleteSentence(Sentence request)
+    {
+        var response = await _sentenceApiService.DeleteSentenceAsync(request.Id, accessToken);
+        if (response == System.Net.HttpStatusCode.NoContent)
+        {
+            // Kelime sayısı çekiliyor..
+            // await GetTotalCountByUserId();
+
+            // Bir kelime silindiğinde toplam kelime sayısı 1 azalacak, sayfa sayısı da 1 azalmış olabilir.. Eğer son sayfa seçiliyse ve sayfa sayısı 1 azaldıysa seçili olan sayfa da 1 azalmalı..
+
+            // if (_selectedPage > pageCount)
+            // {
+            //     _selectedPage -= -1;
+            // }
+
+            // Cümle listesi güncelleniyor..
+            // await GetAllWordsBySelectedWordList(_selectedPage - 1, rowsPerPage);
+            await GetSentencesByWordIdAsync(selectedWord.Id); // Parametredeki kelime idsi ile ilişkili cümleleri çeker..
+
+            ShowNotification("Cümle başarıyla silinmiştir.", Severity.Success);
+        }
+        else if (response == System.Net.HttpStatusCode.NotFound)
+        {
+            // Bu id ile kayıtlı bir kelime bulunmuyorsa..
+            ShowNotification($"{request.Value} şeklinde kayıtlı bir cümle bulunamadı.", Severity.Warning);
+        }
+        else if (response == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kişiyse..
+            // isUnauthorized = true;
+            ShowNotification("Cümle silme yetkiniz bulunmamaktadır.", Severity.Warning);
         }
         else
         {
