@@ -3,9 +3,11 @@
 @using VocabList.UserPortal.Data
 @using VocabList.UserPortal.Data.WordLists
 @using VocabList.UserPortal.Data.Words
+@using VocabList.UserPortal.Data.Sentences
 @using VocabList.UserPortal.Services
 @inject WordListApiService _wordListApiService
 @inject WordApiService _wordApiService
+@inject SentenceApiService _sentenceApiService
 @inject NavigationManager navigationManager
 @inject ISnackbar SnackbarService
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
@@ -37,47 +39,55 @@ else
                 <MudTh>Kelime</MudTh>
                 <MudTh>Anlamı</MudTh>
                 <MudTh>Türü</MudTh>
+                <MudTh>Oluşturulma Tarihi</MudTh>
+                <MudTh>Değiştirilme Tarihi</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => ShowBtnPress(context.Id))">@((context.ShowDetails == true) ? "Gizle" : "Göster") Örnek Cümle</MudButton></MudTd>
-                <MudTd DataLabel="Nr">@context.Value</MudTd>
-                    <MudTd DataLabel="Name">@context.Description</MudTd>
-                    <MudTd DataLabel="Age">@context.Type</MudTd>
+                <MudTd><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => ShowBtnPress(context))">Cümle</MudButton></MudTd>
+                @* <MudTd><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => ShowBtnPress(context.Id))">@((context.ShowDetails == true) ? "Gizle" : "Göster") Cümle</MudButton></MudTd> *@
+                <MudTd DataLabel="Kelime">@context.Value</MudTd>
+                    <MudTd DataLabel="Anlamı">@context.Description</MudTd>
+                    <MudTd DataLabel="Türü">@context.Type</MudTd>
+                    <MudTd DataLabel="Oluşturulma Tarihi">@context.CreatedDate</MudTd>
+                    <MudTd DataLabel="Değiştirilme Tarihi">@(context.UpdatedDate is not null ? context.UpdatedDate.Value.ToShortDateString() : "-")</MudTd>
                 </RowTemplate>
                 <ChildRowContent>
                     @if (context.ShowDetails)
                 {
                     @* Cümleler basılacak *@
-                   @*  <MudTr>
+                    <MudTr>
                         <td colspan="4">
                             <MudCard Elevation="0">
                                 <MudCardHeader>
                                     <CardHeaderContent>
-                                        <MudText Typo="Typo.body1">Address Details for <strong>@context.Name</strong></MudText>
+                                        <MudText Typo="Typo.body1"><strong>@context.Value</strong> @(Sentences.Any() ? " için kayıtlı cümleler :" : " için henüz cümle eklenmemiş.")</MudText>
                                     </CardHeaderContent>
                                 </MudCardHeader>
-                                <MudCardContent Class="pa-0">
-                                    <MudTable Items="@context.Addresses" Context="AddressContext" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
-                                        <ColGroup>
-                                            <col />
-                                            <col />
-                                            <col style="width:200px;" />
-                                        </ColGroup>
-                                        <HeaderContent>
-                                            <MudTh>Address Line 1</MudTh>
-                                            <MudTh>Address Line 2</MudTh>
-                                            <MudTh>Postal Code</MudTh>
-                                        </HeaderContent>
-                                        <RowTemplate>
-                                            <MudTd DataLabel="Address Line 1">@AddressContext.Address_Line_1</MudTd>
-                                            <MudTd DataLabel="Address Line 2">@AddressContext.Address_Line_2</MudTd>
-                                            <MudTd DataLabel="Postal Code">@AddressContext.Postal_Code</MudTd>
-                                        </RowTemplate>
-                                    </MudTable>
-                                </MudCardContent>
+                                @if (Sentences.Any())
+                                {
+                                    <MudCardContent Class="pa-0">
+                                        <MudTable Items="@Sentences" Context="sentenceContext" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                            <ColGroup>
+                                                <col />
+                                                <col />
+                                                <col style="width:200px;" />
+                                            </ColGroup>
+                                            <HeaderContent>
+                                                <MudTh>Cümle</MudTh>
+                                                <MudTh>Oluşturulma Tarihi</MudTh>
+                                                <MudTh>Değiştirilme Tarihi</MudTh>
+                                            </HeaderContent>
+                                            <RowTemplate>
+                                                <MudTd DataLabel="Cümle">@sentenceContext.Value</MudTd>
+                                            <MudTd DataLabel="Oluşturulma Tarihi">@sentenceContext.CreatedDate</MudTd>
+                                            <MudTd DataLabel="Değiştirilme Tarihi">@(sentenceContext.UpdatedDate is not null ? sentenceContext.UpdatedDate.Value.ToShortDateString() : "-")</MudTd>
+                                            </RowTemplate>
+                                        </MudTable>
+                                    </MudCardContent>
+                                }
                             </MudCard>
                         </td>
-                    </MudTr> *@
+                    </MudTr>
                 }
             </ChildRowContent>
         </MudTable>
@@ -116,6 +126,7 @@ else
 
     WordList wordList = new WordList();
     List<Word> Words = new List<Word>();
+    List<Sentence> Sentences = new List<Sentence>();
 
     CreateWordRequest createWordRequest = new CreateWordRequest();
 
@@ -250,9 +261,40 @@ else
         createWordRequest = new();
     }
 
-    private void ShowBtnPress(int id)
+    Word selectedWord = new Word();
+    // Göster/Gizle butonuna tıklandığında çalışır.. Parametredeki kelime idsi ile ilişkili cümleleri çeker..
+    private async Task ShowBtnPress(Word word)
     {
-        Word selectedWord = Words.First(f => f.Id == id);
+        if (selectedWord != word)
+        {
+            selectedWord.ShowDetails = false;
+        }
+        // Words.ForEach(word => word.ShowDetails = false);
+        selectedWord = word;
+
+        var response = await _sentenceApiService.GetSentencesByWordIdAsync(word.Id, accessToken);
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            // İşlem başarılıysa..
+            Sentences = response.Item1;
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.NotFound)
+        {
+            // Seçili listede eleman yoksa..
+            Sentences = null;
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kişiyse..
+            // isUnauthorized = true;
+            ShowNotification("Cümleleri görme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("Kelimeye ait cümleleri çekerken beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+
         selectedWord.ShowDetails = !selectedWord.ShowDetails;
     }
 }
