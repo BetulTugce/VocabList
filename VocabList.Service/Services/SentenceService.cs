@@ -16,5 +16,10 @@ namespace VocabList.Service.Services
             _sentenceRepository = sentenceRepository;
             _mapper = mapper;
         }
+
+        public async Task<List<Sentence>> GetAllByWordId(int WordId)
+        {
+            return await _sentenceRepository.GetAllByWordId(WordId);
+        }
     }
 }
