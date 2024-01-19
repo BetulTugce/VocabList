@@ -62,5 +62,13 @@ namespace VocabList.API.Controllers
             await _wordService.RemoveAsync(response); //Data siliniyor..
             return NoContent();
         }
+
+        [HttpPost("[action]")]
+        [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.Words, ActionType = ActionType.Reading, Definition = "Get Total Count By WordList Id")]
+        public async Task<IActionResult> GetTotalCountByWordListId(GetTotalCountByWordListIdRequest request)
+        {
+            var wordCount = await _wordService.GetTotalCountByWordListIdAsync(request.WordListId); //Toplam kelime sayısını döner..
+            return Ok(wordCount);
+        }
     }
 }

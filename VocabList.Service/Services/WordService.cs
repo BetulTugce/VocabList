@@ -21,5 +21,10 @@ namespace VocabList.Service.Services
         {
             return await _wordRepository.GetAllWordsByUserIdAndWordListIdAsync(page, size, wordListId, userId);
         }
+
+        public async Task<int> GetTotalCountByWordListIdAsync(int wordListId)
+        {
+            return await _wordRepository.GetTotalCountByWordListIdAsync(wordListId);
+        }
     }
 }

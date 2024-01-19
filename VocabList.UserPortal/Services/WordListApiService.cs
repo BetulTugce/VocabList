@@ -131,8 +131,13 @@ namespace VocabList.UserPortal.Services
             {
                 _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
                 var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}WordLists/GetTotalCountByUserId", request);
-                var data = await response.Content.ReadFromJsonAsync<int>();
-                return (data, response.StatusCode);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<int>();
+                    return (data, response.StatusCode);
+                }
+
+                return (0, response.StatusCode);
             }
             catch (Exception)
             {

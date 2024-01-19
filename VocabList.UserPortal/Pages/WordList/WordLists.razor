@@ -98,6 +98,9 @@ else
                     </MudTr>
                 }
             </ChildRowContent>
+            <PagerContent>
+                <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="WordsPageChanged" Count="@pageCount" Class="pa-4" />
+            </PagerContent>
         </MudTable>
     }
 }
@@ -129,8 +132,10 @@ else
     String username = string.Empty;
     bool isUnauthorized = false;
 
+    int pageCount; // Toplam sayfa sayısı
     int _selectedPage = 1; // Seçili olan sayfanın numarası
     const int rowsPerPage = 10; // Sayfa başına gösterilecek kelime sayısı
+    int TotalWordCountOfTheWordList;
 
     WordList wordList = new WordList();
     List<Word> Words = new List<Word>();
@@ -169,9 +174,11 @@ else
             //Burada appuseridnin kontrol edilme sebebi, kullanıcının id kısmına rastgele bir sayı girip başkasının listesini çekmesini önlemek..
             await GetSelectedWordList();
 
-            // UserId bilgisi de kontrol edilerek page ve sizea göre ilgili idye sahip listesinin altındaki kelimeler çekiliyor..
+            // UserId bilgisi de kontrol edilerek page ve sizea göre ilgili idye sahip listesinin altındaki kelimeler çekiliyor.. (İlk sayfa - 10 adet kelime)
             await GetAllWordsBySelectedWordList(0, rowsPerPage);
 
+            // Kelime listesine ait toplam kelime sayısı çekiliyor..
+            await GetTotalCountByWordListId();
         }
 
     }
@@ -229,6 +236,49 @@ else
         }
     }
 
+    // Kelime listesine ait toplam kelime sayısı bilgisi çekiliyor..
+    async Task GetTotalCountByWordListId()
+    {
+        var response = await _wordApiService.GetTotalCountByWordListId(new() { WordListId = Id }, accessToken);
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            // İşlem başarılıysa..
+
+            // Kelime listesinin toplam kelime sayısı alınıyor..
+            TotalWordCountOfTheWordList = response.Item1;
+
+            // Sayfa sayısı hesaplanıyor..
+            if (TotalWordCountOfTheWordList % rowsPerPage == 0)
+            {
+                // Toplam kelime sayısı sayfa başına gösterilecek kelime sayısına tam bölünüyorsa sayfa sayısı bölme işleminin sonucu kadardır..
+                pageCount = TotalWordCountOfTheWordList / rowsPerPage;
+            }
+            else
+            {
+                // Toplam kelime sayısının sayfa başına gösterilecek kelime sayısına bölümü kalanlıysa sayfa sayısı 1 fazla olacak..
+                pageCount = (TotalWordCountOfTheWordList / rowsPerPage) + 1;
+            }
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kullanıcı..
+            ShowNotification("Kelime listesinin toplam kelime sayısını görme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("İşlem sırasında beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    // Kelimelerin listelendiği tabloda sayfa değiştirildiğinde çalışır..
+    private async Task WordsPageChanged(int selectedPage)
+    {
+        _selectedPage = selectedPage;
+        // Seçili olan sayfa 1 ise aslında 0.sayfayı getirmesi gerekiyor, bu yüzden 1 eksiği parametre olarak veriliyor..
+        await GetAllWordsBySelectedWordList((selectedPage - 1), rowsPerPage);
+    }
+
     private void ShowNotification(string resultMessage, Severity severity)
     {
         SnackbarService.Add(resultMessage, severity);
@@ -245,10 +295,10 @@ else
         {
             // İşlem başarılıysa..
 
-            // Kelime sayısı çekiliyor..
-            // await GetTotalCountByUserId();
+            // Toplam kelime sayısı çekiliyor..
+            await GetTotalCountByWordListId();
 
-            // Güncel listeyi çeker..
+            // Güncel listeyi çeker.. (Kelimeleri getiriyor..)
             await GetAllWordsBySelectedWordList(_selectedPage - 1, rowsPerPage);
 
             CloseCreateWordDialog(); // Dialog penceresini kapatır..
@@ -320,15 +370,15 @@ else
         var response = await _wordApiService.DeleteWordAsync(request.Id, accessToken);
         if (response == System.Net.HttpStatusCode.NoContent)
         {
-            // Kelime sayısı çekiliyor..
-            // await GetTotalCountByUserId();
+            // Toplam kelime sayısı çekiliyor..
+            await GetTotalCountByWordListId();
 
             // Bir kelime silindiğinde toplam kelime sayısı 1 azalacak, sayfa sayısı da 1 azalmış olabilir.. Eğer son sayfa seçiliyse ve sayfa sayısı 1 azaldıysa seçili olan sayfa da 1 azalmalı..
 
-            // if (_selectedPage > pageCount)
-            // {
-            //     _selectedPage -= -1;
-            // }
+            if (_selectedPage > pageCount)
+            {
+                _selectedPage -= 1;
+            }
 
             // Kelime listesi güncelleniyor..
             await GetAllWordsBySelectedWordList(_selectedPage - 1, rowsPerPage);
@@ -366,7 +416,7 @@ else
 
             // if (_selectedPage > pageCount)
             // {
-            //     _selectedPage -= -1;
+            //     _selectedPage -= 1;
             // }
 
             // Cümle listesi güncelleniyor..

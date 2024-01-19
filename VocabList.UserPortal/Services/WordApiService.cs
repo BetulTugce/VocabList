@@ -67,5 +67,25 @@ namespace VocabList.UserPortal.Services
                 return (null, HttpStatusCode.InternalServerError);
             }
         }
+
+        public async Task<(int, HttpStatusCode)> GetTotalCountByWordListId(GetTotalCountByWordListIdRequest request, string accessToken)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}Words/GetTotalCountByWordListId", request);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<int>();
+                    return (data, response.StatusCode);
+                }
+
+                return (0, response.StatusCode);
+            }
+            catch (Exception)
+            {
+                return (0, HttpStatusCode.InternalServerError);
+            }
+        }
     }
 }
