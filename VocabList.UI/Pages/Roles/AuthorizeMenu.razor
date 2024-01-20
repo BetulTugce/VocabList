@@ -199,6 +199,7 @@
         {
             // Rol ataması başarılıysa..
             ShowNotification("Seçili roller endpointe başarıyla atanmıştır.", Severity.Success);
+            CloseDialog();
         }
         else if (response == System.Net.HttpStatusCode.Unauthorized)
         {

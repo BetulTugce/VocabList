@@ -1,5 +1,6 @@
 ﻿@page "/word-lists/{Id:int}"
 
+@using System.Collections.Immutable
 @using VocabList.UserPortal.Data
 @using VocabList.UserPortal.Data.WordLists
 @using VocabList.UserPortal.Data.Words
@@ -119,7 +120,13 @@ else
     <DialogContent>
         <MudTextField @bind-Value="createWordRequest.Value" Label="Kelime" HelperText="Lütfen eklemek istediğiniz kelimeyi girin.." Variant="Variant.Outlined" />
         <MudTextField @bind-Value="createWordRequest.Description" Label="Anlamı" HelperText="Lütfen kelimenin anlamını girin.." Variant="Variant.Outlined" />
-        <MudTextField @bind-Value="createWordRequest.Type" Label="Türü" HelperText="Lütfen kelimenin türünü girin.." Variant="Variant.Outlined" />
+        <MudSelect Dense="true" T="string" Label="Kelime Türü" HelperText="Lütfen kelimenin türünü seçin.." Variant="Variant.Text" @bind-Value="@createWordRequest.Type">
+            @foreach (var type in TypesOfWords)
+            {
+                <MudSelectItem Value="@(type)" />
+            }
+        </MudSelect>
+        @* <MudTextField @bind-Value="createWordRequest.Type" Label="Türü" HelperText="Lütfen kelimenin türünü girin.." Variant="Variant.Outlined" /> *@
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateWord" Class="px-10">Kaydet</MudButton>
@@ -137,7 +144,13 @@ else
         @* Buraya oluşturulma ve güncellenme tarihleri de eklenecek.. *@
         <MudTextField @bind-Value="@updateWordRequest.Value" Label="Kelime" HelperText="Lütfen kelime için bir isim belirleyin.." Variant="Variant.Outlined" />
         <MudTextField @bind-Value="updateWordRequest.Description" Label="Anlamı" HelperText="Lütfen kelimenin anlamını girin.." Variant="Variant.Outlined" />
-        <MudTextField @bind-Value="updateWordRequest.Type" Label="Türü" HelperText="Lütfen kelimenin türünü girin.." Variant="Variant.Outlined" />
+        <MudSelect Dense="true" T="string" Label="Kelime Türü" HelperText="Lütfen kelimenin türünü seçin.." Variant="Variant.Text" @bind-Value="@updateWordRequest.Type">
+            @foreach (var type in TypesOfWords)
+            {
+                <MudSelectItem Value="@(type)" />
+            }
+        </MudSelect>
+        @* <MudTextField @bind-Value="updateWordRequest.Type" Label="Türü" HelperText="Lütfen kelimenin türünü girin.." Variant="Variant.Outlined" /> *@
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="UpdateWord" Class="px-10">Kaydet</MudButton>
@@ -189,6 +202,10 @@ else
     int _selectedPage = 1; // Seçili olan sayfanın numarası
     const int rowsPerPage = 10; // Sayfa başına gösterilecek kelime sayısı
     int TotalWordCountOfTheWordList;
+
+    // Kelime türlerini tutar..
+    public static readonly string[] TypesOfWords = { "noun", "verb", "adjective", "adverb", "phrasal verb", "preposition", "collocation", "conjunction", "transition", "prepositional phrase" };
+    // ImmutableList<string> TypesOfWords = ImmutableList.Create("noun", "verb", "adjective", "adverb", "phrasal verb", "preposition", "collocation", "conjunction", "transition", "prepositional phrase");
 
     WordList wordList = new WordList();
     List<Word> Words = new List<Word>();
