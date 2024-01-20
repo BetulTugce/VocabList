@@ -51,6 +51,7 @@ else
                     <MudTd DataLabel="Oluşturulma Tarihi">@context.CreatedDate</MudTd>
                     <MudTd DataLabel="Değiştirilme Tarihi">@(context.UpdatedDate is not null ? context.UpdatedDate.Value.ToShortDateString() : "-")</MudTd>
                     <MudTd Style="text-align: right">
+                        <MudIconButton OnClick="@(() => OpenCreateSentenceDialog(context))" Icon="@Icons.Material.Outlined.Add" Size="@Size.Small" />
                         <MudIconButton OnClick="@(() => GetWordInfo(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
                         <MudIconButton OnClick="@(() => DeleteWord(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
                     </MudTd>
@@ -64,6 +65,7 @@ else
                             <MudCard Elevation="0">
                                 <MudCardHeader>
                                     <CardHeaderContent>
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="(() => OpenCreateSentenceDialog(context))" Color="Color.Info">Cümle Ekle</MudButton>
                                         <MudText Typo="Typo.body1"><strong>@context.Value</strong> @(Sentences.Any() ? " için kayıtlı cümleler :" : " için henüz cümle eklenmemiş.")</MudText>
                                     </CardHeaderContent>
                                 </MudCardHeader>
@@ -125,7 +127,7 @@ else
 <MudDialog @bind-IsVisible="updateWordDialogIsVisible" Options="dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> @* @updateWordRequest.Value *@ Kelime Düzenle
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3" /> @* @updateWordRequest.Value *@ Kelime Düzenle
         </MudText>
     </TitleContent>
     <DialogContent>
@@ -140,10 +142,25 @@ else
     </DialogActions>
 </MudDialog>
 
+<MudDialog @bind-IsVisible="createSentenceDialogIsVisible" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> Yeni Cümle Ekle
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="@createSentenceRequest.Value" Label="Cümle" HelperText="Lütfen cümle girin.." Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateSentence" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseCreateSentenceDialog" Class="px-10">Kapat</MudButton>
+    </DialogActions>
+</MudDialog>
+
 <MudDialog @bind-IsVisible="updateSentenceDialogIsVisible" Options="dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> @* @updateSentenceRequest.Value *@ Cümle Düzenle
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3" /> @* @updateSentenceRequest.Value *@ Cümle Düzenle
         </MudText>
     </TitleContent>
     <DialogContent>
@@ -176,6 +193,8 @@ else
 
     CreateWordRequest createWordRequest = new CreateWordRequest();
     Word updateWordRequest = new Word();
+
+    CreateSentenceRequest createSentenceRequest = new CreateSentenceRequest();
     Sentence updateSentenceRequest = new Sentence();
 
     private DialogOptions dialogOptions = new() { FullWidth = true };
@@ -187,6 +206,15 @@ else
     private void OpenUpdateWordDialog() => updateWordDialogIsVisible = true;
     void CloseUpdateWordDialog() => updateWordDialogIsVisible = false;
 
+    private bool createSentenceDialogIsVisible;
+    // private void OpenCreateSentenceDialog() => createSentenceDialogIsVisible = true;
+    private void OpenCreateSentenceDialog(Word word)
+    {
+        selectedWord = word;
+        createSentenceDialogIsVisible = true;
+    }
+    void CloseCreateSentenceDialog() => createSentenceDialogIsVisible = false;
+    
     private bool updateSentenceDialogIsVisible;
     private void OpenUpdateSentenceDialog() => updateSentenceDialogIsVisible = true;
     void CloseUpdateSentenceDialog() => updateSentenceDialogIsVisible = false;
@@ -327,10 +355,10 @@ else
         SnackbarService.Add(resultMessage, severity);
     }
 
-    // Yeni kelime listesi oluşturur..
+    // Yeni kelime oluşturur..
     async Task CreateWord()
     {
-        // Kullanıcının idsi alınıyor..
+        // Kelime listesinin idsi alınıyor..
         createWordRequest.WordListId = Id;
         // Actiona istekte bulunuyor..
         var response = await _wordApiService.CreateWordAsync(createWordRequest, accessToken);
@@ -488,6 +516,41 @@ else
             // Diğer hata durumları..
             ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
         }
+    }
+
+    // Yeni cümle oluşturur..
+    async Task CreateSentence()
+    {
+        // Kelimenin idsi alınıyor..
+        createSentenceRequest.WordId = selectedWord.Id;
+        // Actiona istekte bulunuyor..
+        var response = await _sentenceApiService.CreateSentenceAsync(createSentenceRequest, accessToken);
+        if (response == System.Net.HttpStatusCode.Created)
+        {
+            // İşlem başarılıysa..
+
+            // Toplam cümle sayısı çekiliyor..
+            // await GetTotalCountByWordListId();
+
+            // Güncel listeyi çeker.. (Cümleleri getiriyor..)
+            await GetSentencesByWordIdAsync(selectedWord.Id);
+
+            CloseCreateSentenceDialog(); // Dialog penceresini kapatır..
+
+            ShowNotification("Cümle eklendi.", Severity.Success);
+        }
+        else if (response == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kişi..
+            // isUnauthorized = true;
+            ShowNotification("Cümle ekleme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+        createSentenceRequest = new();
     }
 
     // Kelime tablosunda cümle alanındaki edit butonuna tıklandığı zaman cümlenin bilgilerini getirecek olan method.. Sonuçları bir dialog penceresi açarak sunar..
