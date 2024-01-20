@@ -35,6 +35,23 @@ namespace VocabList.API.Controllers
             return StatusCode((int)HttpStatusCode.Created);
         }
 
+        [HttpPut]
+        [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.Sentences, ActionType = ActionType.Updating, Definition = "Update The Sentence")]
+        public async Task<IActionResult> Put(SentenceDto model)
+        {
+            try
+            {
+                model.UpdatedDate = DateTime.UtcNow;
+                var mappedData = _mapper.Map<Sentence>(model);
+                bool response = await _sentenceService.UpdateAsync(mappedData);
+                if (response) { return Ok(); } else { return BadRequest(); }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
+        }
+
         // İlgili WordIdye sahip cümleleri getirir..
         [HttpGet("{id}")]
         [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.Sentences, ActionType = ActionType.Reading, Definition = "Get All Sentences By WordId")]

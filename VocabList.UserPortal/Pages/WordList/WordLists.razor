@@ -86,7 +86,7 @@ else
                                             <MudTd DataLabel="Oluşturulma Tarihi">@sentenceContext.CreatedDate</MudTd>
                                             <MudTd DataLabel="Değiştirilme Tarihi">@(sentenceContext.UpdatedDate is not null ? sentenceContext.UpdatedDate.Value.ToShortDateString() : "-")</MudTd>
                                             <MudTd Style="text-align: right">
-                                                @* <MudIconButton OnClick="@(() => GetSentenceInfo(sentenceContext))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" /> *@
+                                                <MudIconButton OnClick="@(() => GetSentenceInfo(sentenceContext))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
                                                 <MudIconButton OnClick="@(() => DeleteSentence(sentenceContext))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
                                             </MudTd>
                                             </RowTemplate>
@@ -108,7 +108,7 @@ else
 <MudDialog @bind-IsVisible="createWordDialogIsVisible" Options="dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6">
-            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> Yeni Liste Ekle
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> Yeni Kelime Ekle
         </MudText>
     </TitleContent>
     <DialogContent>
@@ -140,6 +140,22 @@ else
     </DialogActions>
 </MudDialog>
 
+<MudDialog @bind-IsVisible="updateSentenceDialogIsVisible" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-3" /> @* @updateSentenceRequest.Value *@ Cümle Düzenle
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @* Buraya oluşturulma ve güncellenme tarihleri de eklenecek.. *@
+        <MudTextField @bind-Value="@updateSentenceRequest.Value" Label="Cümle" HelperText="Lütfen cümle girin.." Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="UpdateSentence" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseUpdateSentenceDialog" Class="px-10">Kapat</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     [Parameter]
     public int Id { get; set; }
@@ -160,6 +176,7 @@ else
 
     CreateWordRequest createWordRequest = new CreateWordRequest();
     Word updateWordRequest = new Word();
+    Sentence updateSentenceRequest = new Sentence();
 
     private DialogOptions dialogOptions = new() { FullWidth = true };
     private bool createWordDialogIsVisible; // Dialog penceresinin görünürlük durumu..
@@ -169,6 +186,10 @@ else
     private bool updateWordDialogIsVisible;
     private void OpenUpdateWordDialog() => updateWordDialogIsVisible = true;
     void CloseUpdateWordDialog() => updateWordDialogIsVisible = false;
+
+    private bool updateSentenceDialogIsVisible;
+    private void OpenUpdateSentenceDialog() => updateSentenceDialogIsVisible = true;
+    void CloseUpdateSentenceDialog() => updateSentenceDialogIsVisible = false;
 
     // Login sayfasına yönlendiriyor..
     void GoToLoginPage()
@@ -461,6 +482,50 @@ else
             // Yetkisiz kişiyse..
             // isUnauthorized = true;
             ShowNotification("Kelime güncelleme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    // Kelime tablosunda cümle alanındaki edit butonuna tıklandığı zaman cümlenin bilgilerini getirecek olan method.. Sonuçları bir dialog penceresi açarak sunar..
+    async Task GetSentenceInfo(Sentence sentence)
+    {
+        // Parametrede gelen cümle modele atanıyor..
+        // updateSentenceRequest = sentence; // Bu şekilde doğrudan atama yapınca işlem başarısız olsa bile güncellenmiş gibi gösteriyor..
+        updateSentenceRequest = new() { Id = sentence.Id, Value = sentence.Value, CreatedDate = sentence.CreatedDate, UpdatedDate = sentence.UpdatedDate, WordId = sentence.WordId };
+
+        // Dialog penceresini açar..
+        OpenUpdateSentenceDialog();
+    }
+
+    // Cümleyi günceller..
+    async Task UpdateSentence()
+    {
+        var response = await _sentenceApiService.UpdateSentenceAsync(updateSentenceRequest, accessToken);
+        if (response == System.Net.HttpStatusCode.OK)
+        {
+            // İşlem başarılıysa..
+
+            // Güncel listeyi çeker..
+            await GetSentencesByWordIdAsync(updateSentenceRequest.WordId);
+
+            CloseUpdateSentenceDialog(); // Dialog penceresini kapatır..
+
+            ShowNotification("Cümle güncellendi.", Severity.Success);
+        }
+        else if (response == System.Net.HttpStatusCode.NotFound)
+        {
+            // İlgili cümle bulunamadı..
+            ShowNotification("İlgili cümle bulunamadı.", Severity.Warning);
+        }
+        else if (response == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kişiyse..
+            // isUnauthorized = true;
+            ShowNotification("Cümle güncelleme yetkiniz bulunmamaktadır.", Severity.Warning);
         }
         else
         {

@@ -63,5 +63,15 @@ namespace VocabList.UserPortal.Services
                 return (null, HttpStatusCode.InternalServerError);
             }
         }
+
+        // Cümleyi güncellemek için kulanılır..
+        public async Task<HttpStatusCode> UpdateSentenceAsync(Sentence request, string accessToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            // İlgili URL'ye verilen model verilerine sahip bir JSON içeriği gönderiliyor.
+            var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}Sentences", request);
+            return response.StatusCode;
+        }
     }
 }
