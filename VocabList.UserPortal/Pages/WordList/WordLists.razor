@@ -18,8 +18,7 @@
 }
 else if (wordList == null)
 {
-    @*TODO: Böyle bir liste bulunmamaktadır uyarısı eklenecek*@
-    <p>Liste yokki :D</p>
+    <MudAlert Severity="Severity.Normal" Variant="Variant.Filled" NoIcon="true" Class="mb-2 mt-3">Böyle bir liste bulunmamaktadır.</MudAlert>
 }
 else
 {
@@ -104,6 +103,10 @@ else
                 <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="WordsPageChanged" Count="@pageCount" Class="pa-4" />
             </PagerContent>
         </MudTable>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Normal" Variant="Variant.Filled" NoIcon="true" Class="mb-2 mt-3">Bu listeye hiç kelime eklememişsiniz.</MudAlert>
     }
 }
 
