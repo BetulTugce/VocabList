@@ -1,4 +1,5 @@
-﻿using VocabList.Core.Entities;
+﻿using VocabList.Core.DTOs;
+using VocabList.Core.Entities;
 
 namespace VocabList.Core.Repositories
 {
@@ -8,5 +9,8 @@ namespace VocabList.Core.Repositories
         Task<int> GetTotalCountByUserIdAsync(string userId);
 
         Task<WordList> GetWordListByIdAndUserIdAsync(int id, string userId);
+
+        // Filtreleme seçeneklerine göre userin oluşturduğu kelime listelerini içeren bir liste ve toplam kelime listesi sayısını döndürür..
+        Task<(List<WordList>, int)> GetFilteredWordListsAsync(WordListFilterRequest request);
     }
 }

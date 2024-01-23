@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -132,6 +133,30 @@ namespace VocabList.API.Controllers
         {
             var wordListCount = await _wordListService.GetTotalCountByUserIdAsync(request.AppUserId); //Toplam liste sayısını döner..
             return Ok(wordListCount);
+        }
+
+        // Filtreleme seçeneklerine göre kelime listelerini içeren bir liste ve toplam kelime listesi sayısını döndürür..
+        //[HttpGet]
+        [HttpPost("[action]")]
+        [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.WordLists, ActionType = ActionType.Reading, Definition = "Get Word Lists By Filter Options")]
+        //public IActionResult GetFilteredWordLists([FromQuery] WordListFilterRequest filter, int pageNumber, int pageSize)
+        public IActionResult GetFilteredWordLists(WordListFilterRequest filter)
+        {
+            var filteredWordLists = _wordListService.GetFilteredWordListsAsync(filter);
+            if (!filteredWordLists.Result.Item1.Any())
+            {
+                return NotFound();
+            }
+            
+            WordListFilterResponse response = new() { WordLists = _mapper.Map<List<WordListDto>>(filteredWordLists.Result.Item1), TotalCount = filteredWordLists.Result.Item2};
+            return Ok(response);
+
+            //List<WordListDto> wordListsDtos = _mapper.Map<List<WordListDto>>(filteredWordLists.Result.Item1); //Mapleme ile entityler dtoya çevriliyor..
+            //var result = new ObjectResult(new { WordLists = wordListsDtos, TotalCount = filteredWordLists.Result.Item2 })
+            //{
+            //    StatusCode = (int)HttpStatusCode.OK
+            //};
+            //return result;
         }
     }
 }

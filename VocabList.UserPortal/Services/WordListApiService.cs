@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using VocabList.UserPortal.Data.WordLists;
 
 namespace VocabList.UserPortal.Services
@@ -142,6 +143,40 @@ namespace VocabList.UserPortal.Services
             catch (Exception)
             {
                 return (0, HttpStatusCode.InternalServerError);
+            }
+        }
+
+        // Filtreleme seçeneklerine göre userin oluşturduğu kelime listelerini içeren bir liste ve toplam kelime listesi sayısını döndürür..
+        public async Task<(WordListFilterResponse, HttpStatusCode)> GetFilteredWordListsAsync(WordListFilterRequest request, string accessToken)
+        {
+            try
+            {
+                // AccessToken ile Authorization başlığı ayarlanıyor..
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+                //İlgili urle verilen model verilerine sahip bir json içeriği gönderiliyor..
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}WordLists/GetFilteredWordLists", request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    //List<WordList> data = await response.Content.ReadFromJsonAsync<List<WordList>>();
+                    //int totalCount = (await response.Content.ReadFromJsonAsync<int>());
+                    //return (data, totalCount, response.StatusCode);
+
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    WordListFilterResponse result = await response.Content.ReadFromJsonAsync<WordListFilterResponse>();
+
+                    return (result, response.StatusCode);
+                }
+                else
+                {
+                    return (new() { WordLists = null, TotalCount = 0 }, response.StatusCode);
+                }
+            }
+            catch (Exception)
+            {
+                //return (null, 0, HttpStatusCode.InternalServerError);
+                return (new() { WordLists = null, TotalCount = 0 }, HttpStatusCode.InternalServerError);
             }
         }
     }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using VocabList.Core.DTOs;
 using VocabList.Core.Entities;
 using VocabList.Core.Repositories;
 using VocabList.Core.Services;
@@ -21,6 +22,11 @@ namespace VocabList.Service.Services
         public async Task<List<WordList>> GetAllWordListsByUserIdAsync(int page, int size, string userId)
         {
             return await _wordListRepository.GetAllWordListsByUserIdAsync(page, size, userId);
+        }
+
+        public async Task<(List<WordList>, int)> GetFilteredWordListsAsync(WordListFilterRequest request)
+        {
+            return await _wordListRepository.GetFilteredWordListsAsync(request);
         }
 
         public async Task<int> GetTotalCountByUserIdAsync(string userId)
