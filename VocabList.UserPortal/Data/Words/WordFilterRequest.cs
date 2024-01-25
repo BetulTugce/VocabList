@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace VocabList.Core.DTOs
+namespace VocabList.UserPortal.Data.Words
 {
     public class WordFilterRequest
     {

@@ -13,6 +13,17 @@
 @inject ISnackbar SnackbarService
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
 
+<style>
+    .page-item {
+        cursor: pointer;
+    }
+
+    .mud-select {
+        max-width: max-content;
+        margin-right: 20px;
+    }
+</style>
+
 @if (isUnauthorized)
 {
     <UnauthorizedTransactions></UnauthorizedTransactions>
@@ -28,6 +39,28 @@ else
     @if (Words is not null)
     {
         <MudTable Items="@Words" Hover="true" Breakpoint="Breakpoint.Sm">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">@wordList.Name</MudText>
+                <MudSpacer />
+
+                <MudSelect Dense="true" T="string" Label="Sırala" Variant="Variant.Text" SelectedValuesChanged="HandleValueChanged" @bind-Value="@orderString">
+                        <MudSelectItem Value="@("UpdatedDate ASC")">Değiştirme Tarihi (Eskiden yeniye)</MudSelectItem>
+                        <MudSelectItem Value="@("UpdatedDate DESC")">Değiştirme Tarihi (Yeniden eskiye)</MudSelectItem>
+                        <MudSelectItem Value="@("CreatedDate ASC")">Oluşturma Tarihi (Eskiden yeniye)</MudSelectItem>
+                        <MudSelectItem Value="@("CreatedDate DESC")">Oluşturma Tarihi (Yeniden eskiye)</MudSelectItem>
+                        <MudSelectItem Value="@("Value ASC")">Kelime (A-Z)</MudSelectItem>
+                        <MudSelectItem Value="@("Value DESC")">Kelime (Z-A)</MudSelectItem>
+                        <MudSelectItem Value="@("Type ASC")">Kelime Türü (A-Z)</MudSelectItem>
+                        <MudSelectItem Value="@("Type DESC")">Kelime Türü (Z-A)</MudSelectItem>
+                        <MudSelectItem Value="@("Description ASC")">Açıklama (A-Z)</MudSelectItem>
+                        <MudSelectItem Value="@("Description DESC")">Açıklama (Z-A)</MudSelectItem>
+                </MudSelect>
+
+                @* <MudSpacer /> *@
+
+                <MudTextField @bind-Value="filterRequest.SearchString" Label=" " Placeholder="Arama yap" HelperText="Arama sonuçlarını görmek için enter'a basın.." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" @onkeyup="HandleKeyUp"></MudTextField>
+
+            </ToolBarContent>
             <ColGroup>
                 <col style="width:300px;" />
                 <col style="width:100px;" />
@@ -101,7 +134,35 @@ else
                 }
             </ChildRowContent>
             <PagerContent>
-                <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="WordsPageChanged" Count="@pageCount" Class="pa-4" />
+                @* <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="WordsPageChanged" Count="@pageCount" Class="pa-4" /> *@
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-end">
+                        <li class="page-item @GetPreviousButtonClass(_selectedPage)">
+                            <a class="page-link" @onclick=@(() => WordsPageChanged(1)) tabindex="-1">İlk</a>
+                        </li>
+                        <li class="page-item @GetPreviousButtonClass(_selectedPage)">
+                            <a class="page-link" @onclick=@(() => WordsPageChanged(_selectedPage - 1)) tabindex="-1">Önceki</a>
+                        </li>
+                        @foreach (var pageNumber in GetDisplayedPageNumbers())
+                        {
+                            if (pageNumber.Equals(_selectedPage))
+                            {
+                                <li class="page-item active"><a class="page-link" @onclick=@(() => @WordsPageChanged(pageNumber))>@pageNumber</a></li>
+                            }
+                            else
+                            {
+                                <li class="page-item"><a class="page-link" @onclick=@(() => @WordsPageChanged(pageNumber))>@pageNumber</a></li>
+                            }
+                        }
+                        <li class="page-item @GetNextButtonClass(_selectedPage)">
+                            <a class="page-link" @onclick=@(() => WordsPageChanged(_selectedPage + 1))>Sonraki</a>
+                        </li>
+                        <li class="page-item @GetNextButtonClass(_selectedPage)">
+                            <a class="page-link" @onclick=@(() => WordsPageChanged(pageCount))>Son</a>
+                        </li>
+
+                    </ul>
+                </nav>
             </PagerContent>
         </MudTable>
     }
@@ -200,8 +261,13 @@ else
 
     int pageCount; // Toplam sayfa sayısı
     int _selectedPage = 1; // Seçili olan sayfanın numarası
-    const int rowsPerPage = 10; // Sayfa başına gösterilecek kelime sayısı
+    /* const */ int rowsPerPage = 10; // Sayfa başına gösterilecek kelime sayısı
     int TotalWordCountOfTheWordList;
+
+    string orderString;
+
+    // Sıralama (Sort-OrderBy) seçeneklerini tutar..
+    public static readonly string[] sortOptions = { "CreatedDate ASC", "CreatedDate DESC", "UpdatedDate ASC", "UpdatedDate DESC", "Value ASC", "Value DESC", "Type ASC", "Type DESC", "Description ASC", "Description DESC" };
 
     // Kelime türlerini tutar..
     public static readonly string[] TypesOfWords = { "noun", "verb", "adjective", "adverb", "phrasal verb", "preposition", "collocation", "conjunction", "transition", "prepositional phrase" };
@@ -210,6 +276,8 @@ else
     WordList wordList = new WordList();
     List<Word> Words = new List<Word>();
     List<Sentence> Sentences = new List<Sentence>();
+
+    WordFilterRequest filterRequest = new WordFilterRequest();
 
     CreateWordRequest createWordRequest = new CreateWordRequest();
     Word updateWordRequest = new Word();
@@ -234,7 +302,7 @@ else
         createSentenceDialogIsVisible = true;
     }
     void CloseCreateSentenceDialog() => createSentenceDialogIsVisible = false;
-    
+
     private bool updateSentenceDialogIsVisible;
     private void OpenUpdateSentenceDialog() => updateSentenceDialogIsVisible = true;
     void CloseUpdateSentenceDialog() => updateSentenceDialogIsVisible = false;
@@ -245,6 +313,34 @@ else
         navigationManager.NavigateTo("/login");
     }
 
+    #region Paginition İşlemleri
+    // Paginitiondaki önceki ve sonraki sayfa butonlarının tıklanabilir olma özelliğini ayarlamak için..
+    // _selectedPage 1'e veya pageCounta eşitse classa disabled basılacak..
+    private string GetPreviousButtonClass(int selectedNumber) => selectedNumber == 1 ? "disabled" : "";
+    private string GetNextButtonClass(int selectedNumber) => selectedNumber == pageCount ? "disabled" : "";
+
+    // Sayfa numaralarını yazdırmak için..
+    private List<int> GetDisplayedPageNumbers()
+    {
+        List<int> displayedPages = new List<int>();
+
+        if (pageCount <= 3)
+        {
+            // Sayfa sayısı 3 ve daha az ise tüm sayfaları listeye ekler..
+            displayedPages.AddRange(Enumerable.Range(1, pageCount));
+        }
+        else
+        {
+            // Seçili olan sayfa 1. sayfa değilse seçili sayfanın bir eksiği ve seçili sayfayı listeye ekler..
+            if (_selectedPage > 1) displayedPages.Add(_selectedPage - 1);
+            displayedPages.Add(_selectedPage);
+            if (_selectedPage < pageCount) displayedPages.Add(_selectedPage + 1); // Seçili olan sayfa toplam sayfa sayısından küçükse seçili sayfanın 1 fazlasını listeye ekler..
+        }
+
+        return displayedPages;
+    }
+    #endregion
+
     protected override async Task OnInitializedAsync()
     {
         // AccessToken, username ve userId bilgisi localstorageden alınıyor.. Eğer null ise Login sayfasına yönlendiriliyor..
@@ -254,22 +350,62 @@ else
 
         if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(username))
         {
-            GoToLoginPage();
+            GoToLoginPage(); // Login sayfasına yönlendirir..
         }
         else
         {
             accessToken = accessToken.Substring(1, (accessToken.Length - 2));
             userId = userId.Substring(1, (userId.Length - 2));
 
+            // URL'den parametreleri okur ve filtreleri günceller
+            var uri = new Uri(navigationManager.Uri);
+            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+            if (query.TryGetValue("SearchString", out var searchString))
+            {
+                filterRequest.SearchString = searchString; // Aranılan Kelime (Value, Type, Description kolonlarında)
+            }
+
+            if (query.TryGetValue("Sort", out var sort))
+            {
+                filterRequest.Sort = sort; // Sıralama Seçeneği (Value, Description, Type, UpdatedDate, CreatedDate)
+            }
+
+            if (query.TryGetValue("OrderBy", out var orderBy))
+            {
+                filterRequest.OrderBy = orderBy; // Sıralama biçimi (ASC - DESC)
+            }
+
+            orderString = filterRequest.Sort + " " + filterRequest.OrderBy; // dropdown seçili hale getiriliyor..
+            bool isOrderValid = sortOptions.Contains(orderString);
+
+            if (!isOrderValid)
+            { // Kullanıcı urlden sort ve orderby değerlerine anlamsız bir şey girdiğinde varsayılan değerlere göre sıralama yapacak..
+                filterRequest.Sort = "UpdatedDate";
+                filterRequest.OrderBy = "DESC";
+                orderString = filterRequest.Sort + " " + filterRequest.OrderBy;
+            }
+
+            if (query.TryGetValue("Page", out var pageNumberString) && int.TryParse(pageNumberString, out var pageNumberValue))
+            {
+                _selectedPage = pageNumberValue; // Seçili sayfa
+            }
+
+            if (query.TryGetValue("Size", out var sizeNumberString) && int.TryParse(sizeNumberString, out var sizeNumberValue))
+            {
+                rowsPerPage = sizeNumberValue; // Seçili sayfa boyutu
+            }
+
             // İlgili idye sahip kelime listesi userIdyi de kontrol ederek çekiliyor..
             //Burada appuseridnin kontrol edilme sebebi, kullanıcının id kısmına rastgele bir sayı girip başkasının listesini çekmesini önlemek..
             await GetSelectedWordList();
 
             // UserId bilgisi de kontrol edilerek page ve sizea göre ilgili idye sahip listesinin altındaki kelimeler çekiliyor.. (İlk sayfa - 10 adet kelime)
-            await GetAllWordsBySelectedWordList(0, rowsPerPage);
+            // await GetAllWordsBySelectedWordList(0, rowsPerPage);
+            await GetFilteredWordsAsync((_selectedPage - 1), rowsPerPage);
 
             // Kelime listesine ait toplam kelime sayısı çekiliyor..
-            await GetTotalCountByWordListId();
+            // await GetTotalCountByWordListId();
         }
 
     }
@@ -300,74 +436,78 @@ else
         }
     }
 
+    #region Filtreleme Öncesi Listeleme Kodları..
     // UserId bilgisi de kontrol edilerek page ve sizea göre ilgili idye sahip listesinin altındaki kelimeler çekiliyor..
-    async Task GetAllWordsBySelectedWordList(int page, int size)
-    {
-        var response = await _wordApiService.GetAllWordsByUserIdAndWordListIdAsync(new() { Page = page, Size = size, AppUserId = userId, WordListId = Id }, accessToken);
-        if (response.Item2 == System.Net.HttpStatusCode.OK)
-        {
-            // İşlem başarılıysa..
-            Words = response.Item1;
-        }
-        else if (response.Item2 == System.Net.HttpStatusCode.NotFound)
-        {
-            // Seçili listede eleman yoksa..
-            Words = null;
-        }
-        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
-        {
-            // Yetkisiz kişiyse..
-            // isUnauthorized = true;
-            ShowNotification("Kelime listelerini görme yetkiniz bulunmamaktadır.", Severity.Warning);
-        }
-        else
-        {
-            // Diğer hata durumları..
-            ShowNotification("Kelime listelerinizi çekerken beklenmeyen bir hata meydana geldi.", Severity.Error);
-        }
-    }
+    // async Task GetAllWordsBySelectedWordList(int page, int size)
+    // {
+    //     var response = await _wordApiService.GetAllWordsByUserIdAndWordListIdAsync(new() { Page = page, Size = size, AppUserId = userId, WordListId = Id }, accessToken);
+    //     if (response.Item2 == System.Net.HttpStatusCode.OK)
+    //     {
+    //         // İşlem başarılıysa..
+    //         Words = response.Item1;
+    //     }
+    //     else if (response.Item2 == System.Net.HttpStatusCode.NotFound)
+    //     {
+    //         // Seçili listede eleman yoksa..
+    //         Words = null;
+    //     }
+    //     else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+    //     {
+    //         // Yetkisiz kişiyse..
+    //         // isUnauthorized = true;
+    //         ShowNotification("Kelime listelerini görme yetkiniz bulunmamaktadır.", Severity.Warning);
+    //     }
+    //     else
+    //     {
+    //         // Diğer hata durumları..
+    //         ShowNotification("Kelime listelerinizi çekerken beklenmeyen bir hata meydana geldi.", Severity.Error);
+    //     }
+    // }
 
-    // Kelime listesine ait toplam kelime sayısı bilgisi çekiliyor..
-    async Task GetTotalCountByWordListId()
-    {
-        var response = await _wordApiService.GetTotalCountByWordListId(new() { WordListId = Id }, accessToken);
-        if (response.Item2 == System.Net.HttpStatusCode.OK)
-        {
-            // İşlem başarılıysa..
+    // // Kelime listesine ait toplam kelime sayısı bilgisi çekiliyor..
+    // async Task GetTotalCountByWordListId()
+    // {
+    //     var response = await _wordApiService.GetTotalCountByWordListId(new() { WordListId = Id }, accessToken);
+    //     if (response.Item2 == System.Net.HttpStatusCode.OK)
+    //     {
+    //         // İşlem başarılıysa..
 
-            // Kelime listesinin toplam kelime sayısı alınıyor..
-            TotalWordCountOfTheWordList = response.Item1;
+    //         // Kelime listesinin toplam kelime sayısı alınıyor..
+    //         TotalWordCountOfTheWordList = response.Item1;
 
-            // Sayfa sayısı hesaplanıyor..
-            if (TotalWordCountOfTheWordList % rowsPerPage == 0)
-            {
-                // Toplam kelime sayısı sayfa başına gösterilecek kelime sayısına tam bölünüyorsa sayfa sayısı bölme işleminin sonucu kadardır..
-                pageCount = TotalWordCountOfTheWordList / rowsPerPage;
-            }
-            else
-            {
-                // Toplam kelime sayısının sayfa başına gösterilecek kelime sayısına bölümü kalanlıysa sayfa sayısı 1 fazla olacak..
-                pageCount = (TotalWordCountOfTheWordList / rowsPerPage) + 1;
-            }
-        }
-        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
-        {
-            // Yetkisiz kullanıcı..
-            ShowNotification("Kelime listesinin toplam kelime sayısını görme yetkiniz bulunmamaktadır.", Severity.Warning);
-        }
-        else
-        {
-            // Diğer hata durumları..
-            ShowNotification("İşlem sırasında beklenmeyen bir hata meydana geldi.", Severity.Error);
-        }
-    }
+    //         // Sayfa sayısı hesaplanıyor..
+    //         if (TotalWordCountOfTheWordList % rowsPerPage == 0)
+    //         {
+    //             // Toplam kelime sayısı sayfa başına gösterilecek kelime sayısına tam bölünüyorsa sayfa sayısı bölme işleminin sonucu kadardır..
+    //             pageCount = TotalWordCountOfTheWordList / rowsPerPage;
+    //         }
+    //         else
+    //         {
+    //             // Toplam kelime sayısının sayfa başına gösterilecek kelime sayısına bölümü kalanlıysa sayfa sayısı 1 fazla olacak..
+    //             pageCount = (TotalWordCountOfTheWordList / rowsPerPage) + 1;
+    //         }
+    //     }
+    //     else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+    //     {
+    //         // Yetkisiz kullanıcı..
+    //         ShowNotification("Kelime listesinin toplam kelime sayısını görme yetkiniz bulunmamaktadır.", Severity.Warning);
+    //     }
+    //     else
+    //     {
+    //         // Diğer hata durumları..
+    //         ShowNotification("İşlem sırasında beklenmeyen bir hata meydana geldi.", Severity.Error);
+    //     }
+    // }
+    #endregion
 
     // Kelimelerin listelendiği tabloda sayfa değiştirildiğinde çalışır..
     private async Task WordsPageChanged(int selectedPage)
     {
         _selectedPage = selectedPage;
         // Seçili olan sayfa 1 ise aslında 0.sayfayı getirmesi gerekiyor, bu yüzden 1 eksiği parametre olarak veriliyor..
-        await GetAllWordsBySelectedWordList((selectedPage - 1), rowsPerPage);
+        // await GetAllWordsBySelectedWordList((selectedPage - 1), rowsPerPage);
+        // await GetFilteredWordsAsync((_selectedPage - 1), rowsPerPage);
+        UpdateUrl(_selectedPage);
     }
 
     private void ShowNotification(string resultMessage, Severity severity)
@@ -387,10 +527,11 @@ else
             // İşlem başarılıysa..
 
             // Toplam kelime sayısı çekiliyor..
-            await GetTotalCountByWordListId();
+            // await GetTotalCountByWordListId();
 
             // Güncel listeyi çeker.. (Kelimeleri getiriyor..)
-            await GetAllWordsBySelectedWordList(_selectedPage - 1, rowsPerPage);
+            // await GetAllWordsBySelectedWordList(_selectedPage - 1, rowsPerPage);
+            await GetFilteredWordsAsync(_selectedPage - 1, rowsPerPage);
 
             CloseCreateWordDialog(); // Dialog penceresini kapatır..
 
@@ -462,17 +603,22 @@ else
         if (response == System.Net.HttpStatusCode.NoContent)
         {
             // Toplam kelime sayısı çekiliyor..
-            await GetTotalCountByWordListId();
+            // await GetTotalCountByWordListId();
+            TotalWordsCountOfTheUser -= 1; // Toplam liste sayısı 1 azalıyor..
+
+            await CalculateTotalPageCount(TotalWordsCountOfTheUser, rowsPerPage);
 
             // Bir kelime silindiğinde toplam kelime sayısı 1 azalacak, sayfa sayısı da 1 azalmış olabilir.. Eğer son sayfa seçiliyse ve sayfa sayısı 1 azaldıysa seçili olan sayfa da 1 azalmalı..
 
             if (_selectedPage > pageCount)
             {
                 _selectedPage -= 1;
+                UpdateUrl(_selectedPage);// Seçili sayfa sayısı da 1 azaldığı için url güncellenir..
             }
 
             // Kelime listesi güncelleniyor..
-            await GetAllWordsBySelectedWordList(_selectedPage - 1, rowsPerPage);
+            // await GetAllWordsBySelectedWordList(_selectedPage - 1, rowsPerPage);
+            await GetFilteredWordsAsync(_selectedPage - 1, rowsPerPage);
 
             ShowNotification("Kelime başarıyla silinmiştir.", Severity.Success);
         }
@@ -514,7 +660,8 @@ else
             // İşlem başarılıysa..
 
             // Güncel listeyi çeker..
-            await GetAllWordsBySelectedWordList(_selectedPage - 1, rowsPerPage);
+            // await GetAllWordsBySelectedWordList(_selectedPage - 1, rowsPerPage);
+            await GetFilteredWordsAsync(_selectedPage - 1, rowsPerPage);
 
             CloseUpdateWordDialog(); // Dialog penceresini kapatır..
 
@@ -654,6 +801,118 @@ else
         {
             // Diğer hata durumları..
             ShowNotification("İşlem başarısız, beklenmeyen bir hata meydana geldi.", Severity.Error);
+        }
+    }
+
+    private async Task HandleKeyUp(KeyboardEventArgs args)
+    {
+        // Enter tuşuna basıldığında çalışır..
+        if (args.Key == "Enter")
+        {
+            // Filtreleme yapılacağı için seçili sayfa 1 olarak güncelleniyor..
+            _selectedPage = 1;
+
+            // await GetFilteredWordsAsync(_selectedPage - 1, rowsPerPage);
+
+            // Url güncellenir..
+            UpdateUrl(_selectedPage);
+        }
+    }
+
+    // Sıralama dropdownında seçim yapılınca tetiklenir..
+    private async Task HandleValueChanged()
+    {
+        // Filtreleme yapılacağı için seçili sayfa 1 olarak güncelleniyor..
+        _selectedPage = 1;
+
+        // await GetFilteredWordsAsync(_selectedPage - 1, rowsPerPage);
+
+        string[] orderWords = orderString.Split(' ');
+
+        filterRequest.Sort = orderWords[0];
+        filterRequest.OrderBy = orderWords[1];
+
+        // Url güncellenir
+        UpdateUrl(_selectedPage);
+    }
+
+    // Filtreleri ve sıralama durumunu kullanarak URL güncellenir..
+    void UpdateUrl(int page)
+    {
+        var uriBuilder = new UriBuilder(navigationManager.Uri);
+        filterRequest.Page = page;
+        filterRequest.Size = rowsPerPage;
+        // Searchboxa değer girilmişse..
+        if (!string.IsNullOrEmpty(filterRequest.SearchString))
+        {
+            uriBuilder.Query = $"SearchString={Uri.EscapeDataString(filterRequest.SearchString)}&Sort={filterRequest.Sort}&OrderBy={filterRequest.OrderBy}&Page={filterRequest.Page}&Size={filterRequest.Size}";
+        }
+        else
+        {
+            uriBuilder.Query = $"Sort={filterRequest.Sort}&OrderBy={filterRequest.OrderBy}&Page={filterRequest.Page}&Size={filterRequest.Size}";
+        }
+
+
+        // Sayfayı günceller..
+        navigationManager.NavigateTo(uriBuilder.Uri.ToString(), true);
+        // navigationManager.NavigateTo(uriBuilder.Uri.ToString());
+    }
+
+    // Toplam sayfa sayısı hesaplanıyor..
+    async Task CalculateTotalPageCount(int _totalWordCount, int _rowsPerPage)
+    {
+        // Sayfa sayısı hesaplanıyor..
+        if (_totalWordCount % _rowsPerPage == 0)
+        {
+            // Toplam kelime sayısı sayfa başına gösterilecek kelime sayısına tam bölünüyorsa sayfa sayısı bölme işleminin sonucu kadardır..
+            pageCount = _totalWordCount / _rowsPerPage;
+        }
+        else
+        {
+            // Toplam kelime sayısının sayfa başına gösterilecek kelime sayısına bölümü kalanlıysa sayfa sayısı 1 fazla olacak..
+            pageCount = (_totalWordCount / _rowsPerPage) + 1;
+        }
+    }
+
+    int TotalWordsCountOfTheUser;
+
+    private async Task GetFilteredWordsAsync(int page, int size)
+    {
+        // filterRequest.Page = (_selectedPage - 1);
+        filterRequest.Page = page;
+        filterRequest.Size = size;
+        filterRequest.AppUserId = userId;
+        filterRequest.WordListId = wordList.Id;
+        var response = await _wordApiService.GetFilteredWordsAsync(filterRequest, accessToken);
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            // İşlem başarılı..
+
+            // Liste güncelleniyor..
+            Words = response.Item1.Words;
+
+            // Kullanıcının toplam kelime sayısı alınıyor.. (filtreye uyan)
+            TotalWordsCountOfTheUser = response.Item1.TotalCount;
+
+            // Sayfa sayısı hesaplanıyor..
+            await CalculateTotalPageCount(TotalWordsCountOfTheUser, rowsPerPage);
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz kullanıcı..
+            isUnauthorized = true;
+            ShowNotification("Kelimeleri görme yetkiniz bulunmamaktadır.", Severity.Warning);
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.NotFound)
+        {
+            // Bu üyenin kayıtlı bir kelimesi bulunmuyorsa..
+            Words = null;
+            TotalWordsCountOfTheUser = 0;
+        }
+        else
+        {
+            // Diğer hata durumları..
+            ShowNotification("Kelimeleri çekerken beklenmeyen bir hata meydana geldi.", Severity.Error);
         }
     }
 }

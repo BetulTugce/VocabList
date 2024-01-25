@@ -97,5 +97,35 @@ namespace VocabList.UserPortal.Services
                 return (0, HttpStatusCode.InternalServerError);
             }
         }
+
+        // Filtreleme seçeneklerine göre userin oluşturduğu kelime listelerini içeren bir liste ve toplam kelime listesi sayısını döndürür..
+        public async Task<(WordFilterResponse, HttpStatusCode)> GetFilteredWordsAsync(WordFilterRequest request, string accessToken)
+        {
+            try
+            {
+                // AccessToken ile Authorization başlığı ayarlanıyor..
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+                //İlgili urle verilen model verilerine sahip bir json içeriği gönderiliyor..
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}Words/GetFilteredWords", request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    WordFilterResponse result = await response.Content.ReadFromJsonAsync<WordFilterResponse>();
+
+                    return (result, response.StatusCode);
+                }
+                else
+                {
+                    return (new() { Words = null, TotalCount = 0 }, response.StatusCode);
+                }
+            }
+            catch (Exception)
+            {
+                //return (null, 0, HttpStatusCode.InternalServerError);
+                return (new() { Words = null, TotalCount = 0 }, HttpStatusCode.InternalServerError);
+            }
+        }
     }
 }
