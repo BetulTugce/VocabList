@@ -87,5 +87,20 @@ namespace VocabList.API.Controllers
             var wordCount = await _wordService.GetTotalCountByWordListIdAsync(request.WordListId); //Toplam kelime sayısını döner..
             return Ok(wordCount);
         }
+
+        [HttpPost("[action]")]
+        [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.Words, ActionType = ActionType.Reading, Definition = "Get Words By Filter Options")]
+        public async Task<IActionResult> GetFilteredWords(WordFilterRequest filter)
+        {
+            // Filtreleme koşullarına uyan kelimeleri (page-size parametrelerine göre) ve bu koşulu sağlayan toplam kelime sayısını getirir.. 
+            var filteredWords = await _wordService.GetFilteredWordsAsync(filter.SearchString, filter.Page, filter.Size, filter.Sort, filter.OrderBy, filter.WordListId, filter.AppUserId);
+            if (!filteredWords.Item1.Any())
+            {
+                return NotFound();
+            }
+
+            WordFilterResponse response = new() { Words = _mapper.Map<List<WordDto>>(filteredWords.Item1), TotalCount = filteredWords.Item2 };
+            return Ok(response);
+        }
     }
 }
