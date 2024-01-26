@@ -36,140 +36,139 @@ else
 {
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateWordDialog" Color="Color.Info">Kelime Ekle</MudButton>
     <br />
-    @if (Words is not null)
-    {
-        <MudTable Items="@Words" Hover="true" Breakpoint="Breakpoint.Sm">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">@wordList.Name</MudText>
-                <MudSpacer />
+    <MudToolBar>
+        <MudText Typo="Typo.h6">@wordList.Name</MudText>
+            <MudSpacer />
 
-                <MudSelect Dense="true" T="string" Label="Sırala" Variant="Variant.Text" SelectedValuesChanged="HandleValueChanged" @bind-Value="@orderString">
-                        <MudSelectItem Value="@("UpdatedDate ASC")">Değiştirme Tarihi (Eskiden yeniye)</MudSelectItem>
-                        <MudSelectItem Value="@("UpdatedDate DESC")">Değiştirme Tarihi (Yeniden eskiye)</MudSelectItem>
-                        <MudSelectItem Value="@("CreatedDate ASC")">Oluşturma Tarihi (Eskiden yeniye)</MudSelectItem>
-                        <MudSelectItem Value="@("CreatedDate DESC")">Oluşturma Tarihi (Yeniden eskiye)</MudSelectItem>
-                        <MudSelectItem Value="@("Value ASC")">Kelime (A-Z)</MudSelectItem>
-                        <MudSelectItem Value="@("Value DESC")">Kelime (Z-A)</MudSelectItem>
-                        <MudSelectItem Value="@("Type ASC")">Kelime Türü (A-Z)</MudSelectItem>
-                        <MudSelectItem Value="@("Type DESC")">Kelime Türü (Z-A)</MudSelectItem>
-                        <MudSelectItem Value="@("Description ASC")">Açıklama (A-Z)</MudSelectItem>
-                        <MudSelectItem Value="@("Description DESC")">Açıklama (Z-A)</MudSelectItem>
-                </MudSelect>
+            <MudSelect Dense="true" T="string" Label="Sırala" Variant="Variant.Text" SelectedValuesChanged="HandleValueChanged" @bind-Value="@orderString">
+                <MudSelectItem Value="@("UpdatedDate ASC")">Değiştirme Tarihi (Eskiden yeniye)</MudSelectItem>
+                <MudSelectItem Value="@("UpdatedDate DESC")">Değiştirme Tarihi (Yeniden eskiye)</MudSelectItem>
+                <MudSelectItem Value="@("CreatedDate ASC")">Oluşturma Tarihi (Eskiden yeniye)</MudSelectItem>
+                <MudSelectItem Value="@("CreatedDate DESC")">Oluşturma Tarihi (Yeniden eskiye)</MudSelectItem>
+                <MudSelectItem Value="@("Value ASC")">Kelime (A-Z)</MudSelectItem>
+                <MudSelectItem Value="@("Value DESC")">Kelime (Z-A)</MudSelectItem>
+                <MudSelectItem Value="@("Type ASC")">Kelime Türü (A-Z)</MudSelectItem>
+                <MudSelectItem Value="@("Type DESC")">Kelime Türü (Z-A)</MudSelectItem>
+                <MudSelectItem Value="@("Description ASC")">Açıklama (A-Z)</MudSelectItem>
+                <MudSelectItem Value="@("Description DESC")">Açıklama (Z-A)</MudSelectItem>
+            </MudSelect>
 
-                @* <MudSpacer /> *@
+            @* <MudSpacer /> *@
 
-                <MudTextField @bind-Value="filterRequest.SearchString" Label=" " Placeholder="Arama yap" HelperText="Arama sonuçlarını görmek için enter'a basın.." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" @onkeyup="HandleKeyUp"></MudTextField>
+            <MudTextField @bind-Value="filterRequest.SearchString" Label=" " Placeholder="Arama yap" HelperText="Arama sonuçlarını görmek için enter'a basın.." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" @onkeyup="HandleKeyUp"></MudTextField>
 
-            </ToolBarContent>
-            <ColGroup>
-                <col style="width:300px;" />
-                <col style="width:100px;" />
-                <col />
-                <col style="width:100px;" />
-            </ColGroup>
-            <HeaderContent>
-                <MudTh></MudTh>
-                <MudTh>Kelime</MudTh>
-                <MudTh>Anlamı</MudTh>
-                <MudTh>Türü</MudTh>
-                <MudTh>Oluşturulma Tarihi</MudTh>
-                <MudTh>Değiştirilme Tarihi</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => ShowBtnPress(context))">Cümle</MudButton></MudTd>
-                @* <MudTd><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => ShowBtnPress(context.Id))">@((context.ShowDetails == true) ? "Gizle" : "Göster") Cümle</MudButton></MudTd> *@
-                <MudTd DataLabel="Kelime">@context.Value</MudTd>
-                    <MudTd DataLabel="Anlamı">@context.Description</MudTd>
-                    <MudTd DataLabel="Türü">@context.Type</MudTd>
-                    <MudTd DataLabel="Oluşturulma Tarihi">@context.CreatedDate</MudTd>
-                    <MudTd DataLabel="Değiştirilme Tarihi">@(context.UpdatedDate is not null ? context.UpdatedDate.Value.ToShortDateString() : "-")</MudTd>
-                    <MudTd Style="text-align: right">
-                        <MudIconButton OnClick="@(() => OpenCreateSentenceDialog(context))" Icon="@Icons.Material.Outlined.Add" Size="@Size.Small" />
-                        <MudIconButton OnClick="@(() => GetWordInfo(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
-                        <MudIconButton OnClick="@(() => DeleteWord(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
-                    </MudTd>
-                </RowTemplate>
-                <ChildRowContent>
-                    @if (context.ShowDetails)
-                {
-                    @* Cümleler basılacak *@
-                    <MudTr>
-                        <td colspan="4">
-                            <MudCard Elevation="0">
-                                <MudCardHeader>
-                                    <CardHeaderContent>
-                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="(() => OpenCreateSentenceDialog(context))" Color="Color.Info">Cümle Ekle</MudButton>
-                                        <MudText Typo="Typo.body1"><strong>@context.Value</strong> @(Sentences.Any() ? " için kayıtlı cümleler :" : " için henüz cümle eklenmemiş.")</MudText>
-                                    </CardHeaderContent>
-                                </MudCardHeader>
-                                @if (Sentences.Any())
-                                {
-                                    <MudCardContent Class="pa-0">
-                                        <MudTable Items="@Sentences" Context="sentenceContext" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
-                                            <ColGroup>
-                                                <col />
-                                                <col />
-                                                <col style="width:200px;" />
-                                            </ColGroup>
-                                            <HeaderContent>
-                                                <MudTh>Cümle</MudTh>
-                                                <MudTh>Oluşturulma Tarihi</MudTh>
-                                                <MudTh>Değiştirilme Tarihi</MudTh>
-                                            </HeaderContent>
-                                            <RowTemplate>
-                                                <MudTd DataLabel="Cümle">@sentenceContext.Value</MudTd>
-                                            <MudTd DataLabel="Oluşturulma Tarihi">@sentenceContext.CreatedDate</MudTd>
-                                            <MudTd DataLabel="Değiştirilme Tarihi">@(sentenceContext.UpdatedDate is not null ? sentenceContext.UpdatedDate.Value.ToShortDateString() : "-")</MudTd>
-                                            <MudTd Style="text-align: right">
-                                                <MudIconButton OnClick="@(() => GetSentenceInfo(sentenceContext))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
-                                                <MudIconButton OnClick="@(() => DeleteSentence(sentenceContext))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
-                                            </MudTd>
-                                            </RowTemplate>
-                                        </MudTable>
-                                    </MudCardContent>
-                                }
-                            </MudCard>
-                        </td>
-                    </MudTr>
-                }
-            </ChildRowContent>
-            <PagerContent>
-                @* <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="WordsPageChanged" Count="@pageCount" Class="pa-4" /> *@
-                <nav aria-label="Page navigation example">
-                    <ul class="pagination justify-content-end">
-                        <li class="page-item @GetPreviousButtonClass(_selectedPage)">
-                            <a class="page-link" @onclick=@(() => WordsPageChanged(1)) tabindex="-1">İlk</a>
-                        </li>
-                        <li class="page-item @GetPreviousButtonClass(_selectedPage)">
-                            <a class="page-link" @onclick=@(() => WordsPageChanged(_selectedPage - 1)) tabindex="-1">Önceki</a>
-                        </li>
-                        @foreach (var pageNumber in GetDisplayedPageNumbers())
+    </MudToolBar>
+    <MudTable Items="@Words" Hover="true" Breakpoint="Breakpoint.Sm">
+
+        <ColGroup>
+            <col style="width:300px;" />
+            <col style="width:100px;" />
+            <col />
+            <col style="width:100px;" />
+        </ColGroup>
+        <HeaderContent>
+            <MudTh></MudTh>
+            <MudTh>Kelime</MudTh>
+            <MudTh>Anlamı</MudTh>
+            <MudTh>Türü</MudTh>
+            <MudTh>Oluşturulma Tarihi</MudTh>
+            <MudTh>Değiştirilme Tarihi</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => ShowBtnPress(context))">Cümle</MudButton></MudTd>
+            @* <MudTd><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => ShowBtnPress(context.Id))">@((context.ShowDetails == true) ? "Gizle" : "Göster") Cümle</MudButton></MudTd> *@
+            <MudTd DataLabel="Kelime">@context.Value</MudTd>
+                <MudTd DataLabel="Anlamı">@context.Description</MudTd>
+                <MudTd DataLabel="Türü">@context.Type</MudTd>
+                <MudTd DataLabel="Oluşturulma Tarihi">@context.CreatedDate</MudTd>
+                <MudTd DataLabel="Değiştirilme Tarihi">@(context.UpdatedDate is not null ? context.UpdatedDate.Value.ToShortDateString() : "-")</MudTd>
+                <MudTd Style="text-align: right">
+                    <MudIconButton OnClick="@(() => OpenCreateSentenceDialog(context))" Icon="@Icons.Material.Outlined.Add" Size="@Size.Small" />
+                    <MudIconButton OnClick="@(() => GetWordInfo(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
+                    <MudIconButton OnClick="@(() => DeleteWord(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
+                </MudTd>
+            </RowTemplate>
+            <ChildRowContent>
+                @if (context.ShowDetails)
+            {
+                @* Cümleler basılacak *@
+                <MudTr>
+                    <td colspan="4">
+                        <MudCard Elevation="0">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="(() => OpenCreateSentenceDialog(context))" Color="Color.Info">Cümle Ekle</MudButton>
+                                    <MudText Typo="Typo.body1"><strong>@context.Value</strong> @(Sentences.Any() ? " için kayıtlı cümleler :" : " için henüz cümle eklenmemiş.")</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            @if (Sentences.Any())
+                            {
+                                <MudCardContent Class="pa-0">
+                                    <MudTable Items="@Sentences" Context="sentenceContext" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                        <ColGroup>
+                                            <col />
+                                            <col />
+                                            <col style="width:200px;" />
+                                        </ColGroup>
+                                        <HeaderContent>
+                                            <MudTh>Cümle</MudTh>
+                                            <MudTh>Oluşturulma Tarihi</MudTh>
+                                            <MudTh>Değiştirilme Tarihi</MudTh>
+                                        </HeaderContent>
+                                        <RowTemplate>
+                                            <MudTd DataLabel="Cümle">@sentenceContext.Value</MudTd>
+                                        <MudTd DataLabel="Oluşturulma Tarihi">@sentenceContext.CreatedDate</MudTd>
+                                        <MudTd DataLabel="Değiştirilme Tarihi">@(sentenceContext.UpdatedDate is not null ? sentenceContext.UpdatedDate.Value.ToShortDateString() : "-")</MudTd>
+                                        <MudTd Style="text-align: right">
+                                            <MudIconButton OnClick="@(() => GetSentenceInfo(sentenceContext))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
+                                            <MudIconButton OnClick="@(() => DeleteSentence(sentenceContext))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
+                                        </MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                            </MudCardContent>
+                            }
+                        </MudCard>
+                    </td>
+                </MudTr>
+            }
+        </ChildRowContent>
+        <PagerContent>
+            @* <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="WordsPageChanged" Count="@pageCount" Class="pa-4" /> *@
+            <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-end">
+                    <li class="page-item @GetPreviousButtonClass(_selectedPage)">
+                        <a class="page-link" @onclick=@(() => WordsPageChanged(1)) tabindex="-1">İlk</a>
+                    </li>
+                    <li class="page-item @GetPreviousButtonClass(_selectedPage)">
+                        <a class="page-link" @onclick=@(() => WordsPageChanged(_selectedPage - 1)) tabindex="-1">Önceki</a>
+                    </li>
+                    @foreach (var pageNumber in GetDisplayedPageNumbers())
+                    {
+                        if (pageNumber.Equals(_selectedPage))
                         {
-                            if (pageNumber.Equals(_selectedPage))
-                            {
-                                <li class="page-item active"><a class="page-link" @onclick=@(() => @WordsPageChanged(pageNumber))>@pageNumber</a></li>
-                            }
-                            else
-                            {
-                                <li class="page-item"><a class="page-link" @onclick=@(() => @WordsPageChanged(pageNumber))>@pageNumber</a></li>
-                            }
+                            <li class="page-item active"><a class="page-link" @onclick=@(() => @WordsPageChanged(pageNumber))>@pageNumber</a></li>
                         }
-                        <li class="page-item @GetNextButtonClass(_selectedPage)">
-                            <a class="page-link" @onclick=@(() => WordsPageChanged(_selectedPage + 1))>Sonraki</a>
-                        </li>
-                        <li class="page-item @GetNextButtonClass(_selectedPage)">
-                            <a class="page-link" @onclick=@(() => WordsPageChanged(pageCount))>Son</a>
-                        </li>
+                        else
+                        {
+                            <li class="page-item"><a class="page-link" @onclick=@(() => @WordsPageChanged(pageNumber))>@pageNumber</a></li>
+                        }
+                    }
+                    <li class="page-item @GetNextButtonClass(_selectedPage)">
+                        <a class="page-link" @onclick=@(() => WordsPageChanged(_selectedPage + 1))>Sonraki</a>
+                    </li>
+                    <li class="page-item @GetNextButtonClass(_selectedPage)">
+                        <a class="page-link" @onclick=@(() => WordsPageChanged(pageCount))>Son</a>
+                    </li>
 
-                    </ul>
-                </nav>
-            </PagerContent>
-        </MudTable>
-    }
-    else
-    {
-        <MudAlert Severity="Severity.Normal" Variant="Variant.Filled" NoIcon="true" Class="mb-2 mt-3">Bu listeye hiç kelime eklememişsiniz.</MudAlert>
-    }
+                </ul>
+            </nav>
+        </PagerContent>
+    </MudTable>
+}
+
+@if (Words is null)
+{
+    <MudAlert Severity="Severity.Normal" Variant="Variant.Filled" NoIcon="true" Class="mb-2 mt-3">Kelime bulunamadı.</MudAlert>
 }
 
 <MudDialog @bind-IsVisible="createWordDialogIsVisible" Options="dialogOptions">
@@ -261,7 +260,8 @@ else
 
     int pageCount; // Toplam sayfa sayısı
     int _selectedPage = 1; // Seçili olan sayfanın numarası
-    /* const */ int rowsPerPage = 10; // Sayfa başına gösterilecek kelime sayısı
+    /* const */
+    int rowsPerPage = 10; // Sayfa başına gösterilecek kelime sayısı
     int TotalWordCountOfTheWordList;
 
     string orderString;
@@ -413,7 +413,7 @@ else
     // İlgili idye sahip kelime listesi userIdyi de kontrol ederek çekiliyor..
     async Task GetSelectedWordList()
     {
-        var response = await _wordListApiService.GetWordListByIdAndUserIdAsync(new(){ Id = Id, AppUserId = userId}, accessToken);
+        var response = await _wordListApiService.GetWordListByIdAndUserIdAsync(new() { Id = Id, AppUserId = userId }, accessToken);
         if (response.Item2 == System.Net.HttpStatusCode.OK)
         {
             wordList = response.Item1;
@@ -645,7 +645,7 @@ else
     {
         // Parametrede gelen kelime modele atanıyor..
         // updateWordRequest = word; // Bu şekilde doğrudan atama yapınca işlem başarısız olsa bile güncellenmiş gibi gösteriyor..
-        updateWordRequest = new(){ Id = word.Id, CreatedDate = word.CreatedDate, UpdatedDate = word.UpdatedDate, WordListId = word.WordListId, Description = word.Description, Type = word.Type, Value = word.Value, ShowDetails = word.ShowDetails };
+        updateWordRequest = new() { Id = word.Id, CreatedDate = word.CreatedDate, UpdatedDate = word.UpdatedDate, WordListId = word.WordListId, Description = word.Description, Type = word.Type, Value = word.Value, ShowDetails = word.ShowDetails };
 
         // Dialog penceresini açar..
         OpenUpdateWordDialog();

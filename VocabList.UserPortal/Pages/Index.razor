@@ -40,60 +40,58 @@ else
 {
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateWordListDialog" Color="Color.Info">Liste Oluştur</MudButton>
     <br />
-    @if (wordLists is not null)
-    {
-        <MudTable Items="@wordLists" Hover="true" FixedHeader="true" Style="width:100%">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">Kelime Listelerim</MudText>
-                <MudSpacer />
+    <MudToolBar>
+        <MudText Typo="Typo.h6">Kelime Listelerim</MudText>
+        <MudSpacer />
 
-                @* <MudSelect Dense="true" T="string" Label="Sırala" HelperText="Oluşturma tarihine göre sıralama yapın.." Variant="Variant.Text" SelectedValuesChanged="HandleValueChanged" @bind-Value="@orderByDescending">
-                    <MudSelectItem Value="@("false")">Eskiden yeniye</MudSelectItem>
-                    <MudSelectItem Value="@("true")">Yeniden eskiye</MudSelectItem>
-                </MudSelect> *@
-                <MudSelect Dense="true" T="string" Label="Sırala" HelperText="Oluşturma tarihine göre sıralama yapın.." Variant="Variant.Text" SelectedValuesChanged="HandleValueChanged" @bind-Value="@orderString">
-                    <MudSelectItem Value="@("UpdatedDate ASC")">Değiştirme Tarihi (Eskiden yeniye)</MudSelectItem>
-                    <MudSelectItem Value="@("UpdatedDate DESC")">Değiştirme Tarihi (Yeniden eskiye)</MudSelectItem>
-                    <MudSelectItem Value="@("CreatedDate ASC")">Oluşturma Tarihi (Eskiden yeniye)</MudSelectItem>
-                    <MudSelectItem Value="@("CreatedDate DESC")">Oluşturma Tarihi (Yeniden eskiye)</MudSelectItem>
-                    <MudSelectItem Value="@("Name ASC")">Liste Adı (A-Z)</MudSelectItem>
-                    <MudSelectItem Value="@("Name DESC")">Liste Adı (Z-A)</MudSelectItem>
-                </MudSelect>
+        @* <MudSelect Dense="true" T="string" Label="Sırala" HelperText="Oluşturma tarihine göre sıralama yapın.." Variant="Variant.Text" SelectedValuesChanged="HandleValueChanged" @bind-Value="@orderByDescending">
+    <MudSelectItem Value="@("false")">Eskiden yeniye</MudSelectItem>
+    <MudSelectItem Value="@("true")">Yeniden eskiye</MudSelectItem>
+    </MudSelect> *@
+        <MudSelect Dense="true" T="string" Label="Sırala" HelperText="Oluşturma tarihine göre sıralama yapın.." Variant="Variant.Text" SelectedValuesChanged="HandleValueChanged" @bind-Value="@orderString">
+            <MudSelectItem Value="@("UpdatedDate ASC")">Değiştirme Tarihi (Eskiden yeniye)</MudSelectItem>
+            <MudSelectItem Value="@("UpdatedDate DESC")">Değiştirme Tarihi (Yeniden eskiye)</MudSelectItem>
+            <MudSelectItem Value="@("CreatedDate ASC")">Oluşturma Tarihi (Eskiden yeniye)</MudSelectItem>
+            <MudSelectItem Value="@("CreatedDate DESC")">Oluşturma Tarihi (Yeniden eskiye)</MudSelectItem>
+            <MudSelectItem Value="@("Name ASC")">Liste Adı (A-Z)</MudSelectItem>
+            <MudSelectItem Value="@("Name DESC")">Liste Adı (Z-A)</MudSelectItem>
+        </MudSelect>
 
-                @* <MudSpacer /> *@
+        @* <MudSpacer /> *@
 
-                <MudTextField @bind-Value="filterRequest.SearchString" Label=" " Placeholder="Arama yap" HelperText="Arama sonuçlarını görmek için enter'a basın.." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" @onkeyup="HandleKeyUp"></MudTextField>
+        <MudTextField @bind-Value="filterRequest.SearchString" Label=" " Placeholder="Arama yap" HelperText="Arama sonuçlarını görmek için enter'a basın.." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" @onkeyup="HandleKeyUp"></MudTextField>
 
-            </ToolBarContent>
-            <HeaderContent>
-                @* <MudTh>ID</MudTh> *@
-                <MudTh>Listenin Adı</MudTh>
-                <MudTh>Oluşturulma Tarihi</MudTh>
-                <MudTh>Değiştirildiği Tarih</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                @* <MudTd DataLabel="Id">@context.id</MudTd> *@
-                <MudTd DataLabel="Name">@context.Name</MudTd>
-                    <MudTd DataLabel="CreatedDate">@context.CreatedDate.ToShortDateString()</MudTd>
-                    <MudTd DataLabel="UpdatedDate">@(context.UpdatedDate is not null ? context.UpdatedDate.Value.ToShortDateString() : "-") </MudTd>
-                    <MudTd Style="text-align: right">
-                        <MudIconButton OnClick="@(() => GoToWordListPage(context))" Size="@Size.Small"> <img src="icons/eye-solid.svg" /></MudIconButton>
-                        <MudIconButton OnClick="@(() => GetWordListInfo(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
-                        <MudIconButton OnClick="@(() => DeleteWordList(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
-                    </MudTd>
-                </RowTemplate>
-                <PagerContent>
-                    @* <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="PageChanged" Count="@pageCount" Class="pa-4" /> *@
-                    <nav aria-label="Page navigation example">
-                        <ul class="pagination justify-content-end">
-                            <li class="page-item @GetPreviousButtonClass(_selectedPage)">
-                                <a class="page-link" @onclick=@(() => PageChanged(1)) tabindex="-1">İlk</a>
-                            </li>
-                            <li class="page-item @GetPreviousButtonClass(_selectedPage)">
-                                <a class="page-link" @onclick=@(() => PageChanged(_selectedPage - 1)) tabindex="-1">Önceki</a>
-                            </li>
+    </MudToolBar>
+    <MudTable Items="@wordLists" Hover="true" FixedHeader="true" Style="width:100%">
+        <HeaderContent>
+            @* <MudTh>ID</MudTh> *@
+            <MudTh>Listenin Adı</MudTh>
+            <MudTh>Oluşturulma Tarihi</MudTh>
+            <MudTh>Değiştirildiği Tarih</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            @* <MudTd DataLabel="Id">@context.id</MudTd> *@
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="CreatedDate">@context.CreatedDate.ToShortDateString()</MudTd>
+                <MudTd DataLabel="UpdatedDate">@(context.UpdatedDate is not null ? context.UpdatedDate.Value.ToShortDateString() : "-") </MudTd>
+                <MudTd Style="text-align: right">
+                    <MudIconButton OnClick="@(() => GoToWordListPage(context))" Size="@Size.Small"> <img src="icons/eye-solid.svg" /></MudIconButton>
+                    <MudIconButton OnClick="@(() => GetWordListInfo(context))" Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
+                    <MudIconButton OnClick="@(() => DeleteWordList(context))" Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                @* <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="PageChanged" Count="@pageCount" Class="pa-4" /> *@
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-end">
+                        <li class="page-item @GetPreviousButtonClass(_selectedPage)">
+                            <a class="page-link" @onclick=@(() => PageChanged(1)) tabindex="-1">İlk</a>
+                        </li>
+                        <li class="page-item @GetPreviousButtonClass(_selectedPage)">
+                            <a class="page-link" @onclick=@(() => PageChanged(_selectedPage - 1)) tabindex="-1">Önceki</a>
+                        </li>
 
-                            @* @for (int i = 1; i <= pageCount; i++)
+                        @* @for (int i = 1; i <= pageCount; i++)
                 {
                 int pageNumber = i;
                 if (pageNumber.Equals(_selectedPage))
@@ -106,29 +104,33 @@ else
                 }
                 } *@
 
-                            @foreach (var pageNumber in GetDisplayedPageNumbers())
+                        @foreach (var pageNumber in GetDisplayedPageNumbers())
+                    {
+                        if (pageNumber.Equals(_selectedPage))
                         {
-                            if (pageNumber.Equals(_selectedPage))
-                            {
-                                <li class="page-item active"><a class="page-link" @onclick=@(() => @PageChanged(pageNumber))>@pageNumber</a></li>
-                            }
-                            else
-                            {
-                                <li class="page-item"><a class="page-link" @onclick=@(() => @PageChanged(pageNumber))>@pageNumber</a></li>
-                            }
+                            <li class="page-item active"><a class="page-link" @onclick=@(() => @PageChanged(pageNumber))>@pageNumber</a></li>
                         }
-                        <li class="page-item @GetNextButtonClass(_selectedPage)">
-                            <a class="page-link" @onclick=@(() => PageChanged(_selectedPage + 1))>Sonraki</a>
-                        </li>
-                        <li class="page-item @GetNextButtonClass(_selectedPage)">
-                            <a class="page-link" @onclick=@(() => PageChanged(pageCount))>Son</a>
-                        </li>
+                        else
+                        {
+                            <li class="page-item"><a class="page-link" @onclick=@(() => @PageChanged(pageNumber))>@pageNumber</a></li>
+                        }
+                    }
+                    <li class="page-item @GetNextButtonClass(_selectedPage)">
+                        <a class="page-link" @onclick=@(() => PageChanged(_selectedPage + 1))>Sonraki</a>
+                    </li>
+                    <li class="page-item @GetNextButtonClass(_selectedPage)">
+                        <a class="page-link" @onclick=@(() => PageChanged(pageCount))>Son</a>
+                    </li>
 
-                    </ul>
-                </nav>
-            </PagerContent>
-        </MudTable>
-    }
+                </ul>
+            </nav>
+        </PagerContent>
+    </MudTable>
+}
+
+@if (wordLists is null)
+{
+    <MudAlert Severity="Severity.Normal" Variant="Variant.Filled" NoIcon="true" Class="mb-2 mt-3">Liste bulunamadı.</MudAlert>
 }
 
 <MudDialog @bind-IsVisible="createWordListDialogIsVisible" Options="dialogOptions">
@@ -168,7 +170,8 @@ else
     List<Data.WordLists.WordList> wordLists = new List<Data.WordLists.WordList>();
     int TotalWordListCountOfTheUser;
 
-    /* const */ int rowsPerPage = 10; // Sayfa başına gösterilecek liste sayısı
+    /* const */
+    int rowsPerPage = 10; // Sayfa başına gösterilecek liste sayısı
     int pageCount; // Toplam sayfa sayısı
     int _selectedPage = 1; // Seçili olan sayfanın numarası
 
