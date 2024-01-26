@@ -135,6 +135,8 @@ else
         <PagerContent>
             @* <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="WordsPageChanged" Count="@pageCount" Class="pa-4" /> *@
             <nav aria-label="Page navigation example">
+                <div class="d-flex justify-content-between">
+                    <div class="pagination-info d-flex justify-content-center align-items-center flex-column">Toplam Kelime Sayısı: @TotalWordsCountOfTheUser</div>
                 <ul class="pagination justify-content-end">
                     <li class="page-item @GetPreviousButtonClass(_selectedPage)">
                         <a class="page-link" @onclick=@(() => WordsPageChanged(1)) tabindex="-1">İlk</a>
@@ -161,6 +163,7 @@ else
                     </li>
 
                 </ul>
+                </div>
             </nav>
         </PagerContent>
     </MudTable>
@@ -262,7 +265,7 @@ else
     int _selectedPage = 1; // Seçili olan sayfanın numarası
     /* const */
     int rowsPerPage = 10; // Sayfa başına gösterilecek kelime sayısı
-    int TotalWordCountOfTheWordList;
+    // int TotalWordCountOfTheWordList;
 
     string orderString;
 

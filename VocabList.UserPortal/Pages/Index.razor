@@ -83,6 +83,8 @@ else
             <PagerContent>
                 @* <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="PageChanged" Count="@pageCount" Class="pa-4" /> *@
                 <nav aria-label="Page navigation example">
+                    <div class="d-flex justify-content-between">
+                        <div class="pagination-info d-flex justify-content-center align-items-center flex-column">Toplam Liste Sayısı: @TotalWordListCountOfTheUser</div>
                     <ul class="pagination justify-content-end">
                         <li class="page-item @GetPreviousButtonClass(_selectedPage)">
                             <a class="page-link" @onclick=@(() => PageChanged(1)) tabindex="-1">İlk</a>
@@ -92,37 +94,38 @@ else
                         </li>
 
                         @* @for (int i = 1; i <= pageCount; i++)
-                {
-                int pageNumber = i;
-                if (pageNumber.Equals(_selectedPage))
-                {
-                <li class="page-item active"><a class="page-link" @onclick=@(() => @PageChanged(pageNumber))>@pageNumber</a></li>
-                }
-                else
-                {
-                <li class="page-item"><a class="page-link" @onclick=@(() => @PageChanged(pageNumber))>@pageNumber</a></li>
-                }
-                } *@
+                    {
+                    int pageNumber = i;
+                    if (pageNumber.Equals(_selectedPage))
+                    {
+                    <li class="page-item active"><a class="page-link" @onclick=@(() => @PageChanged(pageNumber))>@pageNumber</a></li>
+                    }
+                    else
+                    {
+                    <li class="page-item"><a class="page-link" @onclick=@(() => @PageChanged(pageNumber))>@pageNumber</a></li>
+                    }
+                    } *@
 
                         @foreach (var pageNumber in GetDisplayedPageNumbers())
-                    {
-                        if (pageNumber.Equals(_selectedPage))
                         {
-                            <li class="page-item active"><a class="page-link" @onclick=@(() => @PageChanged(pageNumber))>@pageNumber</a></li>
+                            if (pageNumber.Equals(_selectedPage))
+                            {
+                                <li class="page-item active"><a class="page-link" @onclick=@(() => @PageChanged(pageNumber))>@pageNumber</a></li>
+                            }
+                            else
+                            {
+                                <li class="page-item"><a class="page-link" @onclick=@(() => @PageChanged(pageNumber))>@pageNumber</a></li>
+                            }
                         }
-                        else
-                        {
-                            <li class="page-item"><a class="page-link" @onclick=@(() => @PageChanged(pageNumber))>@pageNumber</a></li>
-                        }
-                    }
-                    <li class="page-item @GetNextButtonClass(_selectedPage)">
-                        <a class="page-link" @onclick=@(() => PageChanged(_selectedPage + 1))>Sonraki</a>
-                    </li>
-                    <li class="page-item @GetNextButtonClass(_selectedPage)">
-                        <a class="page-link" @onclick=@(() => PageChanged(pageCount))>Son</a>
-                    </li>
+                        <li class="page-item @GetNextButtonClass(_selectedPage)">
+                            <a class="page-link" @onclick=@(() => PageChanged(_selectedPage + 1))>Sonraki</a>
+                        </li>
+                        <li class="page-item @GetNextButtonClass(_selectedPage)">
+                            <a class="page-link" @onclick=@(() => PageChanged(pageCount))>Son</a>
+                        </li>
 
-                </ul>
+                    </ul>
+                </div>
             </nav>
         </PagerContent>
     </MudTable>
