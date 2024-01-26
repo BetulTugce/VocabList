@@ -1,6 +1,8 @@
 ﻿using Azure;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Data;
 using System.Drawing;
 using System.Formats.Tar;
 using VocabList.Core.DTOs;
@@ -36,32 +38,64 @@ namespace VocabList.Repository.Repositories
         // Filtreleme seçeneklerine göre userin oluşturduğu kelime listelerini içeren bir liste ve toplam kelime listesi sayısını döndürür..
         public async Task<(List<WordList>, int)> GetFilteredWordListsAsync(WordListFilterRequest request)
         {
-            // Kullanıcının idsi ile eşleşen kelime listelerini alır..
-            var query = _context.WordLists.AsNoTracking().Where(i => i.AppUserId == request.AppUserId);
-            IQueryable<WordList> wordListsQuery = null;
+            #region Eski Filtreleme Kodları
+            //// Kullanıcının idsi ile eşleşen kelime listelerini alır..
+            //var query = _context.WordLists.AsNoTracking().Where(i => i.AppUserId == request.AppUserId);
+            //IQueryable<WordList> wordListsQuery = null;
 
-            // Parametredeki değer null veya empty değilse..
-            if (!string.IsNullOrEmpty(request.Name))
-                query = query.Where(w => w.Name.Contains(request.Name)); // Kelime listesinin adı parametredeki değeri içeriyor mu kontrol edilir..
+            //// Parametredeki değer null veya empty değilse..
+            //if (!string.IsNullOrEmpty(request.Name))
+            //    query = query.Where(w => w.Name.Contains(request.Name)); // Kelime listesinin adı parametredeki değeri içeriyor mu kontrol edilir..
 
-            // Sıralama yapılıyor..
-            if (request.OrderByDescending)
+            //// Sıralama yapılıyor..
+            //if (request.OrderByDescending)
+            //{
+            //    // OrderByDescending true ise, tabloyu büyükten küçüğe (yani yeni tarihten eski tarihe) sıralar..
+            //    query = query.OrderByDescending(i => i.CreatedDate);
+            //}
+            //else
+            //{
+            //    // OrderByDescending özelliği false ise, tabloyu küçükten büyüğe(yani eski tarihten yeni tarihe) sıralar..
+            //    query = query.OrderBy(i => i.CreatedDate);
+            //}
+
+            //if (request.Page != -1 && request.Size != -1)
+            //    wordListsQuery = query.Skip(request.Page * request.Size).Take(request.Size);
+            //else
+            //    wordListsQuery = query;
+
+            //return (await wordListsQuery.ToListAsync(), query.Count());
+            #endregion
+
+            // Stored Procedure için gerekli parametreler oluşturuluyor.. 
+            var parameters = new[]
             {
-                // OrderByDescending true ise, tabloyu büyükten küçüğe (yani yeni tarihten eski tarihe) sıralar..
-                query = query.OrderByDescending(i => i.CreatedDate);
-            }
-            else
-            {
-                // OrderByDescending özelliği false ise, tabloyu küçükten büyüğe(yani eski tarihten yeni tarihe) sıralar..
-                query = query.OrderBy(i => i.CreatedDate);
-            }
+                // Arama metnini, eğer null değilse, SQL NULL olmayan bir değer olarak ayarlar.
+                // Eğer null ise, parametre SQL NULL olacaktır.
+                new SqlParameter("@SearchString", (object)request.SearchString ?? DBNull.Value),
+                new SqlParameter("@Page", request.Page), // Sayfa numarası..
+                new SqlParameter("@Size", request.Size), // Sayfa başına gösterilecek eleman sayısı..
+                new SqlParameter("@Sort", request.Sort), // Sıralama yapılacak değişken..
+                new SqlParameter("@OrderBy", request.OrderBy), //Sıralama şekli (ASC : küçükten büyüğe / a' dan z' ye / eskiden yeniye --- DESC : büyükten küçüğe / z' den a' ya / yeniden eskiye)
+                new SqlParameter("@AppUserId", request.AppUserId),
+                // Toplam eleman sayısını almak için bir çıkış parametresi ekleniyor..
+                new SqlParameter
+                {
+                    ParameterName = "@TotalCount", // Parametre adı..
+                    SqlDbType = SqlDbType.Int, // SQL tipi (int)..
+                    Direction = ParameterDirection.Output // Çıkış parametresi olarak ayarlanıyor..
+                }
+            };
 
-            if (request.Page != -1 && request.Size != -1)
-                wordListsQuery = query.Skip(request.Page * request.Size).Take(request.Size);
-            else
-                wordListsQuery = query;
+            // SQL sorgusunu çalıştırarak sonuçları alır ve bir liste olarak döndürür..
+            var wordLists = await _context.WordLists.FromSqlRaw(
+                "EXEC GetFilteredWordLists @SearchString, @Page, @Size, @Sort, @OrderBy, @AppUserId, @TotalCount OUTPUT", parameters)
+                .ToListAsync();
 
-            return (await wordListsQuery.ToListAsync(), query.Count());
+            // Toplam eleman sayısını almak için OUTPUT parametresini kullanır.
+            var totalCount = (int)parameters[6].Value; // @TotalCount'ın indexi 7
+
+            return (wordLists, totalCount); // Kelimele listeleri ve toplam kelime listesi sayısını bir tuple olarak geriye döndürür.
         }
 
         // İlgili idye sahip kullanıcının toplam kaç tane kelime listesi varsa onu döndürür..

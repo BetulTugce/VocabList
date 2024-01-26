@@ -140,15 +140,25 @@ namespace VocabList.API.Controllers
         [HttpPost("[action]")]
         [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.WordLists, ActionType = ActionType.Reading, Definition = "Get Word Lists By Filter Options")]
         //public IActionResult GetFilteredWordLists([FromQuery] WordListFilterRequest filter, int pageNumber, int pageSize)
-        public IActionResult GetFilteredWordLists(WordListFilterRequest filter)
+        public async Task<IActionResult> GetFilteredWordLists(WordListFilterRequest filter)
         {
-            var filteredWordLists = _wordListService.GetFilteredWordListsAsync(filter);
-            if (!filteredWordLists.Result.Item1.Any())
+            //var filteredWordLists = _wordListService.GetFilteredWordListsAsync(filter);
+            //if (!filteredWordLists.Result.Item1.Any())
+            //{
+            //    return NotFound();
+            //}
+            
+            //WordListFilterResponse response = new() { WordLists = _mapper.Map<List<WordListDto>>(filteredWordLists.Result.Item1), TotalCount = filteredWordLists.Result.Item2};
+            //return Ok(response);
+
+            // Filtreleme koşullarına uyan kelimele listelerini (page-size parametrelerine göre) ve bu koşulu sağlayan toplam kelime listesi sayısını getirir.. 
+            var filteredWordLists = await _wordListService.GetFilteredWordListsAsync(filter);
+            if (!filteredWordLists.Item1.Any())
             {
                 return NotFound();
             }
-            
-            WordListFilterResponse response = new() { WordLists = _mapper.Map<List<WordListDto>>(filteredWordLists.Result.Item1), TotalCount = filteredWordLists.Result.Item2};
+
+            WordListFilterResponse response = new() { WordLists = _mapper.Map<List<WordListDto>>(filteredWordLists.Item1), TotalCount = filteredWordLists.Item2 };
             return Ok(response);
 
             //List<WordListDto> wordListsDtos = _mapper.Map<List<WordListDto>>(filteredWordLists.Result.Item1); //Mapleme ile entityler dtoya çevriliyor..
