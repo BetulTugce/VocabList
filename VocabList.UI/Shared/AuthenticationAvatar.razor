@@ -19,7 +19,15 @@
 }
 else
 {
-    <button @onclick="Register">Üye Ol</button>
+    <MudMenu ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.BottomLeft">
+        <ActivatorContent>
+            <MudChip Variant=Variant.Text Style="color: #f7f7f8" OnClick="Login">Giriş Yap</MudChip>
+        </ActivatorContent>
+        <ChildContent>
+            <MudMenuItem Style="white-space: nowrap;" Disabled>Henüz bir hesabın yok mu?</MudMenuItem>
+         <MudMenuItem Style="text-align: center;" @onclick="Register">Üye Ol</MudMenuItem>
+         </ChildContent>
+     </MudMenu>
 }
 
 @code {
@@ -38,6 +46,11 @@ else
     void Register()
     {
         navigationManager.NavigateTo($"/register");
+    }
+
+    void Login()
+    {
+        navigationManager.NavigateTo($"/login");
     }
 
     void AccountSettings()

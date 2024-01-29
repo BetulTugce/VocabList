@@ -16,11 +16,16 @@
         </Authorized>
     </AuthorizeView>
     <main>
-        <div class="top-row px-4">
-            @* <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a> *@
-            <CascadingValue Value="username" Name="AvatarChar">
-                <AuthenticationAvatar></AuthenticationAvatar>
-            </CascadingValue>
+        <div class="navbar bg-dark border-bottom border-body" data-bs-theme="dark">
+            <a class="navbar-brand ms-2" style="color: #f7f7f8;" href="/">VocabList - Yönetim Paneli</a>
+            <!-- Navbar content -->
+            <div class="ml-auto">
+                <div class="mr-2">
+                    <CascadingValue Value="username" Name="AvatarChar">
+                        <AuthenticationAvatar></AuthenticationAvatar>
+                    </CascadingValue>
+                </div>
+            </div>
         </div>
 
         <article class="content px-4">
