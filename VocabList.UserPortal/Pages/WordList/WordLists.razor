@@ -12,6 +12,7 @@
 @inject NavigationManager navigationManager
 @inject ISnackbar SnackbarService
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
+@inject IJSRuntime JSRuntime
 
 <style>
     .page-item {
@@ -35,6 +36,11 @@ else if (wordList == null)
 else
 {
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateWordDialog" Color="Color.Info">Kelime Ekle</MudButton>
+    <MudSpacer />
+    <MudButton @onclick="Print" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Print" Style="background-color: yellowgreen; color: white;">
+        Yazdır
+    </MudButton>
+   
     <br />
     <MudToolBar>
         <MudText Typo="Typo.h6">@wordList.Name</MudText>
@@ -920,5 +926,10 @@ else
             // Diğer hata durumları..
             ShowNotification("Kelimeleri çekerken beklenmeyen bir hata meydana geldi.", Severity.Error);
         }
+    }
+
+    private async Task Print()
+    {
+        await JSRuntime.InvokeVoidAsync("print");
     }
 }
