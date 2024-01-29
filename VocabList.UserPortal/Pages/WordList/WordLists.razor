@@ -21,7 +21,6 @@
 
     .mud-select {
         max-width: max-content;
-        margin-right: 20px;
     }
 </style>
 
@@ -36,8 +35,7 @@ else if (wordList == null)
 else
 {
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateWordDialog" Color="Color.Info">Kelime Ekle</MudButton>
-    <MudSpacer />
-    <MudButton @onclick="Print" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Print" Style="background-color: yellowgreen; color: white;">
+    <MudButton @onclick="Print" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Print" Style="background-color: yellowgreen; color: white; margin-left: 20px;">
         Yazdır
     </MudButton>
    
@@ -45,7 +43,7 @@ else
     <MudToolBar>
         <MudText Typo="Typo.h6">@wordList.Name</MudText>
         <MudSpacer />
-        <MudTextField @bind-Value="filterRequest.SearchString" Label=" " Placeholder="Arama yap" HelperTextOnFocus="true" HelperText="Arama sonuçlarını görmek için enter'a basın.." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Style="width: auto;" @onkeyup="HandleKeyUp"></MudTextField>
+        <MudTextField @bind-Value="filterRequest.SearchString" Label=" " Placeholder="Arama yap" HelperTextOnFocus="true" HelperText="Arama sonuçlarını görmek için enter'a basın.." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" @onkeyup="HandleKeyUp"></MudTextField>
     </MudToolBar>
     <br />
     <MudTable RowsPerPage=100 Items="@Words" Hover="true" Breakpoint="Breakpoint.Sm">
