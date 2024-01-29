@@ -38,28 +38,29 @@ else
     <br />
     <MudToolBar>
         <MudText Typo="Typo.h6">@wordList.Name</MudText>
-            <MudSpacer />
-
-            <MudSelect Dense="true" T="string" Label="Sırala" Variant="Variant.Text" SelectedValuesChanged="HandleValueChanged" @bind-Value="@orderString">
-                <MudSelectItem Value="@("UpdatedDate ASC")">Değiştirme Tarihi (Eskiden yeniye)</MudSelectItem>
-                <MudSelectItem Value="@("UpdatedDate DESC")">Değiştirme Tarihi (Yeniden eskiye)</MudSelectItem>
-                <MudSelectItem Value="@("CreatedDate ASC")">Oluşturma Tarihi (Eskiden yeniye)</MudSelectItem>
-                <MudSelectItem Value="@("CreatedDate DESC")">Oluşturma Tarihi (Yeniden eskiye)</MudSelectItem>
-                <MudSelectItem Value="@("Value ASC")">Kelime (A-Z)</MudSelectItem>
-                <MudSelectItem Value="@("Value DESC")">Kelime (Z-A)</MudSelectItem>
-                <MudSelectItem Value="@("Type ASC")">Kelime Türü (A-Z)</MudSelectItem>
-                <MudSelectItem Value="@("Type DESC")">Kelime Türü (Z-A)</MudSelectItem>
-                <MudSelectItem Value="@("Description ASC")">Açıklama (A-Z)</MudSelectItem>
-                <MudSelectItem Value="@("Description DESC")">Açıklama (Z-A)</MudSelectItem>
-            </MudSelect>
-
-            @* <MudSpacer /> *@
-
-            <MudTextField @bind-Value="filterRequest.SearchString" Label=" " Placeholder="Arama yap" HelperText="Arama sonuçlarını görmek için enter'a basın.." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" @onkeyup="HandleKeyUp"></MudTextField>
-
+        <MudSpacer />
+        <MudTextField @bind-Value="filterRequest.SearchString" Label=" " Placeholder="Arama yap" HelperTextOnFocus="true" HelperText="Arama sonuçlarını görmek için enter'a basın.." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Style="width: auto;" @onkeyup="HandleKeyUp"></MudTextField>
     </MudToolBar>
-    <MudTable Items="@Words" Hover="true" Breakpoint="Breakpoint.Sm">
-
+    <br />
+    <MudTable RowsPerPage=100 Items="@Words" Hover="true" Breakpoint="Breakpoint.Sm">
+        <ToolBarContent>
+            <div class="d-flex justify-content-end align-items-center" style="position: absolute; right: 0px;">
+                <MudNumericField @bind-Value="rowsPerPage" Label="Kelime Sayısı" HelperTextOnFocus="true" HelperText="1-100 arası bir değer girin ve enter'a basın.." Min="1" Max="100" Variant="Variant.Text" OnKeyUp="HandleKeyUp" Style="max-width: max-content;" />
+                <MudSpacer />
+                <MudSelect Dense="true" T="string" Label="Sırala" Variant="Variant.Text" SelectedValuesChanged="HandleValueChanged" HelperTextOnFocus="true" HelperText="Tarihe, kelime, anlam ve türe göre sıralama yapabilirsiniz." @bind-Value="@orderString">
+                    <MudSelectItem Value="@("UpdatedDate ASC")">Değiştirme Tarihi (Eskiden yeniye)</MudSelectItem>
+                    <MudSelectItem Value="@("UpdatedDate DESC")">Değiştirme Tarihi (Yeniden eskiye)</MudSelectItem>
+                    <MudSelectItem Value="@("CreatedDate ASC")">Oluşturma Tarihi (Eskiden yeniye)</MudSelectItem>
+                    <MudSelectItem Value="@("CreatedDate DESC")">Oluşturma Tarihi (Yeniden eskiye)</MudSelectItem>
+                    <MudSelectItem Value="@("Value ASC")">Kelime (A-Z)</MudSelectItem>
+                    <MudSelectItem Value="@("Value DESC")">Kelime (Z-A)</MudSelectItem>
+                    <MudSelectItem Value="@("Type ASC")">Kelime Türü (A-Z)</MudSelectItem>
+                    <MudSelectItem Value="@("Type DESC")">Kelime Türü (Z-A)</MudSelectItem>
+                    <MudSelectItem Value="@("Description ASC")">Anlam (A-Z)</MudSelectItem>
+                    <MudSelectItem Value="@("Description DESC")">Anlam (Z-A)</MudSelectItem>
+                </MudSelect>
+            </div>
+        </ToolBarContent>
         <ColGroup>
             <col style="width:300px;" />
             <col style="width:100px;" />
@@ -137,32 +138,32 @@ else
             <nav aria-label="Page navigation example">
                 <div class="d-flex justify-content-between">
                     <div class="pagination-info d-flex justify-content-center align-items-center flex-column">Toplam Kelime Sayısı: @TotalWordsCountOfTheUser</div>
-                <ul class="pagination justify-content-end">
-                    <li class="page-item @GetPreviousButtonClass(_selectedPage)">
-                        <a class="page-link" @onclick=@(() => WordsPageChanged(1)) tabindex="-1">İlk</a>
-                    </li>
-                    <li class="page-item @GetPreviousButtonClass(_selectedPage)">
-                        <a class="page-link" @onclick=@(() => WordsPageChanged(_selectedPage - 1)) tabindex="-1">Önceki</a>
-                    </li>
-                    @foreach (var pageNumber in GetDisplayedPageNumbers())
-                    {
-                        if (pageNumber.Equals(_selectedPage))
+                    <ul class="pagination justify-content-end">
+                        <li class="page-item @GetPreviousButtonClass(_selectedPage)">
+                            <a class="page-link" @onclick=@(() => WordsPageChanged(1)) tabindex="-1">İlk</a>
+                        </li>
+                        <li class="page-item @GetPreviousButtonClass(_selectedPage)">
+                            <a class="page-link" @onclick=@(() => WordsPageChanged(_selectedPage - 1)) tabindex="-1">Önceki</a>
+                        </li>
+                        @foreach (var pageNumber in GetDisplayedPageNumbers())
                         {
-                            <li class="page-item active"><a class="page-link" @onclick=@(() => @WordsPageChanged(pageNumber))>@pageNumber</a></li>
+                            if (pageNumber.Equals(_selectedPage))
+                            {
+                                <li class="page-item active"><a class="page-link" @onclick=@(() => @WordsPageChanged(pageNumber))>@pageNumber</a></li>
+                            }
+                            else
+                            {
+                                <li class="page-item"><a class="page-link" @onclick=@(() => @WordsPageChanged(pageNumber))>@pageNumber</a></li>
+                            }
                         }
-                        else
-                        {
-                            <li class="page-item"><a class="page-link" @onclick=@(() => @WordsPageChanged(pageNumber))>@pageNumber</a></li>
-                        }
-                    }
-                    <li class="page-item @GetNextButtonClass(_selectedPage)">
-                        <a class="page-link" @onclick=@(() => WordsPageChanged(_selectedPage + 1))>Sonraki</a>
-                    </li>
-                    <li class="page-item @GetNextButtonClass(_selectedPage)">
-                        <a class="page-link" @onclick=@(() => WordsPageChanged(pageCount))>Son</a>
-                    </li>
+                        <li class="page-item @GetNextButtonClass(_selectedPage)">
+                            <a class="page-link" @onclick=@(() => WordsPageChanged(_selectedPage + 1))>Sonraki</a>
+                        </li>
+                        <li class="page-item @GetNextButtonClass(_selectedPage)">
+                            <a class="page-link" @onclick=@(() => WordsPageChanged(pageCount))>Son</a>
+                        </li>
 
-                </ul>
+                    </ul>
                 </div>
             </nav>
         </PagerContent>
@@ -265,7 +266,7 @@ else
     int _selectedPage = 1; // Seçili olan sayfanın numarası
     /* const */
     int rowsPerPage = 10; // Sayfa başına gösterilecek kelime sayısı
-    // int TotalWordCountOfTheWordList;
+                          // int TotalWordCountOfTheWordList;
 
     string orderString;
 
@@ -277,7 +278,7 @@ else
     // ImmutableList<string> TypesOfWords = ImmutableList.Create("noun", "verb", "adjective", "adverb", "phrasal verb", "preposition", "collocation", "conjunction", "transition", "prepositional phrase");
 
     WordList wordList = new WordList();
-    List<Word> Words = new List<Word>();
+    IEnumerable<Word> Words = new List<Word>();
     List<Sentence> Sentences = new List<Sentence>();
 
     WordFilterRequest filterRequest = new WordFilterRequest();
@@ -396,7 +397,9 @@ else
 
             if (query.TryGetValue("Size", out var sizeNumberString) && int.TryParse(sizeNumberString, out var sizeNumberValue))
             {
-                rowsPerPage = sizeNumberValue; // Seçili sayfa boyutu
+                // rowsPerPage = sizeNumberValue; // Seçili sayfa boyutu
+                // RowsPerPage değerinin numericfield yerine doğrudan urlden değiştirilmesi durumu için..
+                rowsPerPage = sizeNumberValue < 1 ? 1 : sizeNumberValue > 100 ? 100 : sizeNumberValue;
             }
 
             // İlgili idye sahip kelime listesi userIdyi de kontrol ederek çekiliyor..
@@ -814,7 +817,7 @@ else
         {
             // Filtreleme yapılacağı için seçili sayfa 1 olarak güncelleniyor..
             _selectedPage = 1;
-
+            filterRequest.Size = rowsPerPage;
             // await GetFilteredWordsAsync(_selectedPage - 1, rowsPerPage);
 
             // Url güncellenir..

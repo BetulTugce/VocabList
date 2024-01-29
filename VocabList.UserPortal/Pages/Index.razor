@@ -48,21 +48,26 @@ else
     <MudSelectItem Value="@("false")">Eskiden yeniye</MudSelectItem>
     <MudSelectItem Value="@("true")">Yeniden eskiye</MudSelectItem>
     </MudSelect> *@
-        <MudSelect Dense="true" T="string" Label="Sırala" HelperText="Oluşturma tarihine göre sıralama yapın.." Variant="Variant.Text" SelectedValuesChanged="HandleValueChanged" @bind-Value="@orderString">
-            <MudSelectItem Value="@("UpdatedDate ASC")">Değiştirme Tarihi (Eskiden yeniye)</MudSelectItem>
-            <MudSelectItem Value="@("UpdatedDate DESC")">Değiştirme Tarihi (Yeniden eskiye)</MudSelectItem>
-            <MudSelectItem Value="@("CreatedDate ASC")">Oluşturma Tarihi (Eskiden yeniye)</MudSelectItem>
-            <MudSelectItem Value="@("CreatedDate DESC")">Oluşturma Tarihi (Yeniden eskiye)</MudSelectItem>
-            <MudSelectItem Value="@("Name ASC")">Liste Adı (A-Z)</MudSelectItem>
-            <MudSelectItem Value="@("Name DESC")">Liste Adı (Z-A)</MudSelectItem>
-        </MudSelect>
 
-        @* <MudSpacer /> *@
-
-        <MudTextField @bind-Value="filterRequest.SearchString" Label=" " Placeholder="Arama yap" HelperText="Arama sonuçlarını görmek için enter'a basın.." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" @onkeyup="HandleKeyUp"></MudTextField>
+        <MudTextField @bind-Value="filterRequest.SearchString" Label=" " Placeholder="Arama yap" HelperTextOnFocus="true" HelperText="Arama sonuçlarını görmek için enter'a basın.." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" @onkeyup="HandleKeyUp"></MudTextField>
 
     </MudToolBar>
-    <MudTable Items="@wordLists" Hover="true" FixedHeader="true" Style="width:100%">
+    <br />
+    <MudTable Items="@wordLists" RowsPerPage=100 Hover="true" FixedHeader="true" Style="width:100%">
+        <ToolBarContent>
+            <div class="d-flex justify-content-end align-items-center" style="position: absolute; right: 0px;">
+                <MudNumericField @bind-Value="rowsPerPage" Label="Liste Sayısı" HelperTextOnFocus="true" HelperText="1-100 arası bir değer girin ve enter'a basın.." Min="1" Max="100" Variant="Variant.Text" OnKeyUp="HandleKeyUp" Style="max-width: max-content;" />
+                <MudSpacer />
+                <MudSelect Dense="true" T="string" Label="Sırala" HelperTextOnFocus="true" HelperText="Tarih veya liste adına göre sıralama yapabilirsiniz.." Variant="Variant.Text" SelectedValuesChanged="HandleValueChanged" @bind-Value="@orderString">
+                    <MudSelectItem Value="@("UpdatedDate ASC")">Değiştirme Tarihi (Eskiden yeniye)</MudSelectItem>
+                    <MudSelectItem Value="@("UpdatedDate DESC")">Değiştirme Tarihi (Yeniden eskiye)</MudSelectItem>
+                    <MudSelectItem Value="@("CreatedDate ASC")">Oluşturma Tarihi (Eskiden yeniye)</MudSelectItem>
+                    <MudSelectItem Value="@("CreatedDate DESC")">Oluşturma Tarihi (Yeniden eskiye)</MudSelectItem>
+                    <MudSelectItem Value="@("Name ASC")">Liste Adı (A-Z)</MudSelectItem>
+                    <MudSelectItem Value="@("Name DESC")">Liste Adı (Z-A)</MudSelectItem>
+                </MudSelect>
+            </div>
+        </ToolBarContent>
         <HeaderContent>
             @* <MudTh>ID</MudTh> *@
             <MudTh>Listenin Adı</MudTh>
@@ -301,7 +306,9 @@ else
 
             if (query.TryGetValue("Size", out var sizeNumberString) && int.TryParse(sizeNumberString, out var sizeNumberValue))
             {
-                rowsPerPage = sizeNumberValue; // Seçili sayfa boyutu
+                // rowsPerPage = sizeNumberValue; // Seçili sayfa boyutu
+                // RowsPerPage değerinin numericfield yerine doğrudan urlden değiştirilmesi durumu için..
+                rowsPerPage = sizeNumberValue < 1 ? 1 : sizeNumberValue > 100 ? 100 : sizeNumberValue;
             }
 
             // Kullanıcıya ait kelime listeleri çekiliyor..(İlk sayfa - 10 adet liste)
@@ -537,6 +544,7 @@ else
         {
             // Filtreleme yapılacağı için seçili sayfa 1 olarak güncelleniyor..
             _selectedPage = 1;
+            filterRequest.Size = rowsPerPage;
 
             // await GetFilteredWordListsAsync(_selectedPage - 1, rowsPerPage);
 
