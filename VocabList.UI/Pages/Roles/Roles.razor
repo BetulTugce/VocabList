@@ -50,10 +50,12 @@
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="createRoleRequest.Name" Label="Rol" HelperText="Lütfen eklemek istediğiniz rol için bir isim belirleyin.." Variant="Variant.Outlined" />
+        <MudForm @bind-IsValid="@success">
+            <MudTextField @bind-Value="createRoleRequest.Name" Label="Rol" Required="true" RequiredError="Bu alan zorunlu!" HelperText="Lütfen eklemek istediğiniz rol için bir isim belirleyin.." Variant="Variant.Outlined" />
+        </MudForm>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateRole" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(!success)" OnClick="CreateRole" Class="px-10">Kaydet</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseCreateRoleDialog" Class="px-10">Kapat</MudButton>
     </DialogActions>
 </MudDialog>
@@ -65,10 +67,12 @@
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="@updateRoleRequest.Name" Label="Rol" HelperText="Lütfen rol için bir isim belirleyin.." Variant="Variant.Outlined" />
+        <MudForm @bind-IsValid="@success">
+            <MudTextField @bind-Value="@updateRoleRequest.Name" Label="Rol" Required="true" RequiredError="Bu alan zorunlu!" HelperText="Lütfen rol için bir isim belirleyin.." Variant="Variant.Outlined" />
+        </MudForm>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="UpdateRole" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(!success)" OnClick="UpdateRole" Class="px-10">Kaydet</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseUpdateRoleDialog" Class="px-10">Kapat</MudButton>
     </DialogActions>
 </MudDialog>
@@ -79,6 +83,8 @@
     UpdateRoleRequest updateRoleRequest { get; set; } = new UpdateRoleRequest();
     String accessToken = string.Empty;
     bool isUnauthorized = false;
+
+    bool success;
 
     const int rowsPerPage = 10; // Sayfa başına gösterilecek rol sayısı
     int pageCount; // Toplam sayfa sayısı

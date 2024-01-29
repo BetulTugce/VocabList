@@ -147,10 +147,12 @@ else
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="createWordListRequest.Name" Label="Listenin Adı" HelperText="Lütfen eklemek istediğiniz liste için bir isim belirleyin.." Variant="Variant.Outlined" />
+        <MudForm @bind-IsValid="@success">
+            <MudTextField @bind-Value="createWordListRequest.Name" Label="Listenin Adı" Required="true" RequiredError="Bu alan zorunlu!" HelperText="Lütfen eklemek istediğiniz liste için bir isim belirleyin.." Variant="Variant.Outlined" />
+        </MudForm>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateWordList" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(!success)" OnClick="CreateWordList" Class="px-10">Kaydet</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseCreateWordListDialog" Class="px-10">İptal</MudButton>
     </DialogActions>
 </MudDialog>
@@ -163,15 +165,19 @@ else
     </TitleContent>
     <DialogContent>
         @* Buraya oluşturulma ve güncellenme tarihleri de eklenecek.. *@
-        <MudTextField @bind-Value="@updateWordListRequest.Name" Label="Listenin Adı" HelperText="Lütfen liste için bir isim belirleyin.." Variant="Variant.Outlined" />
+        <MudForm @bind-IsValid="@success">
+            <MudTextField @bind-Value="@updateWordListRequest.Name" Label="Listenin Adı" Required="true" RequiredError="Bu alan zorunlu!" HelperText="Lütfen liste için bir isim belirleyin.." Variant="Variant.Outlined" />
+        </MudForm>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="UpdateWordList" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(!success)" OnClick="UpdateWordList" Class="px-10">Kaydet</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseUpdateWordListDialog" Class="px-10">Kapat</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
+    bool success;
+
     Data.WordLists.CreateWordListRequest createWordListRequest = new Data.WordLists.CreateWordListRequest();
     Data.WordLists.WordList updateWordListRequest = new Data.WordLists.WordList();
     List<Data.WordLists.WordList> wordLists = new List<Data.WordLists.WordList>();

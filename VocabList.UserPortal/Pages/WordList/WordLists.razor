@@ -186,18 +186,20 @@ else
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="createWordRequest.Value" Label="Kelime" HelperText="Lütfen eklemek istediğiniz kelimeyi girin.." Variant="Variant.Outlined" />
-        <MudTextField @bind-Value="createWordRequest.Description" Label="Anlamı" HelperText="Lütfen kelimenin anlamını girin.." Variant="Variant.Outlined" />
-        <MudSelect Dense="true" T="string" Label="Kelime Türü" HelperText="Lütfen kelimenin türünü seçin.." Variant="Variant.Text" @bind-Value="@createWordRequest.Type">
+        <MudForm @bind-IsValid="@success">
+            <MudTextField @bind-Value="createWordRequest.Value" Label="Kelime" Required="true" RequiredError="Bu alan zorunlu!" HelperText="Lütfen eklemek istediğiniz kelimeyi girin.." Variant="Variant.Outlined" />
+            <MudTextField @bind-Value="createWordRequest.Description" Label="Anlamı" Required="true" RequiredError="Bu alan zorunlu!" HelperText="Lütfen kelimenin anlamını girin.." Variant="Variant.Outlined" />
+            <MudSelect Dense="true" T="string" Label="Kelime Türü" Required="true" RequiredError="Bu alan zorunlu!" HelperText="Lütfen kelimenin türünü seçin.." Variant="Variant.Text" @bind-Value="@createWordRequest.Type">
             @foreach (var type in TypesOfWords)
             {
                 <MudSelectItem Value="@(type)" />
             }
         </MudSelect>
         @* <MudTextField @bind-Value="createWordRequest.Type" Label="Türü" HelperText="Lütfen kelimenin türünü girin.." Variant="Variant.Outlined" /> *@
+        </MudForm>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateWord" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateWord" Class="px-10">Kaydet</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseCreateWordDialog" Class="px-10">İptal</MudButton>
     </DialogActions>
 </MudDialog>
@@ -209,19 +211,21 @@ else
         </MudText>
     </TitleContent>
     <DialogContent>
+        <MudForm @bind-IsValid="@success">
         @* Buraya oluşturulma ve güncellenme tarihleri de eklenecek.. *@
-        <MudTextField @bind-Value="@updateWordRequest.Value" Label="Kelime" HelperText="Lütfen kelime için bir isim belirleyin.." Variant="Variant.Outlined" />
-        <MudTextField @bind-Value="updateWordRequest.Description" Label="Anlamı" HelperText="Lütfen kelimenin anlamını girin.." Variant="Variant.Outlined" />
-        <MudSelect Dense="true" T="string" Label="Kelime Türü" HelperText="Lütfen kelimenin türünü seçin.." Variant="Variant.Text" @bind-Value="@updateWordRequest.Type">
+        <MudTextField @bind-Value="@updateWordRequest.Value" Required="true" RequiredError="Bu alan zorunlu!" Label="Kelime" HelperText="Lütfen kelime için bir isim belirleyin.." Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="updateWordRequest.Description" Required="true" RequiredError="Bu alan zorunlu!" Label="Anlamı" HelperText="Lütfen kelimenin anlamını girin.." Variant="Variant.Outlined" />
+        <MudSelect Dense="true" T="string" Required="true" RequiredError="Bu alan zorunlu!" Label="Kelime Türü" HelperText="Lütfen kelimenin türünü seçin.." Variant="Variant.Text" @bind-Value="@updateWordRequest.Type">
             @foreach (var type in TypesOfWords)
             {
                 <MudSelectItem Value="@(type)" />
             }
         </MudSelect>
         @* <MudTextField @bind-Value="updateWordRequest.Type" Label="Türü" HelperText="Lütfen kelimenin türünü girin.." Variant="Variant.Outlined" /> *@
+        </MudForm>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="UpdateWord" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" StartIcon="@Icons.Material.Filled.Save" OnClick="UpdateWord" Class="px-10">Kaydet</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseUpdateWordDialog" Class="px-10">Kapat</MudButton>
     </DialogActions>
 </MudDialog>
@@ -233,10 +237,12 @@ else
         </MudText>
     </TitleContent>
     <DialogContent>
-        <MudTextField @bind-Value="@createSentenceRequest.Value" Label="Cümle" HelperText="Lütfen cümle girin.." Variant="Variant.Outlined" />
+        <MudForm @bind-IsValid="@success">
+            <MudTextField @bind-Value="@createSentenceRequest.Value" Required="true" RequiredError="Bu alan zorunlu!" Label="Cümle" HelperText="Lütfen cümle girin.." Variant="Variant.Outlined" />
+        </MudForm>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="CreateSentence" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(!success)" OnClick="CreateSentence" Class="px-10">Kaydet</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseCreateSentenceDialog" Class="px-10">Kapat</MudButton>
     </DialogActions>
 </MudDialog>
@@ -249,10 +255,12 @@ else
     </TitleContent>
     <DialogContent>
         @* Buraya oluşturulma ve güncellenme tarihleri de eklenecek.. *@
-        <MudTextField @bind-Value="@updateSentenceRequest.Value" Label="Cümle" HelperText="Lütfen cümle girin.." Variant="Variant.Outlined" />
+        <MudForm @bind-IsValid="@success">
+            <MudTextField @bind-Value="@updateSentenceRequest.Value" Label="Cümle" Required="true" RequiredError="Bu alan zorunlu!" HelperText="Lütfen cümle girin.." Variant="Variant.Outlined" />
+        </MudForm>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="UpdateSentence" Class="px-10">Kaydet</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(!success)" OnClick="UpdateSentence" Class="px-10">Kaydet</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseUpdateSentenceDialog" Class="px-10">Kapat</MudButton>
     </DialogActions>
 </MudDialog>
@@ -265,6 +273,8 @@ else
     String userId = string.Empty;
     String username = string.Empty;
     bool isUnauthorized = false;
+
+    bool success;
 
     int pageCount; // Toplam sayfa sayısı
     int _selectedPage = 1; // Seçili olan sayfanın numarası
