@@ -93,8 +93,7 @@
                 resultMessage = "Giriş başarılı! Anasayfaya yönlendiriliyorsunuz..";
                 ShowNotification(resultMessage, severity);
                 
-                // Anasayfaya yönlendirmeden evvel 5sn gecikme eklendi. Kaldırıldığı zaman navigate ederken forcereload kullanıldığı için notification görüntülenemiyor..
-                await Task.Delay(5000);
+                // await Task.Delay(5000);
 
                 navigationManager.NavigateTo("/", true);
             }
