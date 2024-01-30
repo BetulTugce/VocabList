@@ -24,7 +24,7 @@
 
 @code{
     int TotalUsersCount;
-    int TotalRolesCount;
+    // int TotalRolesCount;
     List<UserRolesCountResponse> rolesCountResponses = new List<UserRolesCountResponse>();
 
     String accessToken = string.Empty;
@@ -52,7 +52,7 @@
             userId = userId.Substring(1, (userId.Length - 2));
 
             // Toplam kullanıcı sayısı çekiliyor..
-            // await GetTotalUsersCount();
+            await GetTotalUsersCount();
 
             // Toplam rol sayısı çekiliyor..
             // await GetTotalRolesCount();
@@ -82,7 +82,7 @@
             // }
             data = rolesCountResponses.Select(role => (double)role.Count).ToArray();
             labels = rolesCountResponses.Select(role => role.Role).ToArray();
-            TotalUsersCount = (int) data.Sum();
+            // TotalUsersCount = (int) data.Sum(); // Kullanıcı sayısı hesaplanırken her rolü ve role ait kaç kullanıcı olduğu bilgisi çekildiği için bir kullanıcı sahip olduğu her rol için tekrar sayılıyor. Bu yüzden toplam kullanıcı sayısını burdan almadım.
         }
         else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
         {
@@ -115,25 +115,25 @@
         }
     }
 
-    async Task GetTotalRolesCount()
-    {
-        var response = await _roleApiService.GetTotalCount(accessToken);
-        if (response.Item2 == System.Net.HttpStatusCode.OK)
-        {
-            // İşlem başarılıysa..
-            TotalRolesCount = response.Item1;
-        }
-        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
-        {
-            // Yetkisiz kullanıcı..
-            ShowNotification("Toplam rol sayısını görme yetkiniz bulunmamaktadır.", Severity.Warning);
-        }
-        else
-        {
-            // Diğer hata durumları..
-            ShowNotification("İşlem sırasında beklenmeyen bir hata meydana geldi.", Severity.Error);
-        }
-    }
+    // async Task GetTotalRolesCount()
+    // {
+    //     var response = await _roleApiService.GetTotalCount(accessToken);
+    //     if (response.Item2 == System.Net.HttpStatusCode.OK)
+    //     {
+    //         // İşlem başarılıysa..
+    //         TotalRolesCount = response.Item1;
+    //     }
+    //     else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+    //     {
+    //         // Yetkisiz kullanıcı..
+    //         ShowNotification("Toplam rol sayısını görme yetkiniz bulunmamaktadır.", Severity.Warning);
+    //     }
+    //     else
+    //     {
+    //         // Diğer hata durumları..
+    //         ShowNotification("İşlem sırasında beklenmeyen bir hata meydana geldi.", Severity.Error);
+    //     }
+    // }
 
     private void ShowNotification(string resultMessage, Severity severity)
     {

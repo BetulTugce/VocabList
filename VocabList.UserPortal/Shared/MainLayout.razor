@@ -44,6 +44,8 @@
     ILocalStorageService localStorageService { get; set; }
 
     string username = String.Empty;
+    // string accessToken = String.Empty;
+    // string userId = String.Empty;
 
 
 
@@ -67,7 +69,13 @@
                 await ClearLocalStorageAndNavigateToLogin();
             }
         }
-        username = await localStorageService.GetItemAsStringAsync("Username");
+        else
+        {
+            // accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
+            username = await localStorageService.GetItemAsStringAsync("Username");
+            // userId = await localStorageService.GetItemAsStringAsync("id");
+        }
+
     }
 
 
