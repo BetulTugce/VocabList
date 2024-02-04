@@ -28,11 +28,20 @@ I employed ASP.NET Core framework to build the backend of my application. For us
    
    Before running the project, make sure to configure the `appsettings.json` file in the projects. Update the `ConnectionStrings` section with your MSSQL Server connection string and fill in other settings such as tokens, mail configurations, and administrator credentials as specified.
 
-4. **Create Stored Procedures:**
+4. **Perform Database Migration:**
+   
+   To apply database migration, follow these steps:
+   - Right-click on the API project and select "Set as Startup Project" to make it the startup project.
+   - Open Package Manager Console by navigating to Tools > NuGet Package Manager > Package Manager Console.
+   - Choose `VocabList.Repository` as the default project.
+   - In the Package Manager Console, execute the command `add-migration InitialCreate` to create a migration for the initial database schema.
+   - After the migration is created, apply it to the database by running the command `update-database`.
+
+5. **Create Stored Procedures:**
    
    If you plan to use the provided stored procedures, you need to create them in your MSSQL Server database. Follow the instructions in this file to create the necessary stored procedures.
 
-5. **Run the project:**
+6. **Run the project:**
 
     ```bash
     dotnet run
