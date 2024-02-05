@@ -124,10 +124,14 @@ else
     {
         // AccessToken bilgisi localstorageden alınıyor..
         accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
-        accessToken = accessToken.Substring(1, (accessToken.Length - 2));
+        if (!string.IsNullOrEmpty(accessToken))
+        {
+            accessToken = accessToken.Substring(1, (accessToken.Length - 2));
 
-        // Userları getiriyor.. (İlk sayfa - 10 tane user)
-        await GetAllUsers(0, rowsPerPage);
+            // Userları getiriyor.. (İlk sayfa - 10 tane user)
+            await GetAllUsers(0, rowsPerPage);
+        }
+        
     }
 
     // Seçili sayfa ve sayfa başına düşen kullanıcı sayısına göre kullanıcıları çeker..

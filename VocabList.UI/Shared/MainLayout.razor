@@ -97,6 +97,18 @@
     {
         await localStorageService.RemoveItemAsync("AccessToken");
         await localStorageService.ClearAsync();
-        navigationManager.NavigateTo($"/login");
+        // Önceki sayfa URLi alınıyor.. (Login olduktan sonra kaldığı sayfaya geri dönebilmesi için.. Alternatif olarak sessionda kullanılabilir :/)
+        string currentUrl = navigationManager.Uri;
+        Uri uri = new Uri(currentUrl);
+
+        // Giriş sayfasına yönlendirirken önceki sayfa URLi query string olarak iletiliyor..
+        if (!string.IsNullOrEmpty(uri.AbsolutePath) && !uri.AbsolutePath.Contains("/login")) // returnUrl giriş sayfasına ait değilse
+        {
+            navigationManager.NavigateTo($"/login?returnUrl={uri.AbsolutePath}");
+        }
+        else
+        {
+            navigationManager.NavigateTo($"/login");
+        }
     }
 }

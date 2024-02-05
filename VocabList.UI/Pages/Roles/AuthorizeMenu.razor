@@ -77,10 +77,14 @@
     {
         // AccessToken bilgisi localstorageden alınıyor..
         accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
-        accessToken = accessToken.Substring(1, (accessToken.Length - 2));
+        if (!string.IsNullOrEmpty(accessToken))
+        {
+            accessToken = accessToken.Substring(1, (accessToken.Length - 2));
 
-        // AuthorizeDefinition attributeu ile işaretli endpoint bilgileri alınıyor..
-        await GetAuthorizeDefinitionEndpoints();
+            // AuthorizeDefinition attributeu ile işaretli endpoint bilgileri alınıyor..
+            await GetAuthorizeDefinitionEndpoints();
+        }
+        
     }
 
     // AuthorizeDefinition attributeu ile işaretli endpoint bilgileri alınıyor..

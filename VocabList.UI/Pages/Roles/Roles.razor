@@ -103,10 +103,14 @@
     {
         // AccessToken bilgisi localstorageden alınıyor..
         accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
-        accessToken = accessToken.Substring(1, (accessToken.Length - 2));
+        if (!string.IsNullOrEmpty(accessToken))
+        {
+            accessToken = accessToken.Substring(1, (accessToken.Length - 2));
 
-        // Rolleri getiriyor..(İlk sayfa - 10 rol)
-        await GetAllRoles(0, rowsPerPage);
+            // Rolleri getiriyor..(İlk sayfa - 10 rol)
+            await GetAllRoles(0, rowsPerPage);
+        }
+        
     }
 
     // Parametreye göre rolleri getirir..

@@ -65,27 +65,30 @@
         {
             // var authState = await AuthState;
             String accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
-            accessToken = accessToken.Substring(1, (accessToken.Length - 2));
-
             string userId = await localStorageService.GetItemAsStringAsync("id");
-            userId = userId.Substring(1, (userId.Length - 2));
-            // ApiService üzerinden giriş methodu çağırılıyor..
-            var response = await _userApiService.GetUserByIdAsync(userId, accessToken);
-            if (response.user is not null && response.statusCode == System.Net.HttpStatusCode.OK)
+
+            if (!string.IsNullOrEmpty(accessToken) || !string.IsNullOrEmpty(userId))
             {
-                userResponseModel = response.user;
-            }
-            else if (response.statusCode == System.Net.HttpStatusCode.Unauthorized)
-            {
-                severity = Severity.Warning;
-                resultMessage = $"Bu sayfaya erişim yetkiniz yok!";
-                ShowNotification(resultMessage, severity);
-            }
-            else
-            {
-                severity = Severity.Error;
-                resultMessage = $"Kullanıcı bilgileri çekilirken beklenmeyen bir hata ile karşılaşıldı.";
-                ShowNotification(resultMessage, severity);
+                accessToken = accessToken.Substring(1, (accessToken.Length - 2));
+                userId = userId.Substring(1, (userId.Length - 2));
+                // ApiService üzerinden giriş methodu çağırılıyor..
+                var response = await _userApiService.GetUserByIdAsync(userId, accessToken);
+                if (response.user is not null && response.statusCode == System.Net.HttpStatusCode.OK)
+                {
+                    userResponseModel = response.user;
+                }
+                else if (response.statusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    severity = Severity.Warning;
+                    resultMessage = $"Bu sayfaya erişim yetkiniz yok!";
+                    ShowNotification(resultMessage, severity);
+                }
+                else
+                {
+                    severity = Severity.Error;
+                    resultMessage = $"Kullanıcı bilgileri çekilirken beklenmeyen bir hata ile karşılaşıldı.";
+                    ShowNotification(resultMessage, severity);
+                }
             }
         }
         catch (Exception ex)
