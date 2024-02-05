@@ -419,10 +419,12 @@ else
             // İlgili idye sahip kelime listesi userIdyi de kontrol ederek çekiliyor..
             //Burada appuseridnin kontrol edilme sebebi, kullanıcının id kısmına rastgele bir sayı girip başkasının listesini çekmesini önlemek..
             await GetSelectedWordList();
+            // Urlden id rastgele girildiğinde alınan reload hatasını önlemek amacıyla GetSelectedWordList() methodunda çağırılıyor..
+            // await GetFilteredWordsAsync((_selectedPage - 1), rowsPerPage);
 
             // UserId bilgisi de kontrol edilerek page ve sizea göre ilgili idye sahip listesinin altındaki kelimeler çekiliyor.. (İlk sayfa - 10 adet kelime)
             // await GetAllWordsBySelectedWordList(0, rowsPerPage);
-            await GetFilteredWordsAsync((_selectedPage - 1), rowsPerPage);
+            
 
             // Kelime listesine ait toplam kelime sayısı çekiliyor..
             // await GetTotalCountByWordListId();
@@ -437,11 +439,13 @@ else
         if (response.Item2 == System.Net.HttpStatusCode.OK)
         {
             wordList = response.Item1;
+            await GetFilteredWordsAsync((_selectedPage - 1), rowsPerPage);
         }
         else if (response.Item2 == System.Net.HttpStatusCode.NotFound)
         {
             // Seçili liste yoksa..
             wordList = null;
+            // isUnauthorized = true;
         }
         else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
         {
