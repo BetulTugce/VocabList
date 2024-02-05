@@ -94,7 +94,8 @@ The `appsettings.json` file is not included in the repository as it contains sen
     "Surname": "your_surname",
     "Username": "your_username",
     "Password": "your_password",
-    "Role": "Admin"
+    "Role": "Admin",
+    "Role2": "Member"
   }
 }
 ```
