@@ -96,7 +96,18 @@
                 // Anasayfaya yönlendirmeden evvel 5sn gecikme eklendi. Kaldırıldığı zaman navigate ederken forcereload kullanıldığı için notification görüntülenemiyor..
                 await Task.Delay(5000);
 
-                navigationManager.NavigateTo("/", true);
+                var uri = new Uri(navigationManager.Uri);
+                var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+                if (query.TryGetValue("returnUrl", out var returnUrl))
+                {// Eğer kişi accessTokenı expire olduğu için login sayfasına yönlendirilmişse (yani oturumunu kendisi kapatmadıysa) returnUrldeki link ile kaldığı sayfaya yönlendirilecek..
+                    navigationManager.NavigateTo(returnUrl, true); 
+                }
+                else
+                {
+                    navigationManager.NavigateTo("/", true);
+                }
+                
             }
             else
             {  // response null ise..
