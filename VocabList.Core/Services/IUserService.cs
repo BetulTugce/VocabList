@@ -18,5 +18,8 @@ namespace VocabList.Core.Services
         Task AssignRoleToUserAsnyc(string userId, string[] roles);
         Task<string[]> GetRolesToUserAsync(string userIdOrName);
         Task<bool> HasRolePermissionToEndpointAsync(string name, string code);
+        Task<(bool, string?)> UpdateUserProfileImageAsync(string userId, string path);
+        //Task<(string, CreateUserResponse)> GetPofileImageByUserIdAsync(string userId);
+        Task<string> GetPofileImageByUserIdAsync(string userId);
     }
 }

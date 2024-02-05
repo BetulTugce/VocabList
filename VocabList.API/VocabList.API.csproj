@@ -20,4 +20,8 @@
     <ProjectReference Include="..\VocabList.Service\VocabList.Service.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
 </Project>

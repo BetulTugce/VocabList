@@ -61,6 +61,7 @@ builder.Services.AddScoped<IMenuService, MenuService>();
 builder.Services.AddScoped<IEndpointRepository, EndpointRepository>();
 builder.Services.AddScoped<IEndpointService, EndpointService>();
 builder.Services.AddScoped<IAuthorizationEndpointService, AuthorizationEndpointService>();
+builder.Services.AddScoped<FileService>();
 
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     policy.WithOrigins("http://localhost:4200", "https://localhost:4200").AllowAnyHeader().AllowAnyMethod().AllowCredentials()
@@ -110,22 +111,43 @@ using (var serviceScope = app.Services.CreateScope())
             UserName = builder.Configuration["Administrator:Username"],
         }, builder.Configuration["Administrator:Password"]);
 
-        if (result.Succeeded)
-        {
-            AppUser? defaultUser = await userManager.FindByEmailAsync(builder.Configuration["Administrator:Email"]);
-            if (roleManager.FindByNameAsync(builder.Configuration["Administrator:Role"]).Result == null)
-            {
-                AppRole role = new AppRole();
-                role.Id = Guid.NewGuid().ToString();
-                role.Name = builder.Configuration["Administrator:Role"];
+        //if (result.Succeeded)
+        //{
+        //    AppUser? defaultUser = await userManager.FindByEmailAsync(builder.Configuration["Administrator:Email"]);
+        //if (roleManager.FindByNameAsync(builder.Configuration["Administrator:Role"]).Result == null)
+        //{
+        //    AppRole role = new AppRole();
+        //    role.Id = Guid.NewGuid().ToString();
+        //    role.Name = builder.Configuration["Administrator:Role"];
 
-                var createdRole = roleManager.CreateAsync(role).Result;
-                if (createdRole.Succeeded)
-                {
-                    userManager.AddToRoleAsync(defaultUser, builder.Configuration["Administrator:Role"]).Wait();
-                }
-            }
+        //    var createdRole = roleManager.CreateAsync(role).Result;
+        //    if (createdRole.Succeeded)
+        //    {
+        //        userManager.AddToRoleAsync(defaultUser, builder.Configuration["Administrator:Role"]).Wait();
+        //    }
+        //}
+
+        //    userManager.AddToRoleAsync(defaultUser, builder.Configuration["Administrator:Role"]).Wait();
+        //}
+    }
+    else
+    {
+        var isAdmin = await userManager.IsInRoleAsync(user, builder.Configuration["Administrator:Role"]);
+        if (!isAdmin)
+        {
+            userManager.AddToRoleAsync(user, builder.Configuration["Administrator:Role"]).Wait();
         }
+    }
+    if (roleManager.FindByNameAsync(builder.Configuration["Administrator:Role"]).Result == null)
+    {
+        await roleManager.CreateAsync(new AppRole() { Id = Guid.NewGuid().ToString(), Name = builder.Configuration["Administrator:Role"] });
+        AppUser? defaultUser = await userManager.FindByEmailAsync(builder.Configuration["Administrator:Email"]);
+        userManager.AddToRoleAsync(defaultUser, builder.Configuration["Administrator:Role"]).Wait();
+    }
+
+    if (roleManager.FindByNameAsync(builder.Configuration["Administrator:Role2"]).Result == null)
+    {
+        await roleManager.CreateAsync(new AppRole() { Id = Guid.NewGuid().ToString(), Name = builder.Configuration["Administrator:Role2"] });
     }
 }
 

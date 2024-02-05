@@ -12,6 +12,8 @@ namespace VocabList.Core.Entities.Identity
         public string Name { get; set; }
         public string Surname { get; set; }
 
+        public string? ProfileImagePath { get; set; }
+
         // AccessToken süresi dolduktan sonra RefreshTokenEndDate baz alınarak bu token kontrol edilecek..
         public string? RefreshToken { get; set; } 
         public DateTime? RefreshTokenEndDate { get; set; }

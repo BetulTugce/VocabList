@@ -1,5 +1,5 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using VocabList.Core.DTOs;
 using VocabList.Core.DTOs.Identity;
@@ -19,10 +19,96 @@ namespace VocabList.API.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly FileService _fileService;
 
-        public UsersController(IUserService userService)
+        public UsersController(IUserService userService, FileService fileService)
         {
             _userService = userService;
+            _fileService = fileService;
+        }
+
+        [HttpPost("fileupload")]
+        [AuthorizeDefinition(ActionType = ActionType.Writing, Definition = "Upload Profile Image by UserId", Menu = AuthorizeDefinitionConstants.Users)]
+        public async Task<IActionResult> UploadFile(IFormFile file)
+        {
+            // Dosya boyutu kontrol ediliyor..
+            if (file.Length > 10 * 1024 * 1024) // 10MB sınırı
+            {
+                return BadRequest("Dosya boyutu 10MB'tan büyük olamaz.");
+            }
+            // Dosya adı rastgele oluşturuluyor..
+            string randomFileName = _fileService.GenerateRandomFileName(file.FileName);
+
+            // Dosya yolu alınıyor..
+            string filePath = _fileService.GetFilePath(randomFileName);
+
+            // Dosya kaydediliyor..
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+            return Ok(new { FileName = randomFileName, FilePath = filePath });
+        }
+
+        [HttpPut("update-profile-image")]
+        [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.Users, ActionType = ActionType.Updating, Definition = "Update Profile Image by UserId")]
+        public async Task<IActionResult> UpdateProfileImage(UpdateProfileImageRequest request)
+        {
+            try
+            {
+                // Kullanıcının idsi ile dosya adı (nullable) parametre ile gönderilerek ProfileImagePath kolonu güncelleniyor..
+                var response = await _userService.UpdateUserProfileImageAsync(request.UserId, request.Path);
+
+                // İşlem başarılı değilse 400 döndürür..
+                if (!response.Item1)
+                {
+                    return BadRequest();
+                }
+
+                // Kullanıcının önceden yüklediği bir resim varsa siliniyor..
+                if (response.Item2 != null)
+                {
+                    _fileService.DeleteProfileImage(response.Item2);
+                }
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { ErrorMessage = "Beklenmeyen bir hata meydana geldi." + ex.Message });
+            }
+        }
+
+        [HttpGet("profile-image/{userId}")]
+        [AuthorizeDefinition(Menu = AuthorizeDefinitionConstants.Users, ActionType = ActionType.Reading, Definition = "Get Profile Image by UserId")]
+        public async Task<IActionResult> GetProfileImage(string userId)
+        {
+            // Yapılan istek neticesinde ProfileImagePath ve user bilgisi tuple olarak döner..
+            var response = await _userService.GetPofileImageByUserIdAsync(userId);
+
+            if (response == null)
+            {
+                return NotFound();
+            }
+
+            //if (response.Item2 == null)
+            //{ // Tupledaki 2.item yani user bilgisi null gelirse kullanıcı bulunamadı hatası verir..
+            //    return NotFound(new { ErrorMessage = "Kullanıcı bulunamadı." });
+            //}
+
+            //if (string.IsNullOrEmpty(response.Item1))
+            //{ // Tupledaki 1.item yani ProfileImagePath null gelirse resim bulunamadı hatası verir..
+            //    return NotFound("Profil resmi bulunamadı.");
+            //}
+
+            //byte[] imageBytes = await _fileService.GetProfileImageAsync(response.Item1);
+            byte[] imageBytes = await _fileService.GetProfileImageAsync(response);
+
+            // Dosya uzantısına göre formatı belirlemek için..
+            // string fileExtension = Path.GetExtension(response.Item1);
+            // return File(imageBytes, $"image/{fileExtension.Replace(".", "")}");
+
+            return File(imageBytes, "image/jpeg"); // Resmi JPEG olarak döndürüyor..
         }
 
         [HttpPost]

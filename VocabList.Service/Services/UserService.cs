@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
 using VocabList.Core.DTOs.Identity;
 using VocabList.Core.Entities;
 using VocabList.Core.Entities.Identity;
@@ -255,5 +256,41 @@ namespace VocabList.Service.Services
             CreateUserResponse response = MapToUserDto(user);
             return response;
         }
+
+        public async Task<(bool, string?)> UpdateUserProfileImageAsync(string userId, string path)
+        {
+            // Kullanıcı idye göre aranıyor..
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user != null)
+            {
+                // Önceden başka bir resim yüklediyse bilgisi alınıyor (silmek için)..
+                string previousImage = user.ProfileImagePath;
+
+                user.ProfileImagePath = path;
+
+                // Kullanıcı bilgisi güncelleniyor..
+                var updateResult = await _userManager.UpdateAsync(user);
+                if (updateResult.Succeeded)
+                {
+                    return (true, previousImage);
+                }
+            }
+            return (false, null);
+        }
+
+        //public async Task<(string, CreateUserResponse)> GetPofileImageByUserIdAsync(string userId)
+        public async Task<string> GetPofileImageByUserIdAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                //return (null, null);
+                return null;
+            }
+            //CreateUserResponse response = MapToUserDto(user);
+            //return (user.ProfileImagePath, response);
+            return user.ProfileImagePath;
+        }
     }
+
 }

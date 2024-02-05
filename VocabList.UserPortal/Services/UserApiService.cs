@@ -1,4 +1,8 @@
-﻿using System.Net;
+﻿using Microsoft.AspNetCore.Components.Forms;
+using MudBlazor;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Reflection;
 using VocabList.UserPortal.Data.Users;
 
 namespace VocabList.UserPortal.Services
@@ -35,6 +39,59 @@ namespace VocabList.UserPortal.Services
                 return null;
             }
 
+        }
+
+        //public async Task<(UploadProfileImageResponse,HttpStatusCode)> UploadFileAsync(IBrowserFile file)
+        public async Task<(UploadProfileImageResponse, HttpStatusCode)> UploadFileAsync(MultipartFormDataContent content, string accessToken)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                var response = await _httpClient.PostAsync($"{_baseUrl}Users/fileupload", content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<UploadProfileImageResponse>();
+                    return (data, response.StatusCode);
+                }
+                else
+                {
+                    return (null, response.StatusCode);
+                }
+            }
+            catch (Exception)
+            {
+                return (null, HttpStatusCode.InternalServerError);
+            }
+        }
+
+        // Kullanıcının profil fotoğrafını güncellemek için (ProfileImagePath kolonunu) kullanılır..
+        public async Task<HttpStatusCode> UpdateProfileImageAsync(UpdateProfileImageRequest request, string accessToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            // İlgili URL'ye verilen model verilerine sahip bir JSON içeriği gönderiliyor.
+            var response = await _httpClient.PutAsJsonAsync($"{_baseUrl}Users/update-profile-image", request);
+            return response.StatusCode;
+        }
+
+        // Kullanıcının id bilgisi parametre olarak kullanılıyor ve profil resmi alınıyor..
+        public async Task<(byte[], HttpStatusCode)> GetProfileImageByUserIdAsync(string userId, string accessToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+            var response = await _httpClient.GetAsync($"{_baseUrl}Users/profile-image/{userId}");
+            // Başarılı bir şekilde cevap alındıysa..
+            if (response.IsSuccessStatusCode)
+            {
+                // İçerik okunuyor..
+                var contentStream = await response.Content.ReadAsStreamAsync();
+
+                // İçeriği byte dizisine dönüştürüyor..
+                var imageBytes = new byte[contentStream.Length];
+                await contentStream.ReadAsync(imageBytes, 0, imageBytes.Length);
+
+                return (imageBytes, response.StatusCode);
+            }
+            return (null, response.StatusCode);
         }
 
         public async Task<(User user, HttpStatusCode statusCode)> GetUserByIdAsync(string id, string accessToken)

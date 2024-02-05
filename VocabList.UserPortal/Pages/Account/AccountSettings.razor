@@ -9,10 +9,52 @@
 @inject Blazored.LocalStorage.ILocalStorageService localStorageService
 @inject ISnackbar SnackbarService
 
+<style>
+    .profile-image {
+        width: 200px;
+        height: 200px;
+        object-fit: cover;
+    }
+</style>
+
+
+
 <div class="mud-paper-container">
     <MudContainer MaxWidth="MaxWidth.Small">
         <MudTabs Elevation="2" Rounded="true" Centered="true" Class="m-6" Color="Color.Dark">
             <MudTabPanel Icon="@Icons.Material.Filled.Person" Text="PROFİLİM" BadgeColor="Color.Success">
+                <div style="display: grid; justify-content: center; align-items: center; height: 100%;">
+                    <div>
+                    @if (profileImageUrl is not null)
+                    {
+                        <MudMenu>
+                            <ActivatorContent>
+                                <MudImage Class="profile-image" Width="200" Src="@profileImageUrl" Alt="Profile image"></MudImage>
+                            </ActivatorContent>
+                            <ChildContent>
+                                <MudIconButton Option="Origin.BottomRight" OnClick="DeleteProfilImageByUserId" Icon="@Icons.Material.Filled.Delete" aria-label="delete"></MudIconButton>
+                            </ChildContent>
+                        </MudMenu>
+                    }
+                    else
+                    {
+                        <MudImage Class="profile-image" Width="200" Src="icons/circle-user-solid.svg" Alt="Profile image"></MudImage>
+                    }
+                    </div>
+                    <div>
+                    <MudFileUpload T="IBrowserFile" Accept=".png, .jpg" FilesChanged="UploadFiles" MaximumFileCount="100">
+                        <ButtonTemplate>
+                            <MudButton HtmlTag="label"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                                       for="@context.Id">
+                                Profil Resmi Yükle
+                            </MudButton>
+                        </ButtonTemplate>
+                    </MudFileUpload>
+                    </div>
+                </div>
                 <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
                     <table style="margin-top:10px; font-size:16px;">
                         <tr>
@@ -58,22 +100,27 @@
     string resultMessage = string.Empty;
     Severity severity = new();
     // public Task<AuthenticationState> AuthState { get; set; }
+    string userId = string.Empty;
+    String accessToken = string.Empty;
+    // UploadProfileImageResponse uploadProfileImageResponse = new UploadProfileImageResponse();
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             // var authState = await AuthState;
-            String accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
+            accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
             accessToken = accessToken.Substring(1, (accessToken.Length - 2));
 
-            string userId = await localStorageService.GetItemAsStringAsync("id");
+            userId = await localStorageService.GetItemAsStringAsync("id");
             userId = userId.Substring(1, (userId.Length - 2));
+
             // ApiService üzerinden giriş methodu çağırılıyor..
             var response = await _userApiService.GetUserByIdAsync(userId, accessToken);
             if (response.user is not null && response.statusCode == System.Net.HttpStatusCode.OK)
             {
                 userResponseModel = response.user;
+                await GetProfileImageByUserId();
             }
             else if (response.statusCode == System.Net.HttpStatusCode.Unauthorized)
             {
@@ -94,6 +141,127 @@
             resultMessage = $"SUNUCU HATASI - Kullanıcı bilgileri çekilirken beklenmeyen bir hata ile karşılaşıldı.";
             ShowNotification(resultMessage, severity);
             // Console.WriteLine($"Hata oluştu: {ex.Message}");
+        }
+    }
+
+    private async Task UploadFiles(IBrowserFile file)
+    {
+        if (file.Size <= 10 * 1024 * 1024) // 10 MB'lık maksimum boyut sınırı kontrol ediliyor..
+        {
+            try
+            {
+                using (var content = new MultipartFormDataContent())
+                {
+                    // Dosyayı içeriğe ekler..
+                    content.Add(new StreamContent(file.OpenReadStream(10 * 1024 * 1024)), "file", file.Name);
+
+                    // Apiye istek gönderiliyor..
+                    var response = await _userApiService.UploadFileAsync(content, accessToken);
+                    if (response.Item2 == System.Net.HttpStatusCode.OK)
+                    {
+                        // Yükleme başarılıysa..
+                        UploadProfileImageResponse uploadProfileImageResponse = response.Item1;
+                        // Veritabanında kullanıcının ProfileImagePath kolonu güncelleniyor..
+                        var updateImageResponse = await _userApiService.UpdateProfileImageAsync(new() { UserId = userId, Path = uploadProfileImageResponse.FileName }, accessToken);
+                        if (updateImageResponse == System.Net.HttpStatusCode.OK)
+                        {
+                            // Güncelleme işlemi başarılı..
+                            await GetProfileImageByUserId();
+                            ShowNotification("İşlem başarılı! Profil resminiz başarıyla güncellenmiştir.", Severity.Success);
+                        } 
+                        else if (updateImageResponse == System.Net.HttpStatusCode.BadRequest)
+                        {
+                            ShowNotification("İşlem başarısız! Lütfen tekrar deneyin.", Severity.Error);
+                        }
+                        else if (updateImageResponse == System.Net.HttpStatusCode.Unauthorized)
+                        {
+                            ShowNotification("Bu işlemi gerçekleştirme yetkiniz bulunmamaktadır!", Severity.Warning);
+                        }
+                        else
+                        {
+                            ShowNotification("Beklenmeyen bir hata meydana geldi!", Severity.Error);
+                        }
+                    }
+                    else if (response.Item2 == System.Net.HttpStatusCode.BadRequest)
+                    { // Olası bir bypass durumu için boyut sınırı apida da kontrol ediliyor..
+                        ShowNotification("İşlem başarısız! Dosya boyutu 10mbdan fazla!", Severity.Warning);
+                    }
+                    else if (response.Item2 == System.Net.HttpStatusCode.UnsupportedMediaType)
+                    {
+                        ShowNotification("İşlem başarısız! Desteklenmeyen dosya türü!", Severity.Warning);
+                    }
+                    else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+                    {
+                        ShowNotification("Bu işlemi gerçekleştirme yetkiniz bulunmamaktadır!", Severity.Warning);
+                    }
+                    else
+                    {
+                        ShowNotification("Beklenmeyen bir hata meydana geldi!", Severity.Error);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // ShowNotification($"Beklenmeyen bir hata meydana geldi: {ex.Message}", Severity.Error);
+                ShowNotification($"Beklenmeyen bir hata meydana geldi!", Severity.Error);
+            }
+        }
+        else
+        {
+            ShowNotification("Dosya boyutu 10MB'dan büyük!", Severity.Warning);
+        }
+    }
+
+    private string? profileImageUrl;
+
+    // Kullanıcının profil resmini siler..
+    private async Task DeleteProfilImageByUserId()
+    {
+        var response = await _userApiService.UpdateProfileImageAsync(new UpdateProfileImageRequest() { UserId = userId, Path = null }, accessToken);
+        if (response == System.Net.HttpStatusCode.OK)
+        {
+            // İşlem başarılı..
+            profileImageUrl = null;
+            ShowNotification("İşlem başarılı! Profil resminiz başarıyla silindi.", Severity.Success);
+        }
+        else if (response == System.Net.HttpStatusCode.BadRequest)
+        {
+            // İşlem başarısız..
+            ShowNotification("İşlem başarısız! Lütfen tekrar deneyin.", Severity.Error);
+        }
+        else if (response == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz işlem..
+            ShowNotification("Bu işlemi gerçekleştirme yetkiniz bulunmamaktadır!", Severity.Warning);
+        }else
+        {
+            // Sunucu hatası..
+            ShowNotification($"Beklenmeyen bir hata meydana geldi!", Severity.Error);
+        }
+    }
+
+    // İlgili parametreleri kullanarak bir kullanıcının profil resmini alır..
+    private async Task GetProfileImageByUserId()
+    {
+        var response = await _userApiService.GetProfileImageByUserIdAsync(userId, accessToken);
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            // İşlem başarılı..
+            // Byte dizisi base64 formatına dönüştürülüyor.. 
+            profileImageUrl = "data:image/jpeg;base64," + Convert.ToBase64String(response.Item1);
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.NotFound)
+        {
+            // Kullanıcı ya da resim bulunamadı..
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz işlem..
+            ShowNotification("Yetkisiz işlem!", Severity.Warning);
+        }else
+        {
+            // Sunucu hatası..
+            ShowNotification($"Profil resmine erişmeye çalışırken beklenmeyen bir hata meydana geldi!", Severity.Error);
         }
     }
 
