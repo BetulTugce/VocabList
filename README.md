@@ -10,6 +10,10 @@ There is also an administration panel. Basic CRUD operations for users and roles
 
 I employed ASP.NET Core framework to build the backend of my application. For user management, I relied on the ASP.NET Core Identity framework. As you know, this enables us to handle user authentication, authorization, and role management efficiently. JWT (JSON Web Token) authentication was utilized for identity verification and authorization in the API. JWT-based authentication provides a secure and scalable authorization mechanism. MSSQL Server was used for data storage, I have created a relational database. Entity Framework Core facilitated database operations, making data management straightforward. To simplify code and enhance performance, I opted to utilize Stored Procedures for filtering. I decided to utilize Blazor framework for the user interface and MudBlazor library to design Blazor components.
 
+## Profile Image Upload Feature
+
+The application supports profile image uploading for members. Members can upload profile pictures in JPG or PNG format, with a maximum file size of 10MB. Both the API and UserPortal project handle the validation for this feature. Users perform the image upload operation in the UserPortal project, but the uploaded images are stored in the `wwwroot/ProfileImages` folder in the API project. Only the file name (as a string) is stored in the database. The file name follows the structure of `(uploaded_file_name)_(random_4_digit_number).(file_extension)`. When users upload a new image or wish to delete existing ones, the `ProfileImagePath` column in the database is updated, and any previously uploaded image associated with the user is deleted from the `wwwroot/ProfileImages` folder. When a profile image is requested, the API responds with a byte array, which is then converted to base64 in the UserPortal project for displaying the profile picture.
+
 ## Installation
 
 1. **Clone the project:**
