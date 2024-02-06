@@ -13,8 +13,9 @@
     </Found>
     <NotFound>
         <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
+        <LayoutView Layout="@typeof(NotFoundLayout)">
+            @* <p role="alert">Sorry, there's nothing at this address.</p> *@
+            <_404></_404>
         </LayoutView>
     </NotFound>
 </Router>
