@@ -32,7 +32,7 @@ else if (wordList == null)
 {
     <MudAlert Severity="Severity.Normal" Variant="Variant.Filled" NoIcon="true" Class="mb-2 mt-3">Böyle bir liste bulunmamaktadır.</MudAlert>
 }
-else
+else if (Words is not null)
 {
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateWordDialog" Color="Color.Info">Kelime Ekle</MudButton>
     <MudButton @onclick="Print" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Print" Style="background-color: yellowgreen; color: white; margin-left: 20px;">
@@ -173,9 +173,20 @@ else
         </PagerContent>
     </MudTable>
 }
-
-@if (Words is null)
+else
 {
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateWordDialog" Color="Color.Info">Kelime Ekle</MudButton>
+    <MudButton @onclick="Print" Disabled Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Print" Style="background-color: yellowgreen; color: white; margin-left: 20px;">
+        Yazdır
+    </MudButton>
+
+    <br />
+    <MudToolBar>
+        <MudText Typo="Typo.h6">@wordList.Name</MudText>
+            <MudSpacer />
+            <MudTextField @bind-Value="filterRequest.SearchString" Label=" " Placeholder="Arama yap" HelperTextOnFocus="true" HelperText="Arama sonuçlarını görmek için enter'a basın.." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" @onkeyup="HandleKeyUp"></MudTextField>
+        </MudToolBar>
+    <br />
     <MudAlert Severity="Severity.Normal" Variant="Variant.Filled" NoIcon="true" Class="mb-2 mt-3">Kelime bulunamadı.</MudAlert>
 }
 
@@ -292,7 +303,7 @@ else
     // ImmutableList<string> TypesOfWords = ImmutableList.Create("noun", "verb", "adjective", "adverb", "phrasal verb", "preposition", "collocation", "conjunction", "transition", "prepositional phrase");
 
     WordList wordList = new WordList();
-    IEnumerable<Word> Words = new List<Word>();
+    IEnumerable<Word>? Words = new List<Word>();
     List<Sentence> Sentences = new List<Sentence>();
 
     WordFilterRequest filterRequest = new WordFilterRequest();
@@ -634,7 +645,7 @@ else
 
             // Bir kelime silindiğinde toplam kelime sayısı 1 azalacak, sayfa sayısı da 1 azalmış olabilir.. Eğer son sayfa seçiliyse ve sayfa sayısı 1 azaldıysa seçili olan sayfa da 1 azalmalı..
 
-            if (_selectedPage > pageCount)
+            if (pageCount != 0 && _selectedPage > pageCount)
             {
                 _selectedPage -= 1;
                 UpdateUrl(_selectedPage);// Seçili sayfa sayısı da 1 azaldığı için url güncellenir..
