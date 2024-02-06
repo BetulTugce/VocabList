@@ -17,29 +17,38 @@
     <MudItem xs="12" sm="7">
         <MudPaper Class="pa-4">
             <h2 class="mb-4">Giriş Yap</h2>
-            <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
-                <MudTextField T="string" Label="Kullanıcı Adı/Email" Required="true" @bind-Value="requestModel.UsernameOrEmail" RequiredError="Lütfen kullanıcı adınızı veya emailinizi girin!" />
-                <MudTextField T="string" Label="Parola" @bind-Value="requestModel.Password" InputType="InputType.Password" Required="true" RequiredError="Parola zorunlu!" />
-                <br />
-                <div class="d-flex align-center justify-space-between">
-                    <div class="d-flex align-center"></div>
-                    <div class="d-flex align-center">
-                        <MudLink Target="_blank" Href="/forgot-password" Typo="Typo.body2">Parolamı unuttum</MudLink>
+            @if (!isProgressCircularVisible)
+            {
+                <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                    <MudTextField T="string" Label="Kullanıcı Adı/Email" Required="true" @bind-Value="requestModel.UsernameOrEmail" RequiredError="Lütfen kullanıcı adınızı veya emailinizi girin!" />
+                    <MudTextField T="string" Label="Parola" @bind-Value="requestModel.Password" InputType="InputType.Password" Required="true" RequiredError="Parola zorunlu!" />
+                    <br />
+                    <div class="d-flex align-center justify-space-between">
+                        <div class="d-flex align-center"></div>
+                        <div class="d-flex align-center">
+                            <MudLink Target="_blank" Href="/forgot-password" Typo="Typo.body2">Parolamı unuttum</MudLink>
+                        </div>
                     </div>
+                    <br />
+                    <div class="d-flex align-center justify-space-between">
+                        <div class="d-flex align-center">
+                            @* <MudCheckBox T="bool" Required="true" RequiredError="Kabul etmelisin!" />
+                            <MudLink Href="/KVKK" Typo="Typo.body2">Kişisel Veriler Hakkındaki Protokolü okudum, kabul ediyorum.</MudLink> *@
+                        </div>
+                        <div class="d-flex align-center">
+                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" DisableElevation="true" OnClick="@(()=>form.ResetAsync())" Class="ml-2">TEMİZLE</MudButton>
+                            <div class="ml-2"></div>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" OnClick="LoginAsync" Class="ml-auto">GİRİŞ YAP</MudButton>
+                        </div>
+                    </div>
+                </MudForm>
+            }
+            else
+            {
+                <div class="d-flex align-center justify-center" style="height: 100%;">
+                    <MudProgressCircular Color="Color.Default" Size="Size.Large" Indeterminate="true" />
                 </div>
-                <br />
-                <div class="d-flex align-center justify-space-between">
-                    <div class="d-flex align-center">
-                        @* <MudCheckBox T="bool" Required="true" RequiredError="Kabul etmelisin!" />
-                        <MudLink Href="/KVKK" Typo="Typo.body2">Kişisel Veriler Hakkındaki Protokolü okudum, kabul ediyorum.</MudLink> *@
-                    </div>
-                    <div class="d-flex align-center">
-                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" DisableElevation="true" OnClick="@(()=>form.ResetAsync())" Class="ml-2">TEMİZLE</MudButton>
-                        <div class="ml-2"></div>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" OnClick="LoginAsync" Class="ml-auto">GİRİŞ YAP</MudButton>
-                    </div>
-                </div>
-            </MudForm>
+            }
         </MudPaper>
     </MudItem>
     @* <MudItem xs="12" sm="5">
@@ -55,6 +64,8 @@
 
 
 @code {
+    bool isProgressCircularVisible = false;
+
     bool success;
     string[] errors = { };
     MudForm form;
@@ -72,6 +83,8 @@
     {
         try
         {
+            isProgressCircularVisible = true;
+
             // ApiService üzerinden giriş methodu çağırılıyor..
             var response = await _authApiService.LoginUserAsync(requestModel);
             if (response is not null)
@@ -109,6 +122,9 @@
             }
             else
             {  // response null ise..
+
+                isProgressCircularVisible = false;
+
                 severity = Severity.Warning;
                 resultMessage = "İşlem başarısız! Giriş bilgileriniz sistemimizdeki hesapla uyuşmuyor.";
                 ShowNotification(resultMessage, severity);
