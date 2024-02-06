@@ -260,6 +260,20 @@ BEGIN
 END;
 ```
 
+## Database Diagram
+
+![VocabListDb_Diagram](https://github.com/BetulTugce/VocabList/assets/79140478/fa0ccb14-cb6e-4e1c-8c6f-e7d9e70d01c0)
+<!-- ![VocabListDb_Diagram](https://github.com/BetulTugce/VocabList/assets/79140478/7bb76234-e811-4512-a457-9a6a7a1adbd3) -->
+
+### Relationships
+
+- A user can have multiple word lists, a word list belongs to one user. (One-to-Many Relationship)
+- A word list can contain multiple words, a word can belong to one word list. (One-to-Many Relationship)
+- A word can contain multiple sentences, a sentence can belong to one word. (One-to-Many Relationship)
+- A user can have multiple roles, a role can appear in more than one user. (Many-to-Many Relationship)
+- An endpoint belongs to a menu, a menu can contain multiple endpoints. (One-to-Many Relationship)
+- An endpoint can have more than one role, likewise a role can be associated with more than one endpoint. (Many-to-Many Relationship)
+
 ## Support and Communication
 
 If you encounter any issues or have feedback while using the project, feel free to [create an issue on GitHub](https://github.com/BetulTugce/VocabList/issues). Moreover, if you wish to support or contribute to the project, you can do so by starring the [GitHub repository](https://github.com/BetulTugce/VocabList) or making contributions to the codebase.
