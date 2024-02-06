@@ -8,7 +8,21 @@ There is also an administration panel. Basic CRUD operations for users and roles
 
 ## Technological Infrastructure and Configurations of the Project
 
-I employed ASP.NET Core framework to build the backend of my application. For user management, I relied on the ASP.NET Core Identity framework. As you know, this enables us to handle user authentication, authorization, and role management efficiently. JWT (JSON Web Token) authentication was utilized for identity verification and authorization in the API. JWT-based authentication provides a secure and scalable authorization mechanism. MSSQL Server was used for data storage, I have created a relational database. Entity Framework Core facilitated database operations, making data management straightforward. To simplify code and enhance performance, I opted to utilize Stored Procedures for filtering. I decided to utilize Blazor framework for the user interface and MudBlazor library to design Blazor components.
+I employed ASP.NET Core framework to build the backend of my application. For user management, I relied on the ASP.NET Core Identity framework. As you know, this enables us to handle user authentication, authorization, and role management efficiently. JWT (JSON Web Token) authentication was utilized for identity verification and authorization in the API. JWT-based authentication provides a secure and scalable authorization mechanism. MSSQL Server was used for data storage, I have created a relational database. Entity Framework Core facilitated database operations, making data management straightforward. To simplify code and enhance performance, I opted to utilize Stored Procedures for filtering. I implemented the repository pattern and unit of work pattern in my application. I decided to utilize Blazor framework for the user interface and MudBlazor library to design Blazor components.
+
+## Database Diagram
+
+![VocabListDb_Diagram](https://github.com/BetulTugce/VocabList/assets/79140478/fa0ccb14-cb6e-4e1c-8c6f-e7d9e70d01c0)
+<!-- ![VocabListDb_Diagram](https://github.com/BetulTugce/VocabList/assets/79140478/7bb76234-e811-4512-a457-9a6a7a1adbd3) -->
+
+### Relationships
+
+- A user can have multiple word lists, a word list belongs to one user. (One-to-Many Relationship)
+- A word list can contain multiple words, a word can belong to one word list. (One-to-Many Relationship)
+- A word can contain multiple sentences, a sentence can belong to one word. (One-to-Many Relationship)
+- A user can have multiple roles, a role can appear in more than one user. (Many-to-Many Relationship)
+- An endpoint belongs to a menu, a menu can contain multiple endpoints. (One-to-Many Relationship)
+- An endpoint can have more than one role, likewise a role can be associated with more than one endpoint. (Many-to-Many Relationship)
 
 ## Profile Image Upload Feature
 
@@ -259,20 +273,6 @@ BEGIN
     EXEC sp_executesql @Sql, N'@SearchString NVARCHAR(MAX), @Offset INT, @Size INT, @WordListId INT, @AppUserId NVARCHAR(MAX)', @SearchString, @Offset, @Size, @WordListId, @AppUserId;
 END;
 ```
-
-## Database Diagram
-
-![VocabListDb_Diagram](https://github.com/BetulTugce/VocabList/assets/79140478/fa0ccb14-cb6e-4e1c-8c6f-e7d9e70d01c0)
-<!-- ![VocabListDb_Diagram](https://github.com/BetulTugce/VocabList/assets/79140478/7bb76234-e811-4512-a457-9a6a7a1adbd3) -->
-
-### Relationships
-
-- A user can have multiple word lists, a word list belongs to one user. (One-to-Many Relationship)
-- A word list can contain multiple words, a word can belong to one word list. (One-to-Many Relationship)
-- A word can contain multiple sentences, a sentence can belong to one word. (One-to-Many Relationship)
-- A user can have multiple roles, a role can appear in more than one user. (Many-to-Many Relationship)
-- An endpoint belongs to a menu, a menu can contain multiple endpoints. (One-to-Many Relationship)
-- An endpoint can have more than one role, likewise a role can be associated with more than one endpoint. (Many-to-Many Relationship)
 
 ## Support and Communication
 
