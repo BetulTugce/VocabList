@@ -1,5 +1,8 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager navigationManager
+@using VocabList.UserPortal.Services
+@inject UserApiService _userApiService
+@inject ISnackbar SnackbarService
 
 <PageTitle>VocabList</PageTitle>
 
@@ -19,7 +22,9 @@
             <div class="ml-auto">
                 <div class="mr-2">
                     <CascadingValue Value="username" Name="AvatarChar">
-                        <AuthenticationAvatar></AuthenticationAvatar>
+                        <CascadingValue Value="profileImageUrl" Name="AvatarImage">
+                            <AuthenticationAvatar></AuthenticationAvatar>
+                        </CascadingValue>
                     </CascadingValue>
                 </div>
             </div>
@@ -47,7 +52,41 @@
     // string accessToken = String.Empty;
     // string userId = String.Empty;
 
+    private string? profileImageUrl;
+    string userId = string.Empty;
+    String accessToken = string.Empty;
 
+    // İlgili parametreleri kullanarak bir kullanıcının profil resmini alır..
+    private async Task GetProfileImageByUserId()
+    {
+        var response = await _userApiService.GetProfileImageByUserIdAsync(userId, accessToken);
+        if (response.Item2 == System.Net.HttpStatusCode.OK)
+        {
+            // İşlem başarılı..
+            // Byte dizisi base64 formatına dönüştürülüyor..
+            profileImageUrl = "data:image/jpeg;base64," + Convert.ToBase64String(response.Item1);
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.NotFound)
+        {
+            // Kullanıcı ya da resim bulunamadı..
+            profileImageUrl = null;
+        }
+        else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Yetkisiz işlem..
+            ShowNotification("Yetkisiz işlem!", Severity.Warning);
+        }
+        else
+        {
+            // Sunucu hatası..
+            ShowNotification($"Profil resmine erişmeye çalışırken beklenmeyen bir hata meydana geldi!", Severity.Error);
+        }
+    }
+
+    private void ShowNotification(string resultMessage, Severity severity)
+    {
+        SnackbarService.Add(resultMessage, severity);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -56,12 +95,20 @@
         {
             if (authState.User.Identity.IsAuthenticated)
             {
+                accessToken = await localStorageService.GetItemAsStringAsync("AccessToken");
+                userId = await localStorageService.GetItemAsStringAsync("id");
                 username = await localStorageService.GetItemAsStringAsync("Username");
                 // await InvokeAsync(StateHasChanged);
-                if (String.IsNullOrEmpty(username))
+                if (String.IsNullOrEmpty(username) || string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(userId))
                 {
                     await ClearLocalStorageAndNavigateToLogin();
+                }else
+                {
+                    accessToken = accessToken.Substring(1, (accessToken.Length - 2));
+                    userId = userId.Substring(1, (userId.Length - 2));
+                    await GetProfileImageByUserId();
                 }
+                
                 // await InvokeAsync(StateHasChanged);
             }
             else

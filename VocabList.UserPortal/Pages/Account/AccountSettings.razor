@@ -168,8 +168,11 @@
                         if (updateImageResponse == System.Net.HttpStatusCode.OK)
                         {
                             // Güncelleme işlemi başarılı..
-                            await GetProfileImageByUserId();
-                            ShowNotification("İşlem başarılı! Profil resminiz başarıyla güncellenmiştir.", Severity.Success);
+                            // await GetProfileImageByUserId();
+                            // ShowNotification("İşlem başarılı! Profil resminiz başarıyla güncellenmiştir.", Severity.Success);
+
+                            // mainlayout üzerinden navbarda da profil resmi görüntülendiği için resim değiştirildiğinde sayfayı yeniliyorum..
+                            navigationManager.NavigateTo("/account-settings", true);
                         } 
                         else if (updateImageResponse == System.Net.HttpStatusCode.BadRequest)
                         {
@@ -255,6 +258,7 @@
         else if (response.Item2 == System.Net.HttpStatusCode.NotFound)
         {
             // Kullanıcı ya da resim bulunamadı..
+            profileImageUrl = null;
         }
         else if (response.Item2 == System.Net.HttpStatusCode.Unauthorized)
         {

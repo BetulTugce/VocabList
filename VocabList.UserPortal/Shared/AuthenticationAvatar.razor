@@ -9,7 +9,17 @@
     <MudMenu>
         <ActivatorContent>
             @* <MudAvatar Image="images/toiletvisit.jpg" /> *@
-            <MudAvatar Color="Color.Primary">@username.Substring(1, 1)</MudAvatar>
+            @if (profileImageUrl is not null)
+            {
+                <MudAvatar>
+                    <MudImage Src="@profileImageUrl"></MudImage>
+                </MudAvatar>
+            }else
+            {
+                <MudAvatar Color="Color.Primary">@username.Substring(1, 1)</MudAvatar>
+            }
+            
+                
             </ActivatorContent>
             <ChildContent>
                 <MudMenuItem @onclick=AccountSettings>Hesap Ayarları</MudMenuItem>
@@ -34,6 +44,8 @@ else
 @code {
     [CascadingParameter(Name = "AvatarChar")]
     string username { get; set; }
+    [CascadingParameter(Name = "AvatarImage")]
+    string? profileImageUrl { get; set; }
 
     [Inject]
     AuthenticationStateProvider authenticationStateProvider { get; set; }
