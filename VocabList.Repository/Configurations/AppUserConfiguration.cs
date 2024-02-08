@@ -11,6 +11,9 @@ namespace VocabList.Repository.Configurations
             builder.HasMany(x => x.WordLists)
                    .WithOne(s => s.AppUser)
                    .HasForeignKey(s => s.AppUserId);
+
+            // Email kolonu için UNIQUE kısıtlaması getirir..
+            builder.HasIndex(u => u.Email).IsUnique();
         }
     }
 }
