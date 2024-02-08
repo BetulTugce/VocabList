@@ -8,11 +8,11 @@ There is also an administration panel. Basic CRUD operations for users and roles
 
 ## Screenshots
 
-https://github.com/BetulTugce/VocabList/assets/79140478/314348a8-1579-4cee-b1dc-972262884fd7
+![VocabList_KelimeListesi](https://github.com/BetulTugce/VocabList/assets/79140478/314348a8-1579-4cee-b1dc-972262884fd7)
 
-https://github.com/BetulTugce/VocabList/assets/79140478/a1750fb5-5b48-4582-bc88-ea64e522623f
+![VocabList_404](https://github.com/BetulTugce/VocabList/assets/79140478/a1750fb5-5b48-4582-bc88-ea64e522623f)
 
-https://github.com/BetulTugce/VocabList/assets/79140478/aa475704-5ee1-4f70-a1dd-616e22321f60
+![VocabList_KayıtOl0](https://github.com/BetulTugce/VocabList/assets/79140478/aa475704-5ee1-4f70-a1dd-616e22321f60)
 
 ## Screen Recordings
 
