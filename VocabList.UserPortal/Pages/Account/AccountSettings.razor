@@ -226,8 +226,9 @@
         if (response == System.Net.HttpStatusCode.OK)
         {
             // İşlem başarılı..
-            profileImageUrl = null;
-            ShowNotification("İşlem başarılı! Profil resminiz başarıyla silindi.", Severity.Success);
+            // profileImageUrl = null;
+            // ShowNotification("İşlem başarılı! Profil resminiz başarıyla silindi.", Severity.Success);
+            navigationManager.NavigateTo("/account-settings", true);
         }
         else if (response == System.Net.HttpStatusCode.BadRequest)
         {

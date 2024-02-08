@@ -6,6 +6,24 @@ VocabList is a language learning application developed using ASP.NET Core Web AP
 
 There is also an administration panel. Basic CRUD operations for users and roles can be performed in the admin panel. In addition, assigning roles to users and endpoints can be done. This means users have permissions to perform actions on endpoints associated with the roles assigned to them.
 
+## Screenshots
+
+![VocabList_WordList](https://github.com/BetulTugce/VocabList/assets/79140478/314348a8-1579-4cee-b1dc-972262884fd7)
+
+![VocabList_404](https://github.com/BetulTugce/VocabList/assets/79140478/a1750fb5-5b48-4582-bc88-ea64e522623f)
+
+![VocabList_Register](https://github.com/BetulTugce/VocabList/assets/79140478/aa475704-5ee1-4f70-a1dd-616e22321f60)
+
+## Screen Recordings
+
+*User Portal*
+
+![VocabList](https://github.com/BetulTugce/VocabList/assets/79140478/ad776aa9-ac5d-4e12-9830-a9689ab4f243)
+
+*Admin Dashboard*
+
+![VocabList](https://github.com/BetulTugce/VocabList/assets/79140478/fb0593a3-6002-441f-bb03-5e5f8b07e071)
+
 ## Technological Infrastructure and Configurations of the Project
 
 I employed ASP.NET Core framework to build the backend of my application. For user management, I relied on the ASP.NET Core Identity framework. As you know, this enables us to handle user authentication, authorization, and role management efficiently. JWT (JSON Web Token) authentication was utilized for identity verification and authorization in the API. JWT-based authentication provides a secure and scalable authorization mechanism. MSSQL Server was used for data storage, I have created a relational database. Entity Framework Core facilitated database operations, making data management straightforward. To simplify code and enhance performance, I opted to utilize Stored Procedures for filtering. I implemented the repository pattern and unit of work pattern in my application. I decided to utilize Blazor framework for the user interface and MudBlazor library to design Blazor components.
@@ -61,9 +79,7 @@ The application supports profile image uploading for members. Members can upload
 
 6. **Run the project:**
 
-    ```bash
-    dotnet run
-    ```
+   Right-click on the solution and select Configure Startup Projects. In the opened window, select Multiple startup projects, mark API, UI, and UserPortal projects as Start, then click OK and press F5 to run the project.
 
 These steps ensure that the project is properly configured and ready to run with the required database settings and stored procedures.
 
