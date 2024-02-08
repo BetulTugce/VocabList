@@ -108,8 +108,22 @@ using (var serviceScope = app.Services.CreateScope())
 {
     var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
     var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
+
+    // Admin rolü AppRole tablosundan silinmiþse ekler..
+    if (roleManager.FindByNameAsync(builder.Configuration["Administrator:Role"]).Result == null)
+    {
+        await roleManager.CreateAsync(new AppRole() { Id = Guid.NewGuid().ToString(), Name = builder.Configuration["Administrator:Role"] });
+    }
+
+    // Member rolü veritabanýndan silinmiþse ekler..
+    if (roleManager.FindByNameAsync(builder.Configuration["Administrator:Role2"]).Result == null)
+    {
+        await roleManager.CreateAsync(new AppRole() { Id = Guid.NewGuid().ToString(), Name = builder.Configuration["Administrator:Role2"] });
+    }
+
+    // Admin kullanýcýsý ekli mi kontrol ediliyor..
     var user = userManager.FindByEmailAsync(builder.Configuration["Administrator:Email"]).Result;
-    if (user == null)
+    if (user == null) // Kullanýcý yoksa oluþturur..
     {
         IdentityResult result = await userManager.CreateAsync(new()
         {
@@ -120,43 +134,40 @@ using (var serviceScope = app.Services.CreateScope())
             UserName = builder.Configuration["Administrator:Username"],
         }, builder.Configuration["Administrator:Password"]);
 
-        //if (result.Succeeded)
-        //{
-        //    AppUser? defaultUser = await userManager.FindByEmailAsync(builder.Configuration["Administrator:Email"]);
-        //if (roleManager.FindByNameAsync(builder.Configuration["Administrator:Role"]).Result == null)
-        //{
-        //    AppRole role = new AppRole();
-        //    role.Id = Guid.NewGuid().ToString();
-        //    role.Name = builder.Configuration["Administrator:Role"];
+        if (result.Succeeded)
+        {
+            // Eklenen kullanýcýnýn (Adminin) bilgisi alýnýyor.
+            user = await userManager.FindByEmailAsync(builder.Configuration["Administrator:Email"]);
 
-        //    var createdRole = roleManager.CreateAsync(role).Result;
-        //    if (createdRole.Succeeded)
-        //    {
-        //        userManager.AddToRoleAsync(defaultUser, builder.Configuration["Administrator:Role"]).Wait();
-        //    }
-        //}
+            //// Admin rolü AppRoles tablosunda yoksa eklenerek varsayýlan olarak Admin kullanýcýsýna atanýyor..
+            //if (roleManager.FindByNameAsync(builder.Configuration["Administrator:Role"]).Result == null)
+            //{
+            //    AppRole role = new AppRole();
+            //    role.Id = Guid.NewGuid().ToString();
+            //    role.Name = builder.Configuration["Administrator:Role"];
 
-        //    userManager.AddToRoleAsync(defaultUser, builder.Configuration["Administrator:Role"]).Wait();
-        //}
+            //    var createdRole = roleManager.CreateAsync(role).Result;
+            //    if (createdRole.Succeeded)
+            //    {
+            //        userManager.AddToRoleAsync(user, builder.Configuration["Administrator:Role"]).Wait();
+            //    }
+            //}
+            //else
+            //{
+            //    userManager.AddToRoleAsync(user, builder.Configuration["Administrator:Role"]).Wait();
+            //}
+
+            // Kullanýcýya Admin rolü atanýyor..
+            userManager.AddToRoleAsync(user, builder.Configuration["Administrator:Role"]).Wait();
+        }
     }
-    else
+    else // Kullanýcý varsa admin rolüne sahip mi kontrol ediliyor..
     {
         var isAdmin = await userManager.IsInRoleAsync(user, builder.Configuration["Administrator:Role"]);
         if (!isAdmin)
         {
             userManager.AddToRoleAsync(user, builder.Configuration["Administrator:Role"]).Wait();
         }
-    }
-    if (roleManager.FindByNameAsync(builder.Configuration["Administrator:Role"]).Result == null)
-    {
-        await roleManager.CreateAsync(new AppRole() { Id = Guid.NewGuid().ToString(), Name = builder.Configuration["Administrator:Role"] });
-        AppUser? defaultUser = await userManager.FindByEmailAsync(builder.Configuration["Administrator:Email"]);
-        userManager.AddToRoleAsync(defaultUser, builder.Configuration["Administrator:Role"]).Wait();
-    }
-
-    if (roleManager.FindByNameAsync(builder.Configuration["Administrator:Role2"]).Result == null)
-    {
-        await roleManager.CreateAsync(new AppRole() { Id = Guid.NewGuid().ToString(), Name = builder.Configuration["Administrator:Role2"] });
     }
 }
 
