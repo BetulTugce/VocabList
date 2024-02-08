@@ -8,11 +8,11 @@ There is also an administration panel. Basic CRUD operations for users and roles
 
 ## Screenshots
 
-![VocabList_WordList](https://github.com/BetulTugce/VocabList/assets/79140478/314348a8-1579-4cee-b1dc-972262884fd7)
+https://github.com/BetulTugce/VocabList/assets/79140478/314348a8-1579-4cee-b1dc-972262884fd7
 
-![VocabList_404](https://github.com/BetulTugce/VocabList/assets/79140478/a1750fb5-5b48-4582-bc88-ea64e522623f)
+https://github.com/BetulTugce/VocabList/assets/79140478/a1750fb5-5b48-4582-bc88-ea64e522623f
 
-![VocabList_Register](https://github.com/BetulTugce/VocabList/assets/79140478/aa475704-5ee1-4f70-a1dd-616e22321f60)
+https://github.com/BetulTugce/VocabList/assets/79140478/aa475704-5ee1-4f70-a1dd-616e22321f60
 
 ## Screen Recordings
 
@@ -79,7 +79,7 @@ The application supports profile image uploading for members. Members can upload
 
 6. **Run the project:**
 
-   Right-click on the solution and select Configure Startup Projects. In the opened window, select Multiple startup projects, mark API, UI, and UserPortal projects as Start, then click OK and press F5 to run the project.
+   Right-click on the solution and select `Configure Startup Projects`. In the opened window, select `Multiple startup projects`, mark API, UI, and UserPortal projects as `Start`, then click `OK` and press `F5` to run the project.
 
 These steps ensure that the project is properly configured and ready to run with the required database settings and stored procedures.
 
