@@ -75,13 +75,11 @@ The application supports profile image uploading for members. Members can upload
 
 5. **Create Stored Procedures:**
    
-   If you plan to use the provided stored procedures, you need to create them in your MSSQL Server database. Follow the instructions in this file to create the necessary stored procedures.
+   If you plan to use the provided stored procedures, you need to create them in your MSSQL Server database. Follow the instructions in this file to create the necessary stored procedures. These steps ensure that the project is properly configured and ready to run with the required database settings and stored procedures.
 
 6. **Run the project:**
 
    Right-click on the solution and select `Configure Startup Projects`. In the opened window, select `Multiple startup projects`, mark API, UI, and UserPortal projects as `Start`, then click `OK` and press `F5` to run the project.
-
-These steps ensure that the project is properly configured and ready to run with the required database settings and stored procedures.
 
 ## Dependencies
 
