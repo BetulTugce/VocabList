@@ -18,11 +18,11 @@ There is also an administration panel. Basic CRUD operations for users and roles
 
 *User Portal*
 
-![VocabList](https://github.com/BetulTugce/VocabList/assets/79140478/ad776aa9-ac5d-4e12-9830-a9689ab4f243)
+https://github.com/BetulTugce/VocabList/assets/79140478/cf6763b0-3e62-40de-8b67-6a025deddf3f
 
 *Admin Dashboard*
 
-![VocabList](https://github.com/BetulTugce/VocabList/assets/79140478/fb0593a3-6002-441f-bb03-5e5f8b07e071)
+https://github.com/BetulTugce/VocabList/assets/79140478/fb0593a3-6002-441f-bb03-5e5f8b07e071
 
 ## Technological Infrastructure and Configurations of the Project
 
