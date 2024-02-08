@@ -18,6 +18,10 @@
 else
 {
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateUserDialog" Color="Color.Info">Kullanıcı Ekle</MudButton>
+    <MudToolBar>
+        <MudText Typo="Typo.h6">Kullanıcılar</MudText>
+        <MudSpacer />
+    </MudToolBar>
     @if (UsersResponse.Users is not null)
     {
         <MudTable Items="@UsersResponse.Users" Hover="true" FixedHeader="true" Style="width:100%">
@@ -38,7 +42,10 @@ else
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
+                    <div class="d-flex justify-content-between">
+                        <div class="pagination-info d-flex justify-content-center align-items-center flex-column">Toplam Kullanıcı Sayısı: @UsersResponse.TotalUsersCount</div>
                     <MudPagination ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" BoundaryCount="2" MiddleCount="3" SelectedChanged="PageChanged" Count="@pageCount" Class="pa-4" />
+                    </div>
                 </PagerContent>
             </MudTable>
     }
@@ -118,7 +125,7 @@ else
 
     const int rowsPerPage = 10; // Sayfa başına gösterilecek user sayısı
     int pageCount; // Toplam sayfa sayısı
-    int _selectedPage; // Seçili olan sayfanın numarası
+    int _selectedPage = 1; // Seçili olan sayfanın numarası
 
     protected override async Task OnInitializedAsync()
     {
@@ -129,7 +136,7 @@ else
             accessToken = accessToken.Substring(1, (accessToken.Length - 2));
 
             // Userları getiriyor.. (İlk sayfa - 10 tane user)
-            await GetAllUsers(0, rowsPerPage);
+            await GetAllUsers((_selectedPage - 1), rowsPerPage);
         }
         
     }
@@ -247,7 +254,7 @@ else
             }
             else
             {
-                ShowNotification("Bu kullanıcı adı zaten alınmış. Lütfen yeni bir kullanıcı adı belirleyin.", Severity.Success);
+                ShowNotification("Bu kullanıcı adı zaten alınmış. Lütfen yeni bir kullanıcı adı belirleyin.", Severity.Warning);
             }
         }
         else
