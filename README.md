@@ -18,7 +18,7 @@ There is also an administration panel. Basic CRUD operations for users and roles
 
 *User Portal*
 
-https://github.com/BetulTugce/VocabList/assets/79140478/cf6763b0-3e62-40de-8b67-6a025deddf3f
+https://github.com/BetulTugce/VocabList/assets/79140478/ad776aa9-ac5d-4e12-9830-a9689ab4f243
 
 *Admin Dashboard*
 
